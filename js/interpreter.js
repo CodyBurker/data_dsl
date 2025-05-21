@@ -104,29 +104,6 @@ export class Interpreter {
         }
     }
 
-    async nativeParseCsv(fileContent) { // This is not currently used if PapaParse is active
-        return new Promise((resolve, reject) => {
-            try {
-                const lines = fileContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(line => line.trim() !== '');
-                if (lines.length === 0) { resolve({ data: [], meta: { fields: [] } }); return; }
-                const headers = lines[0].split(',').map(h => h.trim());
-                const data = [];
-                for (let i = 1; i < lines.length; i++) {
-                    const values = lines[i].split(',').map(v => v.trim());
-                    const row = {};
-                    headers.forEach((h, idx) => {
-                        let v = values[idx];
-                        if (v !== undefined && v !== "" && !isNaN(Number(v))) v = Number(v);
-                        else if (v && (v.toLowerCase()==='true' || v.toLowerCase()==='false')) v = v.toLowerCase()==='true';
-                        row[h] = v;
-                    });
-                    data.push(row);
-                }
-                resolve({ data, meta: { fields: headers } });
-            } catch (err) { reject(err); }
-        });
-    }
-
     async handleLoadCsv(args) {
         if (!this.uiElements.csvFileInputEl) throw new Error("File input not available.");
         const file = await this.requestCsvFile(args.file, this.activeVariableName);
