@@ -257,7 +257,7 @@
                     case 'STORE_AS': return this.parseStoreAs(); 
                     case 'EXPORT_CSV': return this.parseExportCsv();
                     case 'EXPORT_EXCEL': return this.parseExportExcel(); 
-                    case 'PEEK': return this.parsePeek();
+                    case 'PEEK': return this.parsePeek(); // Updated to use new parsePeek
                     default: 
                         this.error(`Unexpected keyword '${t.value}' found where a command was expected.`);
                         return null; 
@@ -284,7 +284,12 @@
             parseStoreAs() { this.consume(TokenType.KEYWORD, 'STORE_AS'); const v = this.consume(TokenType.IDENTIFIER).value; return { command: 'STORE_AS', args: { variableName: v } }; } 
             parseExportCsv() { this.consume(TokenType.KEYWORD, 'EXPORT_CSV'); this.consume(TokenType.KEYWORD, 'TO'); const f = this.consume(TokenType.STRING_LITERAL).value; return { command: 'EXPORT_CSV', args: { file: f } }; }
             parseExportExcel() { this.consume(TokenType.KEYWORD, 'EXPORT_EXCEL'); this.consume(TokenType.KEYWORD, 'TO'); const f = this.consume(TokenType.STRING_LITERAL).value; let s = 'Sheet1'; if (this.match(TokenType.KEYWORD, 'SHEET')) s = this.consume(TokenType.STRING_LITERAL).value; return { command: 'EXPORT_EXCEL', args: { file: f, sheet: s } }; }
-            parsePeek() { this.consume(TokenType.KEYWORD, 'PEEK'); return { command: 'PEEK', args: {} }; }
+            
+            parsePeek() { 
+                const peekToken = this.peek(); // Get token before consuming to capture its line
+                this.consume(TokenType.KEYWORD, 'PEEK'); 
+                return { command: 'PEEK', args: {}, line: peekToken.line }; // Add line number to AST node
+            }
             
             match(type, value) { if (this.isAtEnd()) return false; const t = this.peek(); if (t.type !== type) return false; if (value !== undefined && t.value !== value) return false; this.advance(); return true; }
             consume(type, value, errorMessage) { 
@@ -308,7 +313,10 @@
                 this.variables = {}; 
                 this.activeVariableName = null; 
                 this.logOutputEl = document.getElementById('logOutput');
-                this.peekOutputEl = document.getElementById('peekOutputContainer');
+                this.peekTabsContainerEl = document.getElementById('peekTabsContainer');
+                this.peekOutputsDisplayAreaEl = document.getElementById('peekOutputsDisplayArea');
+                this.peekOutputs = []; // Stores {id, varName, line, htmlContent}
+
                 this.fileInputEl = document.getElementById('csvFileInput');
                 this.fileInputContainerEl = document.getElementById('fileInputContainer');
                 this.filePromptMessageEl = document.getElementById('filePromptMessage');
@@ -316,9 +324,15 @@
             }
 
             log(message) { console.log(message); const time = new Date().toLocaleTimeString(); if (this.logOutputEl) { this.logOutputEl.innerHTML += `[${time}] ${message}<br>`; this.logOutputEl.scrollTop = this.logOutputEl.scrollHeight; } }
+            
             clearLogsAndPeek() { 
                 if (this.logOutputEl) this.logOutputEl.innerHTML = 'Logs will appear here...<br>'; 
-                if (this.peekOutputEl) this.peekOutputEl.innerHTML = 'Peek results will appear here...'; 
+                
+                this.peekOutputs = []; 
+                if (this.peekTabsContainerEl) this.peekTabsContainerEl.innerHTML = ''; 
+                if (this.peekOutputsDisplayAreaEl) {
+                    this.peekOutputsDisplayAreaEl.innerHTML = '<div class="output-box-placeholder">Peek results will appear here when a script is run.</div>';
+                }
             }
             
             async requestCsvFile(fileNameHint, forVariable) { 
@@ -339,13 +353,15 @@
             
             async run(ast) { 
                 this.log('Interpreter started.'); 
+                this.peekOutputs = []; // Clear previous peek results at the start of a new run
+
                 for (const varBlock of ast) { 
                     this.activeVariableName = varBlock.variableName;
                     this.log(`Processing block for VAR "${this.activeVariableName}"`);
                     this.variables[this.activeVariableName] = null; 
 
                     for (const commandNode of varBlock.pipeline) { 
-                        this.log(`Executing: ${commandNode.command} for VAR "${this.activeVariableName}"`); 
+                        this.log(`Executing: ${commandNode.command} for VAR "${this.activeVariableName}"` + (commandNode.line ? ` (Line ${commandNode.line})` : '')); 
                         try { 
                             await this.executeCommand(commandNode); 
                         } catch (e) { 
@@ -353,12 +369,14 @@
                             this.log(`ERROR executing ${commandNode.command} for VAR "${this.activeVariableName}": ${err}`); 
                             console.error(`Error details for ${commandNode.command} (VAR "${this.activeVariableName}"):`, e); 
                             if (this.fileInputContainerEl) this.fileInputContainerEl.classList.add('hidden'); 
+                            this.renderPeekOutputsUI(); // Render any PEEKs captured before the error
                             return; 
                         } 
                     }
                     this.log(`Finished block for VAR "${this.activeVariableName}"`);
                 } 
                 this.log('Interpreter finished all blocks.'); 
+                this.renderPeekOutputsUI(); // Render all collected PEEK outputs at the end
                 this.activeVariableName = null; 
                 if (this.fileInputContainerEl) this.fileInputContainerEl.classList.add('hidden'); 
             }
@@ -373,7 +391,19 @@
                         this.variables[this.activeVariableName] = this.handleKeepColumns(args, this.variables[this.activeVariableName]); 
                         break; 
                     case 'PEEK': 
-                        this.handlePeek(args, this.variables[this.activeVariableName]); 
+                        const currentDataset = this.variables[this.activeVariableName];
+                        const peekLine = commandNode.line; // Line number from AST
+                        const peekHtmlContent = this.generatePeekHtml(currentDataset, this.activeVariableName, peekLine);
+                        // Create a more robust unique ID
+                        const peekId = `peek-${this.activeVariableName || 'context'}-l${peekLine}-idx${this.peekOutputs.length}`;
+                        
+                        this.peekOutputs.push({
+                            id: peekId,
+                            varName: this.activeVariableName || 'Current Context',
+                            line: peekLine,
+                            htmlContent: peekHtmlContent
+                        });
+                        this.log(`PEEK data for VAR "${this.activeVariableName}" (Line ${peekLine}) captured.`);
                         break; 
                     case 'STORE_AS': 
                         this.log(`Command STORE_AS for VAR "${this.activeVariableName}" is parsed. Current active dataset for "${this.activeVariableName}" will be copied to "${args.variableName}".`);
@@ -457,20 +487,17 @@
                 return newDataset; 
             }
             
-            handlePeek(args, datasetToPeek) { 
-                const varName = this.activeVariableName;
-                let outputHTML = `<h3 class="text-md font-semibold mb-2">Data for: ${varName || 'Current Context'}</h3>`;
+            generatePeekHtml(datasetToPeek, varName, line) { 
+                let outputHTML = `<h3 class="text-md font-semibold mb-2 text-gray-100">Data for: ${varName || 'Current Context'} (PEEK at Line ${line})</h3>`;
 
                 if (!datasetToPeek) { 
-                    outputHTML += '<p class="text-gray-500">No dataset loaded to PEEK.</p>'; 
-                    this.log(`Cannot PEEK for VAR "${varName}": No dataset loaded.`); 
+                    outputHTML += '<p class="text-gray-400">No dataset loaded to PEEK.</p>'; 
                 } else {
                     const peekRowCount = 10;
                     const dataToDisplay = datasetToPeek.slice(0, peekRowCount);
 
                     if (dataToDisplay.length === 0) {
-                        outputHTML += '<p class="text-gray-500">Dataset is empty.</p>';
-                        this.log(`PEEK for VAR "${varName}": Dataset is empty.`);
+                        outputHTML += '<p class="text-gray-400">Dataset is empty.</p>';
                     } else {
                         let tableHtml = '<table><thead><tr>';
                         const allKeys = new Set();
@@ -490,17 +517,57 @@
                         });
                         tableHtml += `</tbody></table>`;
                         if (datasetToPeek.length > peekRowCount) {
-                            tableHtml += `<p class="text-xs text-gray-500 mt-2">Showing first ${peekRowCount} of ${datasetToPeek.length} rows. Total columns: ${headers.length}.</p>`;
+                            tableHtml += `<p class="text-xs text-gray-400 mt-2">Showing first ${peekRowCount} of ${datasetToPeek.length} rows. Total columns: ${headers.length}.</p>`;
                         } else {
-                            tableHtml += `<p class="text-xs text-gray-500 mt-2">Showing all ${datasetToPeek.length} rows. Total columns: ${headers.length}.</p>`;
+                            tableHtml += `<p class="text-xs text-gray-400 mt-2">Showing all ${datasetToPeek.length} rows. Total columns: ${headers.length}.</p>`;
                         }
                         outputHTML += tableHtml;
-                        this.log(`PEEK displayed ${dataToDisplay.length} rows for VAR "${varName}".`);
                     }
                 }
-                if (this.peekOutputEl) {
-                    this.peekOutputEl.innerHTML = outputHTML;
+                return outputHTML;
+            }
+
+            renderPeekOutputsUI() {
+                if (!this.peekTabsContainerEl || !this.peekOutputsDisplayAreaEl) {
+                    console.error("Peek UI elements not found!");
+                    return;
                 }
+
+                this.peekTabsContainerEl.innerHTML = ''; 
+                this.peekOutputsDisplayAreaEl.innerHTML = ''; 
+
+                if (this.peekOutputs.length === 0) {
+                    this.peekOutputsDisplayAreaEl.innerHTML = '<div class="output-box-placeholder">No PEEK outputs to display.</div>';
+                    return;
+                }
+
+                this.peekOutputs.forEach((peekData, index) => {
+                    const tabButton = document.createElement('button');
+                    tabButton.classList.add('peek-tab');
+                    tabButton.textContent = `PEEK ${index + 1} (VAR "${peekData.varName}", L${peekData.line})`;
+                    tabButton.dataset.target = peekData.id;
+                    
+                    const contentDiv = document.createElement('div');
+                    contentDiv.id = peekData.id;
+                    contentDiv.classList.add('peek-content'); 
+                    contentDiv.innerHTML = peekData.htmlContent;
+
+                    this.peekTabsContainerEl.appendChild(tabButton);
+                    this.peekOutputsDisplayAreaEl.appendChild(contentDiv);
+
+                    tabButton.addEventListener('click', () => {
+                        this.peekTabsContainerEl.querySelectorAll('.peek-tab').forEach(tab => tab.classList.remove('active-peek-tab'));
+                        this.peekOutputsDisplayAreaEl.querySelectorAll('.peek-content').forEach(content => content.classList.remove('active-peek-content'));
+                        
+                        tabButton.classList.add('active-peek-tab');
+                        contentDiv.classList.add('active-peek-content');
+                    });
+
+                    if (index === 0) {
+                        tabButton.classList.add('active-peek-tab');
+                        contentDiv.classList.add('active-peek-content');
+                    }
+                });
             }
         }
 
@@ -519,13 +586,13 @@
             let currentVarBlockStyleIndex = 0;
             const varBlockStyles = ['var-block-bg-1', 'var-block-bg-2', 'var-block-bg-3', 'var-block-bg-4'];
             let inVarBlock = false;
-            let blockContentHtml = ''; // Stores HTML for the current block
+            let blockContentHtml = ''; 
 
             function closeCurrentVarBlock() {
                 if (inVarBlock && blockContentHtml.trim() !== '') {
                     html += `<div class="var-block ${varBlockStyles[currentVarBlockStyleIndex % varBlockStyles.length]}">${blockContentHtml}</div>`;
                     currentVarBlockStyleIndex++;
-                } else if (blockContentHtml.trim() !== '') { // Content outside any var block
+                } else if (blockContentHtml.trim() !== '') { 
                     html += blockContentHtml; 
                 }
                 blockContentHtml = '';
@@ -538,9 +605,8 @@
                 const escapedValue = escapeHtml(token.value);
 
                 if (token.type === TokenType.KEYWORD && token.value.toUpperCase() === 'VAR') {
-                    closeCurrentVarBlock(); // Close previous block if any
+                    closeCurrentVarBlock(); 
                     inVarBlock = true; 
-                    // VAR keyword itself starts the new block content
                 }
                  switch (token.type) {
                     case TokenType.KEYWORD: tokenHtml = `<span class="token-keyword">${escapedValue}</span>`; break;
@@ -558,14 +624,12 @@
                 if (inVarBlock) {
                     blockContentHtml += tokenHtml;
                 } else {
-                    // Handles content before the first VAR block (e.g. initial comments, newlines)
-                    // This part might need adjustment if we strictly want ONLY var blocks to be possible
                     html += tokenHtml; 
                 }
             }
-            closeCurrentVarBlock(); // Close any last open block
+            closeCurrentVarBlock(); 
 
-            return html + '\n\n'; // Retain the scrolling fix
+            return html + '\n\n'; 
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -585,20 +649,20 @@ THEN
 THEN
     PEEK  # Shows the content of "citiesData"
 THEN
-    KEEP_COLUMNS "City", "Country", "Population" 
+    KEEP_COLUMNS "City", "Population" 
     # Note: Column names are case-sensitive based on your CSV!
 THEN
     PEEK # Shows modified "citiesData"
 
-VAR "weatherReport"
+VAR "anotherVar"
 THEN
-    LOAD_CSV FILE "weather.csv"
+    LOAD_CSV FILE "another.csv"
 THEN
-    PEEK # Shows "weatherReport"
+    PEEK
 `;
             inputArea.value = defaultScript;
             highlightingOverlay.innerHTML = applySyntaxHighlighting(inputArea.value);
-
+            interpreter.clearLogsAndPeek(); // Initialize peek area with placeholder
 
             inputArea.addEventListener('input', () => {
                 const text = inputArea.value;
@@ -630,7 +694,7 @@ THEN
                 const script = inputArea.value; 
                 astOutputArea.classList.remove('error-box');
                 astOutputArea.textContent = 'Parsing...';
-                interpreter.clearLogsAndPeek(); 
+                interpreter.clearLogsAndPeek(); // Clear previous results, including PEEK UI
 
                 try {
                     const tokensForParser = tokenizeForParser(script);
@@ -638,7 +702,7 @@ THEN
                     const ast = parser.parse();
                     astOutputArea.textContent = JSON.stringify(ast, null, 2);
                     
-                    await interpreter.run(ast);
+                    await interpreter.run(ast); // run will call renderPeekOutputsUI at the end
 
                 } catch (e) {
                     astOutputArea.classList.add('error-box');
@@ -647,15 +711,16 @@ THEN
                     astOutputArea.textContent = `Error: ${errorMessage}${stackTrace}`;
                     interpreter.log(`Error during parsing or execution: ${errorMessage}`);
                     console.error("Full error object:", e);
+                    interpreter.renderPeekOutputsUI(); // Still try to render any PEEKs captured before error
                 }
             });
 
             clearButton.addEventListener('click', () => {
-                interpreter.clearLogsAndPeek();
+                interpreter.clearLogsAndPeek(); // This now handles the new PEEK UI as well
                 astOutputArea.textContent = 'AST will appear here...';
                 astOutputArea.classList.remove('error-box');
-                inputArea.value = defaultScript; 
-                highlightingOverlay.innerHTML = applySyntaxHighlighting(defaultScript); 
+                // inputArea.value = defaultScript; // Optionally reset script
+                // highlightingOverlay.innerHTML = applySyntaxHighlighting(defaultScript); 
                 if (document.getElementById('fileInputContainer')) {
                      document.getElementById('fileInputContainer').classList.add('hidden');
                 }

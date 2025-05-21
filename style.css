@@ -14,29 +14,38 @@ body { font-family: 'Inter', sans-serif; }
             color: #b91c1c; /* Tailwind red-700 */
             border: 1px solid #f87171; /* Tailwind red-400 */
         }
-        #peekOutputContainer table {
+
+        /* Styling for tables inside PEEK output */
+        .peek-content table, #peekOutputContainer table { /* Keep old ID for a bit if referenced */
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
             font-size: 0.875rem;
-            color: #374151; /* gray-700 */
+            color: #d1d5db; /* Tailwind gray-300 for text inside dark box */
         }
+        .peek-content th, .peek-content td,
         #peekOutputContainer th, #peekOutputContainer td {
-            border: 1px solid #d1d5db; /* gray-300 */
+            border: 1px solid #4b5563; /* gray-600 for borders inside dark box */
             padding: 8px;
             text-align: left;
         }
-        #peekOutputContainer th {
-            background-color: #f3f4f6; /* gray-100 */
+        .peek-content th, #peekOutputContainer th {
+            background-color: #374151; /* gray-700 for header inside dark box */
             font-weight: bold;
+            color: #e5e7eb; /* gray-200 */
         }
-        /* Adjusted LogOutput to be less prominent initially */
+         /* Placeholder style for peek output area before content loads */
+        #peekOutputsDisplayArea .output-box-placeholder {
+            color: #6b7280; /* gray-500 */
+            text-align: center;
+            padding: 2rem;
+            font-style: italic;
+        }
+
+
         #logOutput {
-            /* background-color: #e5e7eb; /* gray-200 */ /* Using default output-box style for consistency when visible */
-            /* color: #4b5563; /* gray-600 */
             padding: 0.75rem;
-            /* border-radius: 0.5rem; */ /* Handled by output-box */
-            min-height: 100px; /* Can be smaller as it's collapsible */
+            min-height: 100px; 
             font-family: monospace;
             font-size: 0.8rem;
         }
@@ -49,7 +58,6 @@ body { font-family: 'Inter', sans-serif; }
             margin-bottom: 1rem;
         }
 
-        /* Styles for Syntax Highlighting */
         .code-editor-container {
             position: relative;
             width: 100%;
@@ -68,7 +76,6 @@ body { font-family: 'Inter', sans-serif; }
             line-height: 1.5; 
             box-sizing: border-box;
             width: 100%;
-            /* min-height: 240px; /* Default height, will be overridden by .editor-prominent */
             overflow: auto; 
             white-space: pre; 
             word-wrap: normal; 
@@ -98,7 +105,6 @@ body { font-family: 'Inter', sans-serif; }
             color: #374151; 
         }
         
-        /* Token Styles */
         .token-keyword { color: #be185d; font-weight: bold; } 
         .token-string_literal { color: #059669; } 
         .token-number_literal { color: #2563eb; } 
@@ -107,7 +113,6 @@ body { font-family: 'Inter', sans-serif; }
         .token-identifier { color: #1d4ed8; } 
         .token-punctuation { color: #374151; } 
 
-        /* Styles for VAR blocks */
         .var-block {
             display: block;
             padding-top: 0.1em;
@@ -119,29 +124,33 @@ body { font-family: 'Inter', sans-serif; }
         .var-block-bg-3 { background-color: rgba(222, 255, 222, 0.4); }
         .var-block-bg-4 { background-color: rgba(255, 240, 222, 0.4); }
 
-        /* New styles for prominence and collapsibility */
         .editor-prominent #pipeDataInput, .editor-prominent #highlightingOverlay {
-            min-height: 350px; /* Increased height for the editor */
-        }
-
-        .peek-prominent {
-            min-height: 300px; /* Increased height for PEEK output */
-            /* You can add more distinct styling here if needed, like a different border */
-        }
-
-        /* Styles for HTML <details> and <summary> to make them collapsible sections */
-        .output-collapsible summary::-webkit-details-marker {
-            display: none; /* Hide default disclosure triangle in WebKit */
-        }
-
-        .output-collapsible summary {
-            list-style: none; /* Hide default disclosure triangle in Firefox */
-            position: relative;
-            padding-left: 1.8rem; /* Space for custom arrow */
+            min-height: 350px; 
         }
         
+        /* Container for the tabbed PEEK outputs, not an output-box itself */
+        .peek-output-area-container {
+            border: 1px solid #d1d5db; /* gray-300 */
+            border-top: none; /* Tabs container provides top border */
+            border-radius: 0 0 0.5rem 0.5rem; /* Rounded bottom corners */
+            min-height: 300px; /* Prominent height */
+            background-color: #1f2937; /* Tailwind gray-800, same as output-box */
+            color: #d1d5db; /* Tailwind gray-300 */
+            padding: 0; /* Padding will be on individual peek-content */
+            overflow: hidden; /* To contain rounded corners of children */
+        }
+
+
+        .output-collapsible summary::-webkit-details-marker {
+            display: none; 
+        }
+        .output-collapsible summary {
+            list-style: none; 
+            position: relative;
+            padding-left: 1.8rem; 
+        }
         .output-collapsible summary::before {
-            content: '►'; /* Collapsed state arrow */
+            content: '►'; 
             position: absolute;
             left: 0.75rem;
             top: 50%;
@@ -149,15 +158,56 @@ body { font-family: 'Inter', sans-serif; }
             transition: transform 0.2s ease-in-out;
             font-size: 0.8em;
         }
-
         .output-collapsible[open] > summary::before {
-            transform: translateY(-50%) rotate(90deg); /* Expanded state arrow */
+            transform: translateY(-50%) rotate(90deg); 
         }
-        
         .output-box-collapsible-content {
-            border-top: 1px solid #d1d5db; /* Separator line */
-            border-radius: 0 0 0.5rem 0.5rem; /* Rounded bottom corners */
-            /* Keep the dark background for the content */
+            border-top: 1px solid #d1d5db; 
+            border-radius: 0 0 0.5rem 0.5rem; 
             background-color: #1f2937; 
             color: #d1d5db;
+        }
+
+        /* Styles for PEEK Tabs */
+        #peekTabsContainer .peek-tab {
+            padding: 0.5rem 1rem;
+            margin-right: 0.25rem;
+            margin-bottom: -1px; /* Overlap border-bottom of container */
+            border: 1px solid #d1d5db; /* gray-300 */
+            border-bottom: none; /* Tab itself doesn't have bottom border */
+            border-radius: 0.375rem 0.375rem 0 0; /* Rounded top corners */
+            background-color: #f9fafb; /* gray-50 */
+            color: #374151; /* gray-700 */
+            cursor: pointer;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+
+        #peekTabsContainer .peek-tab:hover {
+            background-color: #f3f4f6; /* gray-100 */
+            border-color: #9ca3af; /* gray-400 */
+        }
+
+        #peekTabsContainer .peek-tab.active-peek-tab {
+            background-color: #1f2937; /* Tailwind gray-800, to match content area */
+            color: #f9fafb; /* gray-50, light text on dark tab */
+            border-color: #d1d5db #d1d5db #1f2937; /* Match border, bottom transparent to merge */
+            position: relative; 
+            z-index: 1;
+        }
+
+        /* Individual PEEK content (initially hidden) */
+        .peek-content {
+            display: none; /* Hidden by default */
+            padding: 1rem; /* Padding inside each peek view */
+            /* min-height is on peek-output-area-container */
+            /* background-color and color are inherited from peek-output-area-container */
+            white-space: pre-wrap; /* Copied from .output-box */
+            word-wrap: break-word; /* Copied from .output-box */
+            overflow-x: auto; /* Copied from .output-box */
+        }
+
+        .peek-content.active-peek-content {
+            display: block; /* Shown when active */
         }
