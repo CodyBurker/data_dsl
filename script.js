@@ -321,7 +321,7 @@
                 this.fileInputContainerEl = document.getElementById('fileInputContainer');
                 this.filePromptMessageEl = document.getElementById('filePromptMessage');
                 this.fileResolve = null;
-                this.currentEditorHighlightLine = null; // Added to track highlighted PEEK line
+                this.currentEditorHighlightLine = null; 
             }
 
             log(message) { console.log(message); const time = new Date().toLocaleTimeString(); if (this.logOutputEl) { this.logOutputEl.innerHTML += `[${time}] ${message}<br>`; this.logOutputEl.scrollTop = this.logOutputEl.scrollHeight; } }
@@ -334,10 +334,9 @@
                 if (this.peekOutputsDisplayAreaEl) {
                     this.peekOutputsDisplayAreaEl.innerHTML = '<div class="output-box-placeholder">Peek results will appear here when a script is run.</div>';
                 }
-                this.clearEditorPeekHighlight(); // New method call
+                this.clearEditorPeekHighlight(); 
             }
 
-            // New method to clear PEEK highlight in editor
             clearEditorPeekHighlight() {
                 const inputArea = document.getElementById('pipeDataInput');
                 const highlightingOverlay = document.getElementById('highlightingOverlay');
@@ -345,8 +344,6 @@
                     highlightingOverlay.innerHTML = applySyntaxHighlighting(inputArea.value, null);
                     this.currentEditorHighlightLine = null;
                 } else if (inputArea && highlightingOverlay && this.currentEditorHighlightLine === null) {
-                    // If no line was highlighted, ensure overlay is still up-to-date if text changed.
-                    // Or, if clearing, ensure it's without highlight.
                      highlightingOverlay.innerHTML = applySyntaxHighlighting(inputArea.value, null);
                 }
             }
@@ -370,8 +367,8 @@
 
             async run(ast) {
                 this.log('Interpreter started.');
-                this.peekOutputs = []; 
-                this.clearEditorPeekHighlight(); // Clear any previous PEEK highlight
+                this.peekOutputs = [];
+                this.clearEditorPeekHighlight(); 
 
                 for (const varBlock of ast) {
                     this.activeVariableName = varBlock.variableName;
@@ -552,17 +549,16 @@
 
                 this.peekTabsContainerEl.innerHTML = '';
                 this.peekOutputsDisplayAreaEl.innerHTML = '';
-                // this.clearEditorPeekHighlight(); // Done at start of run or clearLogsAndPeek
-
-                if (this.peekOutputs.length === 0) {
-                    this.peekOutputsDisplayAreaEl.innerHTML = '<div class="output-box-placeholder">No PEEK outputs to display.</div>';
-                     this.clearEditorPeekHighlight(); // Ensure no highlight if no PEEKs
-                    return;
-                }
                 
                 const inputArea = document.getElementById('pipeDataInput');
                 const highlightingOverlay = document.getElementById('highlightingOverlay');
 
+                if (this.peekOutputs.length === 0) {
+                    this.peekOutputsDisplayAreaEl.innerHTML = '<div class="output-box-placeholder">No PEEK outputs to display.</div>';
+                    this.clearEditorPeekHighlight(); 
+                    return;
+                }
+                
                 this.peekOutputs.forEach((peekData, index) => {
                     const tabButton = document.createElement('button');
                     tabButton.classList.add('peek-tab');
@@ -587,6 +583,17 @@
                         if (inputArea && highlightingOverlay) {
                             highlightingOverlay.innerHTML = applySyntaxHighlighting(inputArea.value, peekData.line);
                             this.currentEditorHighlightLine = peekData.line;
+                            
+                            // Scroll to highlighted PEEK
+                            const highlightedSpan = highlightingOverlay.querySelector('#active-editor-peek-highlight');
+                            if (highlightedSpan) {
+                                const scrollTargetOffset = highlightedSpan.offsetTop;
+                                const inputAreaVisibleHeight = inputArea.clientHeight;
+                                const desiredScrollTop = scrollTargetOffset - (inputAreaVisibleHeight / 3); // Aim for upper third
+
+                                inputArea.scrollTop = Math.max(0, desiredScrollTop); // Ensure not negative
+                                highlightingOverlay.scrollTop = inputArea.scrollTop; // Sync overlay
+                            }
                         }
                     });
 
@@ -596,6 +603,16 @@
                         if (inputArea && highlightingOverlay) {
                             highlightingOverlay.innerHTML = applySyntaxHighlighting(inputArea.value, peekData.line);
                             this.currentEditorHighlightLine = peekData.line;
+                             // Scroll to highlighted PEEK for the first active tab
+                            const highlightedSpan = highlightingOverlay.querySelector('#active-editor-peek-highlight');
+                            if (highlightedSpan) {
+                                const scrollTargetOffset = highlightedSpan.offsetTop;
+                                const inputAreaVisibleHeight = inputArea.clientHeight;
+                                const desiredScrollTop = scrollTargetOffset - (inputAreaVisibleHeight / 3);
+
+                                inputArea.scrollTop = Math.max(0, desiredScrollTop);
+                                highlightingOverlay.scrollTop = inputArea.scrollTop;
+                            }
                         }
                     }
                 });
@@ -611,7 +628,6 @@
                  .replace(/'/g, "&#039;");
         }
 
-        // Modified applySyntaxHighlighting
         function applySyntaxHighlighting(text, activePeekLine = null) {
             const tokens = tokenizeForHighlighting(text);
             let html = '';
@@ -619,6 +635,7 @@
             const varBlockStyles = ['var-block-bg-1', 'var-block-bg-2', 'var-block-bg-3', 'var-block-bg-4'];
             let inVarBlock = false;
             let blockContentHtml = '';
+            const activePeekHighlightID = "active-editor-peek-highlight"; // Define ID for highlighted span
 
             function closeCurrentVarBlock() {
                 if (inVarBlock && blockContentHtml.trim() !== '') {
@@ -642,13 +659,16 @@
                 }
 
                 let classes = '';
+                let idAttribute = ''; // Prepare for conditional ID
+
                 switch (token.type) {
                     case TokenType.KEYWORD:
                         classes = 'token-keyword';
                         if (token.value.toUpperCase() === 'PEEK' && token.line === activePeekLine) {
                             classes += ' active-peek-line-highlight';
+                            idAttribute = ` id="${activePeekHighlightID}"`; // Add ID only to the active PEEK
                         }
-                        tokenHtml = `<span class="${classes}">${escapedValue}</span>`;
+                        tokenHtml = `<span class="${classes}"${idAttribute}>${escapedValue}</span>`;
                         break;
                     case TokenType.STRING_LITERAL: tokenHtml = `<span class="token-string_literal">${escapedValue}</span>`; break;
                     case TokenType.NUMBER_LITERAL: tokenHtml = `<span class="token-number_literal">${escapedValue}</span>`; break;
@@ -668,7 +688,7 @@
                 }
             }
             closeCurrentVarBlock();
-            return html + '\n\n'; // Retain the scrolling fix
+            return html + '\n\n'; 
         }
 
 
@@ -694,21 +714,39 @@ THEN
 THEN
     PEEK # Shows modified "citiesData"
 
+# Add more lines to test scrolling
+# Line
+# Line
+# Line
+# Line
+# Line
+# Line
 VAR "anotherVar"
 THEN
     LOAD_CSV FILE "another.csv"
 THEN
-    PEEK
+    PEEK # This is a PEEK on a later line
+# Line
+# Line
+# Line
+# Line
+# Line
+# Line
+# Line
+# Line
+# Line
+# Line
+THEN
+    PEEK # Another PEEK even later
 `;
             inputArea.value = defaultScript;
-            highlightingOverlay.innerHTML = applySyntaxHighlighting(inputArea.value, null); // Initial highlight without active PEEK
+            highlightingOverlay.innerHTML = applySyntaxHighlighting(inputArea.value, null); 
             interpreter.clearLogsAndPeek();
 
             inputArea.addEventListener('input', () => {
                 const text = inputArea.value;
-                // When user types, clear specific PEEK highlight, general syntax highlight remains
-                highlightingOverlay.innerHTML = applySyntaxHighlighting(text, null); 
-                interpreter.currentEditorHighlightLine = null; // Reset tracker
+                highlightingOverlay.innerHTML = applySyntaxHighlighting(text, null);
+                interpreter.currentEditorHighlightLine = null; 
                 highlightingOverlay.scrollTop = inputArea.scrollTop;
                 highlightingOverlay.scrollLeft = inputArea.scrollLeft;
             });
@@ -736,7 +774,7 @@ THEN
                 const script = inputArea.value;
                 astOutputArea.classList.remove('error-box');
                 astOutputArea.textContent = 'Parsing...';
-                interpreter.clearLogsAndPeek(); // This will also clear editor PEEK highlights
+                interpreter.clearLogsAndPeek(); 
 
                 try {
                     const tokensForParser = tokenizeForParser(script);
@@ -753,7 +791,7 @@ THEN
                     astOutputArea.textContent = `Error: ${errorMessage}${stackTrace}`;
                     interpreter.log(`Error during parsing or execution: ${errorMessage}`);
                     console.error("Full error object:", e);
-                    interpreter.renderPeekOutputsUI(); // Attempt to render any PEEKs captured before error
+                    interpreter.renderPeekOutputsUI(); 
                 }
             });
 
@@ -761,11 +799,6 @@ THEN
                 interpreter.clearLogsAndPeek();
                 astOutputArea.textContent = 'AST will appear here...';
                 astOutputArea.classList.remove('error-box');
-                // Optionally reset script to default
-                // inputArea.value = defaultScript;
-                // highlightingOverlay.innerHTML = applySyntaxHighlighting(defaultScript, null);
-                // interpreter.currentEditorHighlightLine = null;
-
                 if (document.getElementById('fileInputContainer')) {
                      document.getElementById('fileInputContainer').classList.add('hidden');
                 }
