@@ -75,42 +75,36 @@ export class Interpreter {
 
     async executeCommand(commandNode) {
         const { command, args } = commandNode;
+        let currentDataset = this.variables[this.activeVariableName];
+
         switch (command) {
             case 'LOAD_CSV':
                 this.variables[this.activeVariableName] = await this.handleLoadCsv(args);
                 break;
             case 'KEEP_COLUMNS':
-                this.variables[this.activeVariableName] = this.handleKeepColumns(args, this.variables[this.activeVariableName]);
+                if (!(currentDataset instanceof dfd.DataFrame)) {
+                    throw new Error(`No valid DataFrame loaded for VAR "${this.activeVariableName}" to apply KEEP_COLUMNS.`);
+                }
+                this.variables[this.activeVariableName] = this.handleKeepColumns(args, currentDataset);
                 break;
             case 'PEEK':
-                const currentDataset = this.variables[this.activeVariableName];
+                // currentDataset is already what we want (DataFrame or null)
                 const peekLine = commandNode.line;
-                // HTML generation is moved to ui.js or happens during rendering there
                 const peekId = `peek-${this.activeVariableName || 'context'}-l${peekLine}-idx${this.peekOutputs.length}`;
 
                 this.peekOutputs.push({
                     id: peekId,
                     varName: this.activeVariableName || 'Current Context',
                     line: peekLine,
-                    dataset: currentDataset // Store raw dataset
+                    dataset: currentDataset // Store raw DataFrame (or null/other)
                 });
                 this.log(`PEEK data for VAR "${this.activeVariableName}" (Line ${peekLine}) captured.`);
-                break;
-            case 'STORE_AS':
-                this.log(`Command STORE_AS for VAR "${this.activeVariableName}" is parsed. Current active dataset for "${this.activeVariableName}" will be copied to "${args.variableName}".`);
-                if (this.variables[this.activeVariableName]) {
-                    this.variables[args.variableName] = JSON.parse(JSON.stringify(this.variables[this.activeVariableName]));
-                     this.log(`Dataset from VAR "${this.activeVariableName}" copied to new VAR "${args.variableName}".`);
-                } else {
-                    this.log(`Cannot STORE_AS: VAR "${this.activeVariableName}" has no data to copy.`);
-                     throw new Error(`No data in VAR "${this.activeVariableName}" to copy using STORE_AS.`);
-                }
                 break;
             default: this.log(`Command ${command} for VAR "${this.activeVariableName}" is parsed but not yet fully implemented.`);
         }
     }
 
-    async nativeParseCsv(fileContent) {
+    async nativeParseCsv(fileContent) { // This is not currently used if PapaParse is active
         return new Promise((resolve, reject) => {
             try {
                 const lines = fileContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(line => line.trim() !== '');
@@ -148,10 +142,19 @@ export class Interpreter {
             Papa.parse(file, {
                 header: true,
                 skipEmptyLines: true,
+                dynamicTyping: true, // Automatically convert numbers, booleans
                 complete: (results) => {
                     this.log(`Loaded ${results.data.length} rows for VAR "${this.activeVariableName}" from ${file.name}. Headers: ${results.meta.fields ? results.meta.fields.join(', ') : 'N/A'}`);
                     if (this.uiElements.fileInputContainerEl) this.uiElements.fileInputContainerEl.classList.add('hidden');
-                    resolve(results.data);
+                    
+                    // Convert to Danfo.js DataFrame
+                    if (typeof dfd === 'undefined') {
+                        reject(new Error('Danfo.js (dfd) library is not available.'));
+                        return;
+                    }
+                    const df = new dfd.DataFrame(results.data);
+                    this.log(`Converted to Danfo.js DataFrame for VAR "${this.activeVariableName}". Shape: (${df.shape[0]}, ${df.shape[1]})`);
+                    resolve(df); // Resolve with the DataFrame
                 },
                 error: (err) => {
                     this.log(`PapaParse error for VAR "${this.activeVariableName}": ${err.message}`);
@@ -162,20 +165,31 @@ export class Interpreter {
         });
     }
 
-    handleKeepColumns(args, currentDataset) {
-        if (!currentDataset) throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply KEEP_COLUMNS.`);
+    handleKeepColumns(args, currentDataset) { // currentDataset is now a Danfo.js DataFrame
+        // No need to check `!currentDataset` here as it's checked before calling in executeCommand
         const { columns } = args;
-        if (!Array.isArray(columns)) throw new Error(`Invalid columns argument for KEEP_COLUMNS in VAR "${this.activeVariableName}".`);
+        if (!Array.isArray(columns)) {
+            throw new Error(`Invalid columns argument for KEEP_COLUMNS in VAR "${this.activeVariableName}".`);
+        }
 
-        const newDataset = currentDataset.map(row => {
-            const newRow = {};
-            columns.forEach(colName => {
-                const actualColName = Object.keys(row).find(key => key.toLowerCase() === colName.toLowerCase()) || colName;
-                if (row.hasOwnProperty(actualColName)) newRow[colName] = row[actualColName];
-            });
-            return newRow;
-        });
-        this.log(`Kept columns: ${columns.join(', ')} for VAR "${this.activeVariableName}". Rows: ${newDataset.length}.`);
+        // Danfo.js is case-sensitive. Find actual column names matching requested ones (case-insensitive)
+        // This is a common pattern if user input for column names might not match case exactly.
+        const dfColumns = currentDataset.columns;
+        const columnsToKeep = columns.map(requestedCol => {
+            const foundCol = dfColumns.find(dfCol => dfCol.toLowerCase() === requestedCol.toLowerCase());
+            if (!foundCol) {
+                this.log(`Warning: Column "${requestedCol}" not found in DataFrame for VAR "${this.activeVariableName}". Available columns: ${dfColumns.join(', ')}`);
+            }
+            return foundCol || requestedCol; // Keep original if not found to let Danfo.js handle the error or non-selection
+        }).filter(col => dfColumns.includes(col)); // Only keep columns that actually exist to avoid errors
+
+        if (columnsToKeep.length === 0 && columns.length > 0) {
+             throw new Error(`None of the specified columns for KEEP_COLUMNS were found in VAR "${this.activeVariableName}". Requested: ${columns.join(', ')}. Available: ${dfColumns.join(', ')}`);
+        }
+
+
+        const newDataset = currentDataset.loc({ columns: columnsToKeep });
+        this.log(`Kept columns: ${columnsToKeep.join(', ')} for VAR "${this.activeVariableName}". New shape: (${newDataset.shape[0]}, ${newDataset.shape[1]}).`);
         return newDataset;
     }
 }

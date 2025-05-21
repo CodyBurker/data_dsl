@@ -29,9 +29,9 @@ Mission: To provide a simple and intuitive way to manipulate tabular data in the
 **ADHD Strategy:** Lean into hyperfocus on getting the first end-to-end flow working. Keep it simple.
 
 1.  **Data Engine (Foundation First):**
-    * [ ] **Integrate a DataFrame Library:** Switch to Danfo.js or DataFrame.js for robust data manipulation. (High Priority)
+    * [X] **Integrate a DataFrame Library:** Switch to Danfo.js or DataFrame.js for robust data manipulation. (High Priority)
 2.  **I/O (Getting Data In & Out):**
-    * [ ] **LOAD_CSV (Better):** Implement `LOAD_CSV` using PapaParse.
+    * [X] **LOAD_CSV (Better):** Implement `LOAD_CSV` using PapaParse.
     * [ ] **Save to CSV:** Implement basic functionality to download the transformed data as a CSV.
 3.  **Transformations (The "VLOOKUP" Core):**
     * [ ] **SELECT:** Implement function to select specific columns.

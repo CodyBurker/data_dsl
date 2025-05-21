@@ -25,6 +25,9 @@ function queryElements() {
 
 
 function escapeHtml(unsafe) {
+    if (typeof unsafe !== 'string') {
+        unsafe = String(unsafe);
+    }
     return unsafe
          .replace(/&/g, "&amp;")
          .replace(/</g, "&lt;")
@@ -98,29 +101,23 @@ export function applySyntaxHighlighting(text, activePeekLine = null) {
 
 
 function generatePeekHtmlForDisplay(datasetToPeek, varName, line) {
-    let outputHTML = `<h3 class="text-md font-semibold mb-2 text-gray-100">Data for: ${varName || 'Current Context'} (PEEK at Line ${line})</h3>`;
+    let outputHTML = `<h3 class="text-md font-semibold mb-2 text-gray-100">Data for: VAR "${varName || 'Current Context'}" (PEEK at Line ${line})</h3>`;
 
     if (!datasetToPeek) {
         outputHTML += '<p class="text-gray-400">No dataset loaded to PEEK.</p>';
-    } else {
-        const peekRowCount = 10;
-        const dataToDisplay = datasetToPeek.slice(0, peekRowCount);
+        return outputHTML;
+    }
 
-        if (dataToDisplay.length === 0) {
-            outputHTML += '<p class="text-gray-400">Dataset is empty.</p>';
-        } else {
+    if (!(datasetToPeek instanceof dfd.DataFrame)) {
+        outputHTML += `<p class="text-gray-400">PEEKed data is not a DataFrame (Type: ${typeof datasetToPeek}). Preview may be limited.</p>`;
+        // Attempt a basic preview for non-DataFrame array of objects
+        if (Array.isArray(datasetToPeek) && datasetToPeek.length > 0 && typeof datasetToPeek[0] === 'object') {
+            const peekRowCount = 10;
+            const dataToDisplay = datasetToPeek.slice(0, peekRowCount);
+            const headers = Object.keys(dataToDisplay[0]);
             let tableHtml = '<table><thead><tr>';
-            const allKeys = new Set();
-            // Ensure allKeys come from the original dataset if it was larger, or the slice.
-            // If datasetToPeek is the full dataset, this is fine. If it's already sliced,
-            // and we want headers from the *original* dataset, this logic might need adjustment
-            // based on what `datasetToPeek` represents. Assuming it's the full dataset here.
-            datasetToPeek.forEach(r => Object.keys(r).forEach(k => allKeys.add(k)));
-            const headers = Array.from(allKeys);
-
             headers.forEach(header => tableHtml += `<th>${escapeHtml(String(header))}</th>`);
             tableHtml += '</tr></thead><tbody>';
-
             dataToDisplay.forEach(row => {
                 tableHtml += '<tr>';
                 headers.forEach(header => {
@@ -130,10 +127,46 @@ function generatePeekHtmlForDisplay(datasetToPeek, varName, line) {
                 tableHtml += '</tr>';
             });
             tableHtml += `</tbody></table>`;
-            if (datasetToPeek.length > peekRowCount) {
-                tableHtml += `<p class="text-xs text-gray-400 mt-2">Showing first ${peekRowCount} of ${datasetToPeek.length} rows. Total columns: ${headers.length}.</p>`;
+             if (datasetToPeek.length > peekRowCount) {
+                tableHtml += `<p class="text-xs text-gray-400 mt-2">Showing first ${peekRowCount} of ${datasetToPeek.length} rows (basic preview).</p>`;
             } else {
-                tableHtml += `<p class="text-xs text-gray-400 mt-2">Showing all ${datasetToPeek.length} rows. Total columns: ${headers.length}.</p>`;
+                tableHtml += `<p class="text-xs text-gray-400 mt-2">Showing all ${datasetToPeek.length} rows (basic preview).</p>`;
+            }
+            outputHTML += tableHtml;
+        } else {
+            outputHTML += `<pre class="text-gray-400">${escapeHtml(JSON.stringify(datasetToPeek, null, 2))}</pre>`;
+        }
+        return outputHTML;
+    }
+    
+    if (datasetToPeek.count() === 0) {
+        outputHTML += '<p class="text-gray-400">DataFrame is empty.</p>';
+    } else {
+        const peekRowCount = 10;
+        const headers = datasetToPeek.columns;
+        // Use dfd.toJSON to convert the head of the DataFrame for easier HTML table generation
+        const dataToDisplay = dfd.toJSON(datasetToPeek.head(peekRowCount)); // Returns array of objects
+
+        if (dataToDisplay.length === 0) { // Should not happen if df.isEmpty() was false, but good check
+            outputHTML += '<p class="text-gray-400">DataFrame has columns but no rows to display.</p>';
+        } else {
+            let tableHtml = '<table><thead><tr>';
+            headers.forEach(header => tableHtml += `<th>${escapeHtml(String(header))}</th>`);
+            tableHtml += '</tr></thead><tbody>';
+
+            dataToDisplay.forEach(rowObject => { // rowObject is an object like {col1: val1, col2: val2}
+                tableHtml += '<tr>';
+                headers.forEach(header => {
+                    const value = rowObject[header];
+                    tableHtml += `<td>${value === null || value === undefined ? '' : escapeHtml(String(value))}</td>`;
+                });
+                tableHtml += '</tr>';
+            });
+            tableHtml += `</tbody></table>`;
+            if (datasetToPeek.shape[0] > peekRowCount) {
+                tableHtml += `<p class="text-xs text-gray-400 mt-2">Showing first ${peekRowCount} of ${datasetToPeek.shape[0]} rows. Total columns: ${headers.length}.</p>`;
+            } else {
+                tableHtml += `<p class="text-xs text-gray-400 mt-2">Showing all ${datasetToPeek.shape[0]} rows. Total columns: ${headers.length}.</p>`;
             }
             outputHTML += tableHtml;
         }
@@ -167,7 +200,8 @@ function renderPeekOutputsUI() {
         const contentDiv = document.createElement('div');
         contentDiv.id = peekData.id;
         contentDiv.classList.add('peek-content');
-        contentDiv.innerHTML = generatePeekHtmlForDisplay(peekData.dataset, peekData.varName, peekData.line); // Use the stored dataset
+        // Pass the raw dataset (which should be a DataFrame or other structure)
+        contentDiv.innerHTML = generatePeekHtmlForDisplay(peekData.dataset, peekData.varName, peekData.line); 
 
         elements.peekTabsContainerEl.appendChild(tabButton);
         elements.peekOutputsDisplayAreaEl.appendChild(contentDiv);
@@ -243,20 +277,8 @@ THEN
     # Load CSV data into the "citiesData" variable
     LOAD_CSV FILE "cities.csv"
 THEN
-    PEEK  # Shows the content of "citiesData"
-THEN
-    KEEP_COLUMNS "City", "Population"
-    # Note: Column names are case-sensitive based on your CSV!
-THEN
     PEEK # Shows modified "citiesData"
 
-# Add more lines to test scrolling
-# Line
-# Line
-# Line
-# Line
-# Line
-# Line
 VAR "anotherVar"
 THEN
     LOAD_CSV FILE "another.csv"
@@ -273,7 +295,7 @@ THEN
 # Line
 # Line
 THEN
-    PEEK # Another PEEK even later
+    PEEK # Should show the same data as the PEEK above
 `;
     if (elements.inputArea) {
         elements.inputArea.value = defaultScript;
@@ -318,12 +340,11 @@ THEN
         elements.astOutputArea.classList.remove('error-box');
         elements.astOutputArea.textContent = 'Parsing...';
         
-        // Clear previous logs and peek UI before running interpreter, but preserve interpreter's internal peekOutputs for now
         if (elements.logOutputEl) elements.logOutputEl.innerHTML = 'Logs will appear here...<br>';
         if (elements.peekTabsContainerEl) elements.peekTabsContainerEl.innerHTML = '';
         if (elements.peekOutputsDisplayAreaEl) elements.peekOutputsDisplayAreaEl.innerHTML = '<div class="output-box-placeholder">Peek results will appear here when a script is run.</div>';
         clearEditorPeekHighlight();
-        uiInterpreterInstance.clearInternalState(); // Crucially, clear interpreter's old data
+        uiInterpreterInstance.clearInternalState(); 
 
         try {
             const tokensForParser = tokenizeForParser(script);
@@ -331,7 +352,7 @@ THEN
             const ast = parser.parse();
             elements.astOutputArea.textContent = JSON.stringify(ast, null, 2);
 
-            await uiInterpreterInstance.run(ast); // Interpreter updates its own peekOutputs
+            await uiInterpreterInstance.run(ast); 
 
         } catch (e) {
             elements.astOutputArea.classList.add('error-box');
@@ -341,7 +362,7 @@ THEN
             uiInterpreterInstance.log(`Error during parsing or execution: ${errorMessage}`);
             console.error("Full error object:", e);
         } finally {
-            renderPeekOutputsUI(); // Always render peek outputs based on interpreter's state
+            renderPeekOutputsUI(); 
         }
     });
 
