@@ -17,12 +17,10 @@ export const KEYWORDS = [
 
 export const OPERATORS_REGEX = /^(\*|\+|\-|\/|==|!=|>=|<=|>|<)/;
 export const CONDITION_OPERATORS = ['IS', '!=', '>', '<', '>=', '<=', 'CONTAINS', 'STARTSWITH', 'ENDSWITH'];
-
+export const getLineNumber = (subInput, subCursor) => (subInput.substring(0, subCursor).match(/\n/g) || []).length + 1;
 export function tokenizeForHighlighting(input) {
     const tokens = [];
     let cursor = 0;
-    const getLineNumber = (subInput, subCursor) => (subInput.substring(0, subCursor).match(/\n/g) || []).length + 1;
-
     while (cursor < input.length) {
         let char = input[cursor];
         let currentTokenValue = '';
@@ -111,7 +109,6 @@ export function tokenizeForHighlighting(input) {
 export function tokenizeForParser(input) {
     const tokens = [];
     let cursor = 0;
-    const getLineNumber = (subInput, subCursor) => (subInput.substring(0, subCursor).match(/\n/g) || []).length + 1;
 
     while (cursor < input.length) {
         let char = input[cursor];
