@@ -4,76 +4,124 @@ PipeData is a domain-specific language (DSL) designed for simple, scriptable dat
 
 Mission: To provide a simple and intuitive way to manipulate tabular data in the browser, making data processing accessible to everyone.
 
-## Todo
 
-Un-prioritized list of features and improvements to be made to PipeData.
+# PipeData Development Roadmap
 
-### Data engine
+## Guiding Principles for Development (Especially for a Solo ADHD Developer)
 
-- More robust (preferable existing) dataframe library (e.g., Danfo.js, DataFrame.js) for better performance and features.
-- Dynamically run script (clicking RUN every time is not ideal)
-- Build DAG of operations to visualize the pipeline
-- Cache intermediate results based on the DAG to make realtime updates possible
+* **Short Iterations & Visible Progress:** Each phase aims to deliver tangible results quickly.
+* **Focus on Core Value:** Prioritize features that directly address the goal of replacing spreadsheet vlookups and similar tasks.
+* **Flexibility:** This roadmap is a guide, not a rigid constraint. Pivots are okay based on engagement and emerging priorities.
+* **Leverage Existing Tools:** Use libraries like DataFrame.js/Danfo.js and PapaParse to reduce boilerplate and focus on unique features.
+* **Quick Wins & Feedback Loops:** Emphasize features that provide immediate visual feedback.
 
-### I/O
+---
 
-- LOAD_CSV - Use papa instead of native
-- LOAD_JSON
-- LOAD_EXCEL
-- Save to CSV
-- Save to Excel
-- Cache inputs or be able to give filepath so scripts can be rerun?
-- Save/Load scripts
-- Add support for other file formats (e.g., Parquet, Avro, etc.)
+## 🎯 Phase 1: The "It Works!" Core
 
-### Transformations
+**Goal:** Get basic vlookup-like functionality working ASAP. A user can load two CSVs, join them, select columns, and see the result.
 
-- FILTER - Function to filter rows. Develop syntax for filtering rows based on conditions.
-- SELECT - Function to select specific columns from the data.
-- DROP - Function to drop specific columns from the data.
-- GROUP_BY - Function to group data by specific columns and perform aggregations.
-- JOIN - Function to join two datasets based on a common key.
-- SORT - Function to sort data based on specific columns.
-- AGGREGATE - Function to perform aggregations on grouped data.
-- WITH_COLUMN - Function to create new columns based on existing ones.
-- RENAME - Function to rename columns in the dataset.
-- DISTINCT - Function to remove duplicate rows from the dataset.
-- PIVOT - Function to pivot data based on specific columns.
-- UNPIVOT - Function to unpivot data based on specific columns.
-- FILL - Function to fill missing values in the dataset.
+**ADHD Strategy:** Lean into hyperfocus on getting the first end-to-end flow working. Keep it simple.
 
-### WITH_COLUMN features
+1.  **Data Engine (Foundation First):**
+    * [ ] **Integrate a DataFrame Library:** Switch to Danfo.js or DataFrame.js for robust data manipulation. (High Priority)
+2.  **I/O (Getting Data In & Out):**
+    * [ ] **LOAD_CSV (Better):** Implement `LOAD_CSV` using PapaParse.
+    * [ ] **Save to CSV:** Implement basic functionality to download the transformed data as a CSV.
+3.  **Transformations (The "VLOOKUP" Core):**
+    * [ ] **SELECT:** Implement function to select specific columns.
+    * [ ] **JOIN (Inner Join):** Implement function to perform an inner join on two datasets based on a common key.
+4.  **UI Features (Minimal Viable Preview):**
+    * [ ] **Basic Script Input Area:** Simple textarea for script input.
+    * [ ] **"Run" Button:** Manual trigger for script execution.
+    * [ ] **Simple Tabular Preview:** Display the *final* output in a basic HTML table (replaces 'PEEK').
 
-Syntax needed for creating new columns based on existing ones to handle basic transformations:
+---
 
-- Arithmetic operations (addition, subtraction, multiplication, division)
-- String operations (concatenation, substring, etc.)
-- Date operations (date formatting, date difference, etc.)
-- Conditional operations (if-else statements, case statements)
-- Data type conversions (casting columns to different types)
+## 🚀 Phase 2: Enhancing the Experience & Core Operations
 
-### Aggregation functions
+**Goal:** Make the tool more usable, add more common spreadsheet operations, and improve responsiveness.
 
-Functions to perform aggregations on grouped data:
+**ADHD Strategy:** Mix UI tasks with backend tasks. Allow for task switching if needed.
 
-- SUM - Sum of a numeric column.
-- AVG - Average of a numeric column.
-- COUNT - Count of rows
-- COUNT_DISTINCT - Count of distinct values in a column.
-- MIN - Minimum value of a numeric column.
-- MAX - Maximum value of a numeric column.
-- MEDIAN - Median value of a numeric column.
-- MODE - Mode value of a column.
-- STDDEV - Standard deviation of a numeric column.
-- VARIANCE - Variance of a numeric column.
-- FIRST - First value of a column.
-- LAST - Last value of a column.
-- CONCAT - Concatenate values from multiple rows into a single string.
+1.  **Data Engine (Smarter Execution):**
+    * [ ] **Cache Inputs:** Allow re-running scripts without re-uploading files (e.g., session-based cache or allow local file paths if feasible securely).
+2.  **I/O (More Formats & Script Management):**
+    * [ ] **LOAD\_JSON:** Implement loading data from JSON files.
+    * [ ] **Save/Load Scripts:** Allow users to save and load their PipeData scripts (e.g., using localStorage or file download/upload).
+3.  **Transformations (Expanding the Toolkit):**
+    * [ ] **FILTER:** Develop syntax and implement row filtering based on conditions.
+    * [ ] **DROP:** Implement function to drop specified columns.
+    * [ ] **WITH\_COLUMN (Basic):**
+        * [ ] Implement arithmetic operations (e.g., `new_col = col1 + col2`).
+        * [ ] Implement basic string operations (e.g., `new_col = concat(col1, " ", col2)`).
+4.  **UI Features (Better Feedback):**
+    * [ ] **Clearer Error Messages:** Improve feedback for script errors.
+    * [ ] **Data Preview Enhancement:** Consider options for previewing data after each step (if performance allows without caching) or ensure final preview is robust.
 
-### UI Features
+---
 
-- Add a preview of the data after each step? Replace 'PEEK' with auto-preview
-- Add a way to visualize the data (e.g., charts, graphs) after transformations.
-- Add a way to visualize the pipeline (e.g., DAG, flowchart)
-- Manage multiple inputs
-- Realtime updates to the data preview as the script is being written (wait until user is finished typing or their script is valid enough to be run)
+## ✨ Phase 3: Power & Polish
+
+**Goal:** Make the tool significantly more powerful with advanced transformations, a more dynamic UI, and performance optimizations.
+
+**ADHD Strategy:** Focus on intellectually stimulating features (like DAGs) or visually rewarding UI enhancements.
+
+1.  **Data Engine (Performance & Insight):**
+    * [ ] **Build DAG of Operations:** Internally represent the script as a Directed Acyclic Graph.
+    * [ ] **Cache Intermediate Results:** Use the DAG to cache results of intermediate steps for faster re-runs and dynamic updates.
+    * [ ] **Dynamically Run Script:** Explore running the script automatically (e.g., on pause after typing, or when script is valid) leveraging the cached results.
+2.  **I/O (Wider Compatibility):**
+    * [ ] **LOAD\_EXCEL:** Implement loading data from Excel files (e.g., using SheetJS for .xlsx).
+    * [ ] **Save to Excel:** Implement saving data to Excel format.
+3.  **Transformations (More Analytic Power):**
+    * [ ] **GROUP\_BY:** Implement grouping functionality.
+    * [ ] **AGGREGATE:** Implement core aggregation functions (`SUM`, `AVG`, `COUNT`, `MIN`, `MAX`) for grouped data.
+    * [ ] **SORT:** Implement data sorting based on column values.
+    * [ ] **WITH\_COLUMN (Enhanced):**
+        * [ ] Date operations (e.g., basic formatting).
+        * [ ] Conditional operations (e.g., simple if/else).
+        * [ ] Data type conversions.
+4.  **UI Features (Richer Interaction):**
+    * [ ] **Visualize Pipeline (DAG):** Display the DAG to the user.
+    * [ ] **Manage Multiple Inputs:** Create a UI to list and manage loaded files/datasets.
+    * [ ] **Preview Data After Each Step:** With caching, implement a reliable preview of the data after each transformation step.
+
+---
+
+## 🌟 Phase 4: Advanced Features & Broader Appeal
+
+**Goal:** Add sophisticated data operations and user-friendly features for complex scenarios, making PipeData a comprehensive tool.
+
+**ADHD Strategy:** Tackle larger features one at a time. Switch tasks if motivation wanes, but ensure completion.
+
+1.  **Transformations (Sophisticated Manipulations):**
+    * [ ] **RENAME:** Implement column renaming.
+    * [ ] **DISTINCT:** Implement removal of duplicate rows.
+    * [ ] **FILL:** Implement functions to fill missing values.
+    * [ ] **More Aggregation Functions:** Add `COUNT_DISTINCT`, `MEDIAN`, `MODE`, `STDDEV`, `VARIANCE`, `FIRST`, `LAST`, `CONCAT` (group concat).
+    * [ ] **PIVOT:** Implement data pivoting.
+    * [ ] **UNPIVOT:** Implement data unpivoting.
+2.  **I/O (Professional Grade):**
+    * [ ] **Support for Parquet/Avro:** Add support for these formats (lower priority unless specific demand).
+3.  **UI Features (Data Exploration & Presentation):**
+    * [ ] **Data Visualization:** Integrate a simple charting library (e.g., Chart.js) to create basic charts/graphs from data at any pipeline stage.
+    * [ ] **Realtime Updates (Full):** Refine dynamic script execution for seamless, real-time updates to the data preview as the script is written (with debouncing).
+
+---
+
+## General ADHD Developer Survival Tips for This Project:
+
+* **Break It Down Religiously:** Further break down each roadmap item into the smallest actionable tasks.
+* **Timeboxing/Pomodoro:** Work in focused bursts with short breaks.
+* **"Done" List:** Keep a visible list of accomplishments for motivation.
+* **Embrace Novelty (Strategically):** Switch tasks if bored, but ensure critical path items are completed.
+* **Externalize Motivation:** Share progress with others.
+* **Visual Reminders:** Keep the roadmap and current goals visible.
+* **Reduce Friction:** Make the first step of any task incredibly easy.
+* **Automate Repetitive Tasks:** Script build/test processes if possible.
+* **Be Kind to Yourself:** Forgive "off" days.
+* **Prioritize Well-being:** Sleep, exercise, and breaks are crucial.
+* **Celebrate Milestones:** Acknowledge and reward progress.
+
+This roadmap will evolve. The key is consistent, focused effort on manageable chunks. Good luck!
