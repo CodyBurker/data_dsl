@@ -1,0 +1,107 @@
+
+        body { font-family: 'Inter', sans-serif; }
+        .output-box {
+            background-color: #1f2937; /* Tailwind gray-800 */
+            color: #d1d5db; /* Tailwind gray-300 */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            min-height: 150px;
+        }
+        .error-box {
+            background-color: #fee2e2; /* Tailwind red-100 */
+            color: #b91c1c; /* Tailwind red-700 */
+            border: 1px solid #f87171; /* Tailwind red-400 */
+        }
+        #peekOutputContainer table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.875rem;
+            color: #374151; /* gray-700 */
+        }
+        #peekOutputContainer th, #peekOutputContainer td {
+            border: 1px solid #d1d5db; /* gray-300 */
+            padding: 8px;
+            text-align: left;
+        }
+        #peekOutputContainer th {
+            background-color: #f3f4f6; /* gray-100 */
+            font-weight: bold;
+        }
+        #logOutput {
+            background-color: #e5e7eb; /* gray-200 */
+            color: #4b5563; /* gray-600 */
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            min-height: 100px;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+        .file-input-container {
+            padding: 1rem;
+            background-color: #f9fafb; /* gray-50 */
+            border: 2px dashed #d1d5db; /* gray-300 */
+            border-radius: 0.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        /* Styles for Syntax Highlighting */
+        .code-editor-container {
+            position: relative;
+            width: 100%;
+            height: auto; 
+        }
+
+        #pipeDataInput, #highlightingOverlay {
+            margin: 0;
+            padding: 0.75rem; 
+            border: 1px solid #d1d5db; 
+            border-radius: 0.5rem; 
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.875rem; 
+            line-height: 1.5; 
+            box-sizing: border-box;
+            width: 100%;
+            min-height: 240px; 
+            overflow: auto;
+            white-space: pre; 
+            word-wrap: normal; 
+        }
+
+        #pipeDataInput {
+            position: relative; /* Changed from absolute to relative for stacking context */
+            z-index: 1;
+            color: transparent; 
+            background-color: transparent; 
+            caret-color: #4f46e5; 
+            resize: vertical; 
+            /* Ensure border is visually identical to overlay's if it were visible */
+             border: 1px solid #d1d5db; /* Explicitly match overlay's border for box model consistency */
+        }
+
+        #highlightingOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0; 
+            pointer-events: none; 
+            overflow: hidden; 
+            color: #374151; 
+            /* Ensure border is identical to textarea's for box model consistency */
+            border: 1px solid #d1d5db; 
+        }
+        
+        /* Token Styles */
+        .token-keyword { color: #be185d; font-weight: bold; } 
+        .token-string_literal { color: #059669; } 
+        .token-number_literal { color: #2563eb; } 
+        .token-comment { color: #6b7280; font-style: italic; } 
+        .token-operator { color: #ca8a04; } 
+        .token-identifier { color: #1d4ed8; } 
+        .token-punctuation { color: #374151; } 
+
+    
