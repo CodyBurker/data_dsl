@@ -7,7 +7,7 @@ body { font-family: 'Inter', sans-serif; }
             overflow-x: auto;
             white-space: pre-wrap;
             word-wrap: break-word;
-            min-height: 150px;
+            min-height: 150px; /* Default min-height */
         }
         .error-box {
             background-color: #fee2e2; /* Tailwind red-100 */
@@ -30,12 +30,13 @@ body { font-family: 'Inter', sans-serif; }
             background-color: #f3f4f6; /* gray-100 */
             font-weight: bold;
         }
+        /* Adjusted LogOutput to be less prominent initially */
         #logOutput {
-            background-color: #e5e7eb; /* gray-200 */
-            color: #4b5563; /* gray-600 */
+            /* background-color: #e5e7eb; /* gray-200 */ /* Using default output-box style for consistency when visible */
+            /* color: #4b5563; /* gray-600 */
             padding: 0.75rem;
-            border-radius: 0.5rem;
-            min-height: 100px;
+            /* border-radius: 0.5rem; */ /* Handled by output-box */
+            min-height: 100px; /* Can be smaller as it's collapsible */
             font-family: monospace;
             font-size: 0.8rem;
         }
@@ -67,7 +68,7 @@ body { font-family: 'Inter', sans-serif; }
             line-height: 1.5; 
             box-sizing: border-box;
             width: 100%;
-            min-height: 240px; 
+            /* min-height: 240px; /* Default height, will be overridden by .editor-prominent */
             overflow: auto; 
             white-space: pre; 
             word-wrap: normal; 
@@ -108,15 +109,55 @@ body { font-family: 'Inter', sans-serif; }
 
         /* Styles for VAR blocks */
         .var-block {
-            display: block; /* Ensures each block is on its own 'line' if needed, respects internal newlines */
+            display: block;
             padding-top: 0.1em;
             padding-bottom: 0.1em;
-            /* margin-bottom: 0.25em; /* Optional: space between var blocks if not separated by empty lines */
-            border-radius: 8px; /* Subtle rounded corners for the background */
-            /* Ensure direct children (like spans from highlighting) don't break out if they are inline */
-            
+            border-radius: 8px; 
         }
-        .var-block-bg-1 { background-color: rgba(183, 197, 226, 0.4); } /* Lighter Tailwind gray-200 */
-        .var-block-bg-2 { background-color: rgba(139, 199, 255, 0.4); } /* Lighter blue */
-        .var-block-bg-3 { background-color: rgba(222, 255, 222, 0.4); } /* Lighter green */
-        .var-block-bg-4 { background-color: rgba(255, 240, 222, 0.4); } /* Lighter orange */
+        .var-block-bg-1 { background-color: rgba(183, 197, 226, 0.4); }
+        .var-block-bg-2 { background-color: rgba(139, 199, 255, 0.4); }
+        .var-block-bg-3 { background-color: rgba(222, 255, 222, 0.4); }
+        .var-block-bg-4 { background-color: rgba(255, 240, 222, 0.4); }
+
+        /* New styles for prominence and collapsibility */
+        .editor-prominent #pipeDataInput, .editor-prominent #highlightingOverlay {
+            min-height: 350px; /* Increased height for the editor */
+        }
+
+        .peek-prominent {
+            min-height: 300px; /* Increased height for PEEK output */
+            /* You can add more distinct styling here if needed, like a different border */
+        }
+
+        /* Styles for HTML <details> and <summary> to make them collapsible sections */
+        .output-collapsible summary::-webkit-details-marker {
+            display: none; /* Hide default disclosure triangle in WebKit */
+        }
+
+        .output-collapsible summary {
+            list-style: none; /* Hide default disclosure triangle in Firefox */
+            position: relative;
+            padding-left: 1.8rem; /* Space for custom arrow */
+        }
+        
+        .output-collapsible summary::before {
+            content: '►'; /* Collapsed state arrow */
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%) rotate(0deg);
+            transition: transform 0.2s ease-in-out;
+            font-size: 0.8em;
+        }
+
+        .output-collapsible[open] > summary::before {
+            transform: translateY(-50%) rotate(90deg); /* Expanded state arrow */
+        }
+        
+        .output-box-collapsible-content {
+            border-top: 1px solid #d1d5db; /* Separator line */
+            border-radius: 0 0 0.5rem 0.5rem; /* Rounded bottom corners */
+            /* Keep the dark background for the content */
+            background-color: #1f2937; 
+            color: #d1d5db;
+        }
