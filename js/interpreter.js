@@ -138,26 +138,27 @@ export class Interpreter {
         const file = await this.requestCsvFile(args.file, this.activeVariableName);
 
         return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                try {
-                    this.log(`Using native CSV parser for VAR "${this.activeVariableName}".`);
-                    const results = await this.nativeParseCsv(event.target.result);
+            this.log(`Using PapaParse for CSV parsing for VAR "${this.activeVariableName}".`);
+            if (typeof Papa === 'undefined') {
+                this.log('PapaParse library is not loaded.');
+                if (this.uiElements.fileInputContainerEl) this.uiElements.fileInputContainerEl.classList.add('hidden');
+                reject(new Error('PapaParse library is not available.'));
+                return;
+            }
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: (results) => {
                     this.log(`Loaded ${results.data.length} rows for VAR "${this.activeVariableName}" from ${file.name}. Headers: ${results.meta.fields ? results.meta.fields.join(', ') : 'N/A'}`);
                     if (this.uiElements.fileInputContainerEl) this.uiElements.fileInputContainerEl.classList.add('hidden');
                     resolve(results.data);
-                } catch (err) {
-                    this.log(`Native CSV parsing error for VAR "${this.activeVariableName}": ${err.message}`);
+                },
+                error: (err) => {
+                    this.log(`PapaParse error for VAR "${this.activeVariableName}": ${err.message}`);
                     if (this.uiElements.fileInputContainerEl) this.uiElements.fileInputContainerEl.classList.add('hidden');
                     reject(err);
                 }
-            };
-            reader.onerror = (err) => {
-                this.log(`FileReader error for VAR "${this.activeVariableName}": ${err.message}`);
-                if (this.uiElements.fileInputContainerEl) this.uiElements.fileInputContainerEl.classList.add('hidden');
-                reject(err);
-            };
-            reader.readAsText(file);
+            });
         });
     }
 
