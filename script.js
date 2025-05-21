@@ -527,6 +527,8 @@
             }
         }
 
+        // In script.js
+
         // --- Syntax Highlighting Logic ---
         function escapeHtml(unsafe) {
             return unsafe
@@ -555,8 +557,14 @@
                     default: html += escapedValue; 
                 }
             });
-            return html;
+            // Add an extra newline to the end of the highlighted content.
+            // This helps ensure the overlay's scrollable height better matches the textarea's,
+            // especially for the last line and when scrolling to the very bottom.
+            return html + '\n\n'; 
         }
+
+
+        // ... rest of your script.js ...
 
 
         // --- Main ---
@@ -592,6 +600,8 @@ THEN
                 highlightingOverlay.innerHTML = applySyntaxHighlighting(text);
                 highlightingOverlay.scrollTop = inputArea.scrollTop;
                 highlightingOverlay.scrollLeft = inputArea.scrollLeft;
+                // Log overlay vs input area scroll positions to debug
+                console.log(`Input Area Scroll: ${inputArea.scrollTop}, ${inputArea.scrollLeft}`);
             });
 
             inputArea.addEventListener('scroll', () => {

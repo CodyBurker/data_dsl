@@ -52,13 +52,16 @@ body { font-family: 'Inter', sans-serif; }
         .code-editor-container {
             position: relative;
             width: 100%;
-            height: auto; 
+            /* height: auto; Let content define height */
         }
 
         #pipeDataInput, #highlightingOverlay {
             margin: 0;
             padding: 0.75rem; 
-            border: 1px solid #d1d5db; 
+            /* Ensure border is identical in style, width, and color for both */
+            border-width: 1px;
+            border-style: solid;
+            border-color: #d1d5db; /* Tailwind gray-300 */
             border-radius: 0.5rem; 
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
             font-size: 0.875rem; 
@@ -66,30 +69,38 @@ body { font-family: 'Inter', sans-serif; }
             box-sizing: border-box;
             width: 100%;
             min-height: 240px; 
-            overflow: auto;
+            overflow: auto; /* Textarea handles actual scrolling */
             white-space: pre; 
             word-wrap: normal; 
+            letter-spacing: normal; /* Ensure consistency */
+            word-spacing: normal;   /* Ensure consistency */
+            vertical-align: top;  /* Added for block-like alignment */
         }
 
         #pipeDataInput {
+            display: block; /* Make textarea behave more like a block element */
             position: relative; 
             z-index: 1;
             color: transparent; 
             background-color: transparent; 
             caret-color: #4f46e5; 
             resize: vertical; 
-             border: 1px solid #d1d5db; 
         }
 
         #highlightingOverlay {
+            display: block; /* Ensure it's also block */
             position: absolute;
             top: 0;
             left: 0;
             z-index: 0; 
             pointer-events: none; 
-            overflow: hidden; 
+            overflow: hidden; /* Its scrolling is synced to the textarea */
             color: #374151; 
-            border: 1px solid #d1d5db; 
+            /* Border color for overlay should be transparent or same as background if issues persist,
+               but having it match textarea's border-color ensures box model is same.
+               If textarea's border is visually part of the design, overlay should match.
+               If textarea border is meant to be "inner", then overlay might need transparent or no border
+               and padding adjusted. For now, matching is safest for identical box calculation. */
         }
         
         /* Token Styles */
