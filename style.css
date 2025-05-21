@@ -211,3 +211,10 @@ body { font-family: 'Inter', sans-serif; }
         .peek-content.active-peek-content {
             display: block; /* Shown when active */
         }
+        .token-keyword.active-peek-line-highlight {
+            background-color: rgba(255, 223, 100, 0.6); /* A distinct yellow/orange highlight */
+            border-radius: 3px;
+            box-shadow: 0 0 5px rgba(255, 165, 0, 0.7);
+            padding: 0px 2px; /* Minimal padding to not disrupt flow too much */
+            display: inline-block; /* Ensures background and padding apply correctly */
+        }
