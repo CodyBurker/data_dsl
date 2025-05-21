@@ -1,5 +1,4 @@
-
-        body { font-family: 'Inter', sans-serif; }
+body { font-family: 'Inter', sans-serif; }
         .output-box {
             background-color: #1f2937; /* Tailwind gray-800 */
             color: #d1d5db; /* Tailwind gray-300 */
@@ -73,14 +72,13 @@
         }
 
         #pipeDataInput {
-            position: relative; /* Changed from absolute to relative for stacking context */
+            position: relative; 
             z-index: 1;
             color: transparent; 
             background-color: transparent; 
             caret-color: #4f46e5; 
             resize: vertical; 
-            /* Ensure border is visually identical to overlay's if it were visible */
-             border: 1px solid #d1d5db; /* Explicitly match overlay's border for box model consistency */
+             border: 1px solid #d1d5db; 
         }
 
         #highlightingOverlay {
@@ -91,7 +89,6 @@
             pointer-events: none; 
             overflow: hidden; 
             color: #374151; 
-            /* Ensure border is identical to textarea's for box model consistency */
             border: 1px solid #d1d5db; 
         }
         
@@ -102,6 +99,4 @@
         .token-comment { color: #6b7280; font-style: italic; } 
         .token-operator { color: #ca8a04; } 
         .token-identifier { color: #1d4ed8; } 
-        .token-punctuation { color: #374151; } 
-
-    
+        .token-punctuation { color: #374151; }

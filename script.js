@@ -1,5 +1,4 @@
-
-        // --- Tokenizer (Lexer) ---
+// --- Tokenizer (Lexer) ---
         const TokenType = {
             KEYWORD: 'KEYWORD', IDENTIFIER: 'IDENTIFIER', STRING_LITERAL: 'STRING_LITERAL',
             NUMBER_LITERAL: 'NUMBER_LITERAL', OPERATOR: 'OPERATOR', PUNCTUATION: 'PUNCTUATION',
@@ -7,6 +6,7 @@
             NEWLINE: 'NEWLINE', EOF: 'EOF', WHITESPACE: 'WHITESPACE', UNKNOWN: 'UNKNOWN' 
         };
         const KEYWORDS = [
+            'VAR', 
             'LOAD_CSV', 'LOAD_EXCEL', 'THEN', 'KEEP_COLUMNS', 'DROP_COLUMNS', 'FILTER_ROWS', 'WHERE',
             'NEW_COLUMN', 'AS', 'RENAME_COLUMN', 'TO', 'SORT_BY', 'ORDER', 'STORE_AS',
             'EXPORT_CSV', 'EXPORT_EXCEL', 'SHEET', 'FILE', 'PEEK', 'AND', 'OR',
@@ -112,9 +112,14 @@
 
             while (cursor < input.length) {
                 let char = input[cursor];
-                if (/\s/.test(char) && char !== '\n') { cursor++; continue; }
+                if (/\s/.test(char) && char !== '\n') { cursor++; continue; } // Skip non-newline whitespace
                 if (char === '\n') { tokens.push({ type: TokenType.NEWLINE, value: '\n', line: getLineNumber(input, cursor) }); cursor++; continue; }
-                if (char === '#') { while (cursor < input.length && input[cursor] !== '\n') cursor++; continue; } 
+                if (char === '#') { // Skip comments entirely for the parser
+                    while (cursor < input.length && input[cursor] !== '\n') {
+                        cursor++;
+                    }
+                    continue; 
+                }
                 if (char === '"') {
                     let value = ''; cursor++;
                     while (cursor < input.length && input[cursor] !== '"') value += input[cursor++];
@@ -129,7 +134,7 @@
                 const opMatch = input.substring(cursor).match(OPERATORS_REGEX);
                 if (opMatch) {
                     const op = opMatch[0];
-                    if (!KEYWORDS.includes(op.toUpperCase())) {
+                    if (!KEYWORDS.includes(op.toUpperCase())) { // Ensure it's not a keyword like 'IS' mistaken for an operator
                         tokens.push({ type: TokenType.OPERATOR, value: op, line: getLineNumber(input, cursor) });
                         cursor += op.length; continue;
                     }
@@ -145,43 +150,132 @@
                 throw new Error(`Unexpected character: '${char}' at line ${getLineNumber(input, cursor)}`);
             }
             tokens.push({ type: TokenType.EOF, value: 'EOF', line: getLineNumber(input, cursor) });
-            return tokens.filter((t, i, arr) => t.type !== TokenType.NEWLINE || arr[i - 1]?.type !== TokenType.NEWLINE);
+            return tokens; // Removed the previous complex newline filter
         }
+
         class Parser {
-            constructor(tokens) { this.tokens = tokens; this.position = 0; this.ast = []; } 
+            constructor(tokens) { 
+                this.tokens = tokens; 
+                this.position = 0; 
+                this.ast = []; 
+            }
+            
             parse() { 
-                let currentPipeline = [];
+                this.ast = []; 
                 while (!this.isAtEnd()) {
-                     while (
-                        this.match(TokenType.NEWLINE) ||
-                        (this.peek().type === TokenType.COMMENT && this.advance())
-                    );
-                    const command = this.parseCommand();
-                    if (command) {
-                        currentPipeline.push(command);
+                    this.skipNewlines();
+                    if (this.isAtEnd()) break;
+
+                    if (this.peek().type === TokenType.KEYWORD && this.peek().value === 'VAR') {
+                        const varBlock = this.parseVarBlock();
+                        if (varBlock) {
+                            this.ast.push(varBlock);
+                        }
+                    } else {
+                        this.error("Expected 'VAR' to start a new pipeline block.");
                     }
-                    if (this.match(TokenType.KEYWORD, 'THEN')) { /* continue */ } 
-                    else if (this.isAtEnd() || (currentPipeline.length > 0 && !this.checkNextIsCommand())) {
-                        if (currentPipeline.length > 0) this.ast.push(currentPipeline);
-                        currentPipeline = [];
-                    }
-                    while(this.match(TokenType.NEWLINE));
                 }
-                if (currentPipeline.length > 0) this.ast.push(currentPipeline);
                 return this.ast;
             }
-            checkNextIsCommand() { if (this.isAtEnd()) return false; const next = this.peek(); return next.type === TokenType.KEYWORD && !['THEN', 'WHERE', 'AS', 'TO', 'ORDER', 'SHEET', 'FILE', 'IS', 'CONTAINS', 'STARTSWITH', 'ENDSWITH'].includes(next.value); }
-            parseCommand() { const t = this.peek(); if (t.type !== TokenType.KEYWORD) { if(t.type === TokenType.EOF) return null; this.error(`Expected command keyword but got ${t.type} '${t.value}'`); }
-                switch (t.value) {
-                    case 'LOAD_CSV': return this.parseLoadCsv(); case 'LOAD_EXCEL': return this.parseLoadExcel();
-                    case 'KEEP_COLUMNS': return this.parseKeepColumns(); case 'DROP_COLUMNS': return this.parseDropColumns();
-                    case 'FILTER_ROWS': return this.parseFilterRows(); case 'NEW_COLUMN': return this.parseNewColumn();
-                    case 'RENAME_COLUMN': return this.parseRenameColumn(); case 'SORT_BY': return this.parseSortBy();
-                    case 'STORE_AS': return this.parseStoreAs(); case 'EXPORT_CSV': return this.parseExportCsv();
-                    case 'EXPORT_EXCEL': return this.parseExportExcel(); case 'PEEK': return this.parsePeek();
-                    default: if(t.type === TokenType.EOF) return null; if (!['THEN', 'WHERE', 'AS', 'TO', 'ORDER', 'SHEET', 'FILE'].includes(t.value)) this.error(`Unknown command: ${t.value}`); return null;
+
+            parseVarBlock() {
+                this.consume(TokenType.KEYWORD, 'VAR');
+                const variableNameToken = this.consume(TokenType.STRING_LITERAL, undefined, "Expected variable name as string literal after VAR (e.g., \"myVar\")");
+                const variableName = variableNameToken.value;
+                
+                const commands = [];
+                this.skipNewlines(); 
+                
+                this.consume(TokenType.KEYWORD, 'THEN', `VAR "${variableName}" must be followed by 'THEN'.`);
+                this.skipNewlines(); 
+
+                // Parse the first command
+                if (this.isAtEnd() || (this.peek().type === TokenType.KEYWORD && this.peek().value === 'VAR')) {
+                    this.error(`VAR "${variableName}" THEN must be followed by at least one command.`);
+                }
+
+                let command = this.parseCommand();
+                if (command) {
+                    commands.push(command);
+                } else {
+                    // This case should ideally be caught by parseCommand if it encounters an invalid start
+                    this.error(`Expected a command after VAR "${variableName}" THEN.`);
+                }
+
+                // Loop for subsequent commands, each chained by THEN
+                while (!this.isAtEnd()) {
+                    this.skipNewlines(); // Skip newlines before a potential THEN or new VAR block
+
+                    if (this.peek().type === TokenType.KEYWORD && this.peek().value === 'THEN') {
+                        this.consume(TokenType.KEYWORD, 'THEN');
+                        this.skipNewlines(); // Skip newlines after THEN, before the next command
+
+                        // Ensure THEN is followed by a command and not end of input or another VAR
+                        if (this.isAtEnd() || (this.peek().type === TokenType.KEYWORD && this.peek().value === 'VAR')) {
+                            this.error(`'THEN' must be followed by another command within VAR "${variableName}".`);
+                        }
+                        
+                        command = this.parseCommand();
+                        if (command) {
+                            commands.push(command);
+                        } else {
+                             // parseCommand returning null here is unexpected if not EOF.
+                            this.error(`Expected a command after 'THEN' in VAR "${variableName}" block.`);
+                        }
+                    } else {
+                        // No more THEN, so this VAR block's pipeline ends.
+                        // Break if it's a new VAR block or EOF.
+                        if ((this.peek().type === TokenType.KEYWORD && this.peek().value === 'VAR') || this.isAtEnd()) {
+                           break;
+                        }
+                        // Otherwise, it's an unexpected token.
+                        this.error(`Unexpected token '${this.peek().value}' in VAR "${variableName}" block. Expected 'THEN' or start of new VAR block.`);
+                    }
+                }
+
+                // This check is a safeguard; the logic above should ideally prevent commands.length from being 0
+                // if the VAR...THEN structure was validly followed by at least one command.
+                if (commands.length === 0) {
+                    this.error(`VAR "${variableName}" processing failed to identify commands (internal check).`);
+                }
+                return { variableName: variableName, pipeline: commands };
+            }
+
+            skipNewlines() {
+                while(!this.isAtEnd() && this.peek().type === TokenType.NEWLINE) {
+                    this.advance();
                 }
             }
+            
+            parseCommand() { 
+                this.skipNewlines(); // Ensure we skip any leading newlines before a command
+                const t = this.peek(); 
+                if (t.type === TokenType.EOF) return null;
+
+                if (t.type !== TokenType.KEYWORD) { 
+                    this.error(`Expected command keyword but got ${t.type} '${t.value}'`); 
+                }
+                switch (t.value) {
+                    case 'LOAD_CSV': return this.parseLoadCsv(); 
+                    case 'LOAD_EXCEL': return this.parseLoadExcel();
+                    case 'KEEP_COLUMNS': return this.parseKeepColumns(); 
+                    case 'DROP_COLUMNS': return this.parseDropColumns();
+                    case 'FILTER_ROWS': return this.parseFilterRows(); 
+                    case 'NEW_COLUMN': return this.parseNewColumn();
+                    case 'RENAME_COLUMN': return this.parseRenameColumn(); 
+                    case 'SORT_BY': return this.parseSortBy();
+                    case 'STORE_AS': return this.parseStoreAs(); 
+                    case 'EXPORT_CSV': return this.parseExportCsv();
+                    case 'EXPORT_EXCEL': return this.parseExportExcel(); 
+                    case 'PEEK': return this.parsePeek();
+                    default: 
+                        // If it's a keyword but not a command starter (like THEN, WHERE, VAR, etc.)
+                        // this means it's an unexpected keyword at this position.
+                        this.error(`Unexpected keyword '${t.value}' found where a command was expected.`);
+                        return null; // Should not be reached due to error
+                }
+            }
+            // ... (rest of parseLoadCsv, parseKeepColumns, etc. methods remain largely the same)
             parseLoadCsv() { this.consume(TokenType.KEYWORD, 'LOAD_CSV'); this.consume(TokenType.KEYWORD, 'FILE'); const f = this.consume(TokenType.STRING_LITERAL).value; return { command: 'LOAD_CSV', args: { file: f } }; }
             parseLoadExcel() { this.consume(TokenType.KEYWORD, 'LOAD_EXCEL'); this.consume(TokenType.KEYWORD, 'FILE'); const f = this.consume(TokenType.STRING_LITERAL).value; let s = null; if (this.match(TokenType.KEYWORD, 'SHEET')) s = this.consume(TokenType.STRING_LITERAL).value; return { command: 'LOAD_EXCEL', args: { file: f, sheet: s } }; }
             parseColumnList() { const c = []; do { if (this.peek().type === TokenType.STRING_LITERAL) c.push(this.consume(TokenType.STRING_LITERAL).value); else if (this.peek().type === TokenType.IDENTIFIER) c.push(this.consume(TokenType.IDENTIFIER).value); else this.error("Expected column name (identifier or string literal)."); } while (this.match(TokenType.PUNCTUATION, ',')); return c; }
@@ -190,35 +284,44 @@
             parseFilterRows() { this.consume(TokenType.KEYWORD, 'FILTER_ROWS'); this.consume(TokenType.KEYWORD, 'WHERE'); const cond = { column: null, operator: null, value: null };
                 if (this.peek().type === TokenType.IDENTIFIER) cond.column = this.consume(TokenType.IDENTIFIER).value; else if (this.peek().type === TokenType.STRING_LITERAL) cond.column = this.consume(TokenType.STRING_LITERAL).value; else this.error("Expected column name for filter condition.");
                 const opToken = this.peek();
-                if ((opToken.type === TokenType.KEYWORD || opToken.type === TokenType.OPERATOR) && CONDITION_OPERATORS.includes(opToken.value)) cond.operator = this.advance().value;
-                else if (opToken.value === 'IS' && this.lookAhead(1)?.value === 'NOT') { this.advance(); this.advance(); cond.operator = 'IS NOT';}
+                if ((opToken.type === TokenType.KEYWORD || opToken.type === TokenType.OPERATOR) && CONDITION_OPERATORS.includes(opToken.value.toUpperCase())) cond.operator = this.advance().value.toUpperCase();
+                else if (opToken.value.toUpperCase() === 'IS' && this.lookAhead(1)?.value.toUpperCase() === 'NOT') { this.advance(); this.advance(); cond.operator = 'IS NOT';}
                 else this.error(`Expected filter operator (e.g., IS, >, CONTAINS) but got ${opToken.value}`);
                 if (this.peek().type === TokenType.STRING_LITERAL) cond.value = this.consume(TokenType.STRING_LITERAL).value; else if (this.peek().type === TokenType.NUMBER_LITERAL) cond.value = this.consume(TokenType.NUMBER_LITERAL).value; else if (this.peek().type === TokenType.IDENTIFIER) cond.value = { type: 'COLUMN_REFERENCE', name: this.consume(TokenType.IDENTIFIER).value }; else this.error("Expected value (string, number, or column identifier) for filter condition.");
                 return { command: 'FILTER_ROWS', args: { condition: cond } };
             }
-            parseExpression() { const p = []; while(!this.isAtEnd() && this.peek().type !== TokenType.NEWLINE && !['THEN', 'STORE_AS'].includes(this.peek().value) ) { const t = this.peek(); if (['IDENTIFIER', 'STRING_LITERAL', 'NUMBER_LITERAL'].includes(t.type) || (t.type === TokenType.OPERATOR && ['*', '/', '+', '-'].includes(t.value))) p.push(this.advance()); else break; } if (p.length === 0) this.error("Expected expression for NEW_COLUMN."); return p.map(i => ({ type: i.type, value: i.value })); }
+            parseExpression() { const p = []; while(!this.isAtEnd() && this.peek().type !== TokenType.NEWLINE && !['THEN', 'STORE_AS', 'VAR'].includes(this.peek().value) ) { const t = this.peek(); if (['IDENTIFIER', 'STRING_LITERAL', 'NUMBER_LITERAL'].includes(t.type) || (t.type === TokenType.OPERATOR && ['*', '/', '+', '-'].includes(t.value))) p.push(this.advance()); else break; } if (p.length === 0) this.error("Expected expression for NEW_COLUMN."); return p.map(i => ({ type: i.type, value: i.value })); }
             parseNewColumn() { this.consume(TokenType.KEYWORD, 'NEW_COLUMN'); let n; if (this.peek().type === TokenType.STRING_LITERAL) n = this.consume(TokenType.STRING_LITERAL).value; else n = this.consume(TokenType.IDENTIFIER).value; this.consume(TokenType.KEYWORD, 'AS'); const e = this.parseExpression(); return { command: 'NEW_COLUMN', args: { newColumnName: n, expression: e } }; }
             parseRenameColumn() { this.consume(TokenType.KEYWORD, 'RENAME_COLUMN'); let o; if(this.peek().type === TokenType.STRING_LITERAL) o = this.consume(TokenType.STRING_LITERAL).value; else o = this.consume(TokenType.IDENTIFIER).value; this.consume(TokenType.KEYWORD, 'TO'); let n; if(this.peek().type === TokenType.STRING_LITERAL) n = this.consume(TokenType.STRING_LITERAL).value; else n = this.consume(TokenType.IDENTIFIER).value; return { command: 'RENAME_COLUMN', args: { oldName: o, newName: n } }; }
             parseSortBy() { this.consume(TokenType.KEYWORD, 'SORT_BY'); let c; if(this.peek().type === TokenType.STRING_LITERAL) c = this.consume(TokenType.STRING_LITERAL).value; else c = this.consume(TokenType.IDENTIFIER).value; let o = 'ASC'; if (this.match(TokenType.KEYWORD, 'ORDER')) { const ot = this.consume(TokenType.STRING_LITERAL); if (['ASC', 'DESC'].includes(ot.value.toUpperCase())) o = ot.value.toUpperCase(); else this.error("Sort order must be 'ASC' or 'DESC'."); } return { command: 'SORT_BY', args: { column: c, order: o } }; }
-            parseStoreAs() { this.consume(TokenType.KEYWORD, 'STORE_AS'); const v = this.consume(TokenType.IDENTIFIER).value; return { command: 'STORE_AS', args: { variableName: v } }; }
+            parseStoreAs() { this.consume(TokenType.KEYWORD, 'STORE_AS'); const v = this.consume(TokenType.IDENTIFIER).value; return { command: 'STORE_AS', args: { variableName: v } }; } 
             parseExportCsv() { this.consume(TokenType.KEYWORD, 'EXPORT_CSV'); this.consume(TokenType.KEYWORD, 'TO'); const f = this.consume(TokenType.STRING_LITERAL).value; return { command: 'EXPORT_CSV', args: { file: f } }; }
             parseExportExcel() { this.consume(TokenType.KEYWORD, 'EXPORT_EXCEL'); this.consume(TokenType.KEYWORD, 'TO'); const f = this.consume(TokenType.STRING_LITERAL).value; let s = 'Sheet1'; if (this.match(TokenType.KEYWORD, 'SHEET')) s = this.consume(TokenType.STRING_LITERAL).value; return { command: 'EXPORT_EXCEL', args: { file: f, sheet: s } }; }
             parsePeek() { this.consume(TokenType.KEYWORD, 'PEEK'); return { command: 'PEEK', args: {} }; }
+            
             match(type, value) { if (this.isAtEnd()) return false; const t = this.peek(); if (t.type !== type) return false; if (value !== undefined && t.value !== value) return false; this.advance(); return true; }
-            consume(type, value) { const t = this.peek(); if (t.type === type && (value === undefined || t.value === value)) return this.advance(); this.error(`Expected ${type} '${value || ''}' but got ${t.type} '${t.value}' at line ${t.line}`); }
+            consume(type, value, errorMessage) { 
+                const currentToken = this.peek();
+                if (currentToken.type === type && (value === undefined || currentToken.value === value)) {
+                    return this.advance();
+                }
+                const defaultError = `Expected ${type} ${value !== undefined ? "'" + value + "'" : ''} but got ${currentToken.type} '${currentToken.value}' at line ${currentToken.line}`;
+                this.error(errorMessage || defaultError);
+            }
             peek() { return this.tokens[this.position]; }
             lookAhead(offset = 1) { if (this.position + offset >= this.tokens.length) return this.tokens[this.tokens.length - 1]; return this.tokens[this.position + offset]; }
             advance() { if (!this.isAtEnd()) this.position++; return this.previous(); }
             previous() { return this.tokens[this.position - 1]; }
             isAtEnd() { return this.position >= this.tokens.length || this.peek().type === TokenType.EOF; }
-            error(message) { const t = this.peek() || this.previous(); throw new Error(`Parse Error (Line ${t.line}): ${message}`); }
+            error(message) { const t = this.peek() || this.previous() || {line: 'Unknown', value: 'N/A'}; throw new Error(`Parse Error (Line ${t.line}, near '${t.value}'): ${message}`); }
         }
 
         // --- Interpreter ---
+        // (Interpreter class remains the same as the previous version with VAR logic)
         class Interpreter {
             constructor() {
-                this.variables = {};
-                this.currentDataset = null; 
+                this.variables = {}; 
+                this.activeVariableName = null; 
                 this.logOutputEl = document.getElementById('logOutput');
                 this.peekOutputEl = document.getElementById('peekOutputContainer');
                 this.fileInputEl = document.getElementById('csvFileInput');
@@ -228,32 +331,192 @@
             }
 
             log(message) { console.log(message); const time = new Date().toLocaleTimeString(); if (this.logOutputEl) { this.logOutputEl.innerHTML += `[${time}] ${message}<br>`; this.logOutputEl.scrollTop = this.logOutputEl.scrollHeight; } }
-            clearLogsAndPeek() { if (this.logOutputEl) this.logOutputEl.innerHTML = 'Logs will appear here...<br>'; if (this.peekOutputEl) this.peekOutputEl.innerHTML = 'Peek results will appear here...'; }
-            async requestCsvFile(fileNameHint) { this.fileInputContainerEl.classList.remove('hidden'); this.filePromptMessageEl.textContent = `Script wants to load: "${fileNameHint}". Please select the corresponding CSV file.`; this.fileInputEl.value = ''; return new Promise((resolve, reject) => { this.fileResolve = (file) => { if (file) resolve(file); else reject(new Error("File selection cancelled or no file provided.")); }; }); }
-            async run(ast) { this.log('Interpreter started.'); for (const pipeline of ast) { for (const commandNode of pipeline) { this.log(`Executing: ${commandNode.command}`); try { await this.executeCommand(commandNode); } catch (e) { const err = e instanceof Error ? e.message : JSON.stringify(e); this.log(`ERROR executing ${commandNode.command}: ${err}`); console.error(`Error for ${commandNode.command}:`, e); if (this.fileInputContainerEl) this.fileInputContainerEl.classList.add('hidden'); return; } } } this.log('Interpreter finished.'); if (this.fileInputContainerEl) this.fileInputContainerEl.classList.add('hidden'); }
-            async executeCommand(commandNode) { const { command, args } = commandNode; switch (command) { case 'LOAD_CSV': await this.handleLoadCsv(args); break; case 'KEEP_COLUMNS': this.handleKeepColumns(args); break; case 'PEEK': this.handlePeek(args); break; default: this.log(`Command ${command} is parsed but not yet implemented.`); } }
-            async nativeParseCsv(fileContent) {
-                return new Promise((resolve, reject) => {
-                    Papa.parse(fileContent, {
-                        header: true,
-                        skipEmptyLines: true,
-                        dynamicTyping: true,
-                        complete: (results) => {
-                            resolve({
-                                data: results.data,
-                                meta: { fields: results.meta.fields }
-                            });
-                        },
-                        error: (err) => {
-                            reject(err);
+            clearLogsAndPeek() { 
+                if (this.logOutputEl) this.logOutputEl.innerHTML = 'Logs will appear here...<br>'; 
+                if (this.peekOutputEl) this.peekOutputEl.innerHTML = 'Peek results will appear here...'; 
+            }
+            
+            async requestCsvFile(fileNameHint, forVariable) { 
+                this.fileInputContainerEl.classList.remove('hidden'); 
+                this.filePromptMessageEl.textContent = `Pipeline for VAR "${forVariable}": Select CSV for ${fileNameHint}.`; 
+                this.fileInputEl.value = ''; 
+                return new Promise((resolve, reject) => { 
+                    this.fileResolve = (file) => { 
+                        if (file) {
+                            resolve(file);
+                        } else {
+                            this.log(`File selection cancelled for VAR "${forVariable}".`);
+                            reject(new Error("File selection cancelled or no file provided."));
                         }
-                    });
-                });
-}
-// ...existing code...
-            async handleLoadCsv(args) { if (!this.fileInputEl) throw new Error("File input not available."); const file = await this.requestCsvFile(args.file); return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = async (event) => { try { this.log("Using native CSV parser."); const results = await this.nativeParseCsv(event.target.result); this.currentDataset = results.data; this.log(`Loaded ${this.currentDataset.length} rows from ${file.name}. Headers: ${results.meta.fields ? results.meta.fields.join(', ') : 'N/A'}`); if (this.fileInputContainerEl) this.fileInputContainerEl.classList.add('hidden'); resolve(); } catch (err) { this.log(`Native CSV parsing error: ${err.message}`); if (this.fileInputContainerEl) this.fileInputContainerEl.classList.add('hidden'); reject(err); } }; reader.onerror = (err) => { this.log(`FileReader error: ${err.message}`); if (this.fileInputContainerEl) this.fileInputContainerEl.classList.add('hidden'); reject(err); }; reader.readAsText(file); }); }
-            handleKeepColumns(args) { if (!this.currentDataset) throw new Error("No dataset for KEEP_COLUMNS."); const { columns } = args; if (!Array.isArray(columns)) throw new Error("Invalid columns for KEEP_COLUMNS."); this.currentDataset = this.currentDataset.map(row => { const newRow = {}; columns.forEach(colName => { const actualColName = Object.keys(row).find(key => key.toLowerCase() === colName.toLowerCase()) || colName; if (row.hasOwnProperty(actualColName)) newRow[colName] = row[actualColName]; }); return newRow; }); this.log(`Kept columns: ${columns.join(', ')}. Rows: ${this.currentDataset.length}.`); }
-            handlePeek(args) { if (!this.currentDataset) { if (this.peekOutputEl) this.peekOutputEl.innerHTML = '<p>No dataset to PEEK.</p>'; this.log("PEEK: No dataset."); return; } const peekCount = 10; const data = this.currentDataset.slice(0, peekCount); if (data.length === 0) { if (this.peekOutputEl) this.peekOutputEl.innerHTML = '<p>Dataset is empty.</p>'; this.log("PEEK: Dataset empty."); return; } let html = '<table><thead><tr>'; const allKeys = new Set(); this.currentDataset.forEach(r => Object.keys(r).forEach(k => allKeys.add(k))); const headers = Array.from(allKeys); headers.forEach(h => html += `<th>${String(h).replace(/</g, "&lt;").replace(/>/g, "&gt;")}</th>`); html += '</tr></thead><tbody>'; data.forEach(r => { html += '<tr>'; headers.forEach(h => { const v = r[h]; html += `<td>${v === null || v === undefined ? '' : String(v).replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>`; }); html += '</tr>'; }); html += `</tbody></table><p class="text-xs mt-2">Showing ${data.length} of ${this.currentDataset.length} rows. Columns: ${headers.length}.</p>`; if (this.peekOutputEl) this.peekOutputEl.innerHTML = html; this.log(`PEEK displayed ${data.length} rows.`); }
+                    }; 
+                }); 
+            }
+            
+            async run(ast) { 
+                this.log('Interpreter started.'); 
+                for (const varBlock of ast) { 
+                    this.activeVariableName = varBlock.variableName;
+                    this.log(`Processing block for VAR "${this.activeVariableName}"`);
+                    this.variables[this.activeVariableName] = null; 
+
+                    for (const commandNode of varBlock.pipeline) { 
+                        this.log(`Executing: ${commandNode.command} for VAR "${this.activeVariableName}"`); 
+                        try { 
+                            await this.executeCommand(commandNode); 
+                        } catch (e) { 
+                            const err = e instanceof Error ? e.message : JSON.stringify(e); 
+                            this.log(`ERROR executing ${commandNode.command} for VAR "${this.activeVariableName}": ${err}`); 
+                            console.error(`Error details for ${commandNode.command} (VAR "${this.activeVariableName}"):`, e); 
+                            if (this.fileInputContainerEl) this.fileInputContainerEl.classList.add('hidden'); 
+                            return; 
+                        } 
+                    }
+                    this.log(`Finished block for VAR "${this.activeVariableName}"`);
+                } 
+                this.log('Interpreter finished all blocks.'); 
+                this.activeVariableName = null; 
+                if (this.fileInputContainerEl) this.fileInputContainerEl.classList.add('hidden'); 
+            }
+            
+            async executeCommand(commandNode) { 
+                const { command, args } = commandNode; 
+                switch (command) { 
+                    case 'LOAD_CSV': 
+                        this.variables[this.activeVariableName] = await this.handleLoadCsv(args); 
+                        break; 
+                    case 'KEEP_COLUMNS': 
+                        this.variables[this.activeVariableName] = this.handleKeepColumns(args, this.variables[this.activeVariableName]); 
+                        break; 
+                    case 'PEEK': 
+                        this.handlePeek(args, this.variables[this.activeVariableName]); 
+                        break; 
+                    case 'STORE_AS': 
+                        this.log(`Command STORE_AS for VAR "${this.activeVariableName}" is parsed. Current active dataset for "${this.activeVariableName}" will be copied to "${args.variableName}".`);
+                        if (this.variables[this.activeVariableName]) {
+                            this.variables[args.variableName] = JSON.parse(JSON.stringify(this.variables[this.activeVariableName]));
+                             this.log(`Dataset from VAR "${this.activeVariableName}" copied to new VAR "${args.variableName}".`);
+                        } else {
+                            this.log(`Cannot STORE_AS: VAR "${this.activeVariableName}" has no data to copy.`);
+                             throw new Error(`No data in VAR "${this.activeVariableName}" to copy using STORE_AS.`);
+                        }
+                        break;
+                    default: this.log(`Command ${command} for VAR "${this.activeVariableName}" is parsed but not yet fully implemented.`); 
+                } 
+            }
+            
+            async nativeParseCsv(fileContent) { 
+                return new Promise((resolve, reject) => { 
+                    try { 
+                        const lines = fileContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(line => line.trim() !== ''); 
+                        if (lines.length === 0) { resolve({ data: [], meta: { fields: [] } }); return; } 
+                        const headers = lines[0].split(',').map(h => h.trim()); 
+                        const data = []; 
+                        for (let i = 1; i < lines.length; i++) { 
+                            const values = lines[i].split(',').map(v => v.trim()); 
+                            const row = {}; 
+                            headers.forEach((h, idx) => { 
+                                let v = values[idx]; 
+                                if (v !== undefined && v !== "" && !isNaN(Number(v))) v = Number(v); 
+                                else if (v && (v.toLowerCase()==='true' || v.toLowerCase()==='false')) v = v.toLowerCase()==='true'; 
+                                row[h] = v; 
+                            }); 
+                            data.push(row); 
+                        } 
+                        resolve({ data, meta: { fields: headers } }); 
+                    } catch (err) { reject(err); } 
+                }); 
+            }
+            
+            async handleLoadCsv(args) { 
+                if (!this.fileInputEl) throw new Error("File input not available."); 
+                const file = await this.requestCsvFile(args.file, this.activeVariableName); 
+                
+                return new Promise((resolve, reject) => { 
+                    const reader = new FileReader(); 
+                    reader.onload = async (event) => { 
+                        try { 
+                            this.log(`Using native CSV parser for VAR "${this.activeVariableName}".`); 
+                            const results = await this.nativeParseCsv(event.target.result); 
+                            this.log(`Loaded ${results.data.length} rows for VAR "${this.activeVariableName}" from ${file.name}. Headers: ${results.meta.fields ? results.meta.fields.join(', ') : 'N/A'}`); 
+                            if (this.fileInputContainerEl) this.fileInputContainerEl.classList.add('hidden'); 
+                            resolve(results.data); 
+                        } catch (err) { 
+                            this.log(`Native CSV parsing error for VAR "${this.activeVariableName}": ${err.message}`); 
+                            if (this.fileInputContainerEl) this.fileInputContainerEl.classList.add('hidden'); 
+                            reject(err); 
+                        } 
+                    }; 
+                    reader.onerror = (err) => { 
+                        this.log(`FileReader error for VAR "${this.activeVariableName}": ${err.message}`); 
+                        if (this.fileInputContainerEl) this.fileInputContainerEl.classList.add('hidden'); 
+                        reject(err); 
+                    }; 
+                    reader.readAsText(file); 
+                }); 
+            }
+            
+            handleKeepColumns(args, currentDataset) { 
+                if (!currentDataset) throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply KEEP_COLUMNS.`); 
+                const { columns } = args; 
+                if (!Array.isArray(columns)) throw new Error(`Invalid columns argument for KEEP_COLUMNS in VAR "${this.activeVariableName}".`); 
+                
+                const newDataset = currentDataset.map(row => { 
+                    const newRow = {}; 
+                    columns.forEach(colName => { 
+                        const actualColName = Object.keys(row).find(key => key.toLowerCase() === colName.toLowerCase()) || colName; 
+                        if (row.hasOwnProperty(actualColName)) newRow[colName] = row[actualColName]; 
+                    }); 
+                    return newRow; 
+                }); 
+                this.log(`Kept columns: ${columns.join(', ')} for VAR "${this.activeVariableName}". Rows: ${newDataset.length}.`); 
+                return newDataset; 
+            }
+            
+            handlePeek(args, datasetToPeek) { 
+                const varName = this.activeVariableName;
+                let outputHTML = `<h3 class="text-md font-semibold mb-2">Data for: ${varName || 'Current Context'}</h3>`;
+
+                if (!datasetToPeek) { 
+                    outputHTML += '<p class="text-gray-500">No dataset loaded to PEEK.</p>'; 
+                    this.log(`Cannot PEEK for VAR "${varName}": No dataset loaded.`); 
+                } else {
+                    const peekRowCount = 10;
+                    const dataToDisplay = datasetToPeek.slice(0, peekRowCount);
+
+                    if (dataToDisplay.length === 0) {
+                        outputHTML += '<p class="text-gray-500">Dataset is empty.</p>';
+                        this.log(`PEEK for VAR "${varName}": Dataset is empty.`);
+                    } else {
+                        let tableHtml = '<table><thead><tr>';
+                        const allKeys = new Set();
+                        datasetToPeek.forEach(r => Object.keys(r).forEach(k => allKeys.add(k)));
+                        const headers = Array.from(allKeys);
+
+                        headers.forEach(header => tableHtml += `<th>${String(header).replace(/</g, "&lt;").replace(/>/g, "&gt;")}</th>`);
+                        tableHtml += '</tr></thead><tbody>';
+
+                        dataToDisplay.forEach(row => {
+                            tableHtml += '<tr>';
+                            headers.forEach(header => {
+                                const value = row[header];
+                                tableHtml += `<td>${value === null || value === undefined ? '' : String(value).replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>`;
+                            });
+                            tableHtml += '</tr>';
+                        });
+                        tableHtml += `</tbody></table>`;
+                        if (datasetToPeek.length > peekRowCount) {
+                            tableHtml += `<p class="text-xs text-gray-500 mt-2">Showing first ${peekRowCount} of ${datasetToPeek.length} rows. Total columns: ${headers.length}.</p>`;
+                        } else {
+                            tableHtml += `<p class="text-xs text-gray-500 mt-2">Showing all ${datasetToPeek.length} rows. Total columns: ${headers.length}.</p>`;
+                        }
+                        outputHTML += tableHtml;
+                        this.log(`PEEK displayed ${dataToDisplay.length} rows for VAR "${varName}".`);
+                    }
+                }
+                if (this.peekOutputEl) {
+                    this.peekOutputEl.innerHTML = outputHTML;
+                }
+            }
         }
 
         // --- Syntax Highlighting Logic ---
@@ -299,19 +562,23 @@
             
             const interpreter = new Interpreter(); 
 
-            const defaultScript = `# Welcome to PipeData!
-# 1. Write your script.
-# 2. If using LOAD_CSV, the "Choose File" prompt will appear when you run.
-# 3. Click "Run Script".
+            const defaultScript = `VAR "citiesData"
+THEN
+    # Load CSV data into the "citiesData" variable
+    LOAD_CSV FILE "cities.csv"
+THEN
+    PEEK  # Shows the content of "citiesData"
+THEN
+    KEEP_COLUMNS "City", "Country", "Population" 
+    # Note: Column names are case-sensitive based on your CSV!
+THEN
+    PEEK # Shows modified "citiesData"
 
-LOAD_CSV FILE "your_data.csv"
+VAR "weatherReport"
 THEN
-    PEEK
+    LOAD_CSV FILE "weather.csv"
 THEN
-    KEEP_COLUMNS "Column Name From CSV", AnotherColumn
-    # Ensure column names match your CSV headers (case might matter depending on CSV).
-THEN
-    PEEK
+    PEEK # Shows "weatherReport"
 `;
             inputArea.value = defaultScript;
             highlightingOverlay.innerHTML = applySyntaxHighlighting(inputArea.value);
@@ -330,7 +597,6 @@ THEN
             });
             
             new ResizeObserver(() => {
-                // Attempt to sync height more reliably
                 highlightingOverlay.style.height = inputArea.clientHeight + 'px'; 
                 highlightingOverlay.style.width = inputArea.clientWidth + 'px';
             }).observe(inputArea);
@@ -339,7 +605,7 @@ THEN
             csvFileInput.addEventListener('change', (event) => {
                 const file = event.target.files[0];
                 if (interpreter.fileResolve) { 
-                    interpreter.fileResolve(file);  
+                    interpreter.fileResolve(file);  // Pass the file object, or undefined if no file
                     interpreter.fileResolve = null; 
                 }
             });
@@ -361,8 +627,8 @@ THEN
                 } catch (e) {
                     astOutputArea.classList.add('error-box');
                     const errorMessage = e instanceof Error ? e.message : (typeof e === 'string' ? e : JSON.stringify(e));
-                    const stackTrace = e instanceof Error && e.stack ? e.stack.split('\n').slice(0,3).join('\n') : '';
-                    astOutputArea.textContent = `Error: ${errorMessage}\n${stackTrace}`;
+                    const stackTrace = e instanceof Error && e.stack ? "\n" + e.stack.split('\n').slice(0,3).join('\n') : '';
+                    astOutputArea.textContent = `Error: ${errorMessage}${stackTrace}`;
                     interpreter.log(`Error during parsing or execution: ${errorMessage}`);
                     console.error("Full error object:", e);
                 }
@@ -372,11 +638,10 @@ THEN
                 interpreter.clearLogsAndPeek();
                 astOutputArea.textContent = 'AST will appear here...';
                 astOutputArea.classList.remove('error-box');
-                inputArea.value = ''; 
-                highlightingOverlay.innerHTML = ''; 
+                inputArea.value = defaultScript; 
+                highlightingOverlay.innerHTML = applySyntaxHighlighting(defaultScript); 
                 if (document.getElementById('fileInputContainer')) {
                      document.getElementById('fileInputContainer').classList.add('hidden');
                 }
             });
-        });
-    
+        }); 
