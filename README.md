@@ -4,6 +4,11 @@ PipeData is a domain-specific language (DSL) designed for simple, scriptable dat
 
 Mission: To provide a simple and intuitive way to manipulate tabular data in the browser, making data processing accessible to everyone.
 
+---
+
+**Live Demo:** [Try PipeData DSL in your browser](https://codyburker.github.io/data_dsl/)
+
+--- 
 
 # PipeData Development Roadmap
 
