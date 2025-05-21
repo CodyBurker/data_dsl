@@ -2,6 +2,8 @@
 
 PipeData is a domain-specific language (DSL) designed for simple, scriptable data pipeline operations on CSV files directly in the browser. It allows users to load, transform, and preview tabular data using a readable, step-by-step syntax.
 
+Mission: To provide a simple and intuitive way to manipulate tabular data in the browser, making data processing accessible to everyone.
+
 ## Todo
 
 Un-prioritized list of features and improvements to be made to PipeData.
