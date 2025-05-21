@@ -568,11 +568,6 @@ THEN
     LOAD_CSV FILE "cities.csv"
 THEN
     PEEK  # Shows the content of "citiesData"
-THEN
-    KEEP_COLUMNS "City", "Country", "Population" 
-    # Note: Column names are case-sensitive based on your CSV!
-THEN
-    PEEK # Shows modified "citiesData"
 
 VAR "weatherReport"
 THEN
