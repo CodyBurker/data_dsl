@@ -112,9 +112,9 @@
 
             while (cursor < input.length) {
                 let char = input[cursor];
-                if (/\s/.test(char) && char !== '\n') { cursor++; continue; } // Skip non-newline whitespace
+                if (/\s/.test(char) && char !== '\n') { cursor++; continue; } 
                 if (char === '\n') { tokens.push({ type: TokenType.NEWLINE, value: '\n', line: getLineNumber(input, cursor) }); cursor++; continue; }
-                if (char === '#') { // Skip comments entirely for the parser
+                if (char === '#') { 
                     while (cursor < input.length && input[cursor] !== '\n') {
                         cursor++;
                     }
@@ -134,7 +134,7 @@
                 const opMatch = input.substring(cursor).match(OPERATORS_REGEX);
                 if (opMatch) {
                     const op = opMatch[0];
-                    if (!KEYWORDS.includes(op.toUpperCase())) { // Ensure it's not a keyword like 'IS' mistaken for an operator
+                    if (!KEYWORDS.includes(op.toUpperCase())) { 
                         tokens.push({ type: TokenType.OPERATOR, value: op, line: getLineNumber(input, cursor) });
                         cursor += op.length; continue;
                     }
@@ -150,7 +150,7 @@
                 throw new Error(`Unexpected character: '${char}' at line ${getLineNumber(input, cursor)}`);
             }
             tokens.push({ type: TokenType.EOF, value: 'EOF', line: getLineNumber(input, cursor) });
-            return tokens; // Removed the previous complex newline filter
+            return tokens; 
         }
 
         class Parser {
@@ -189,7 +189,6 @@
                 this.consume(TokenType.KEYWORD, 'THEN', `VAR "${variableName}" must be followed by 'THEN'.`);
                 this.skipNewlines(); 
 
-                // Parse the first command
                 if (this.isAtEnd() || (this.peek().type === TokenType.KEYWORD && this.peek().value === 'VAR')) {
                     this.error(`VAR "${variableName}" THEN must be followed by at least one command.`);
                 }
@@ -198,19 +197,16 @@
                 if (command) {
                     commands.push(command);
                 } else {
-                    // This case should ideally be caught by parseCommand if it encounters an invalid start
                     this.error(`Expected a command after VAR "${variableName}" THEN.`);
                 }
 
-                // Loop for subsequent commands, each chained by THEN
                 while (!this.isAtEnd()) {
-                    this.skipNewlines(); // Skip newlines before a potential THEN or new VAR block
+                    this.skipNewlines(); 
 
                     if (this.peek().type === TokenType.KEYWORD && this.peek().value === 'THEN') {
                         this.consume(TokenType.KEYWORD, 'THEN');
-                        this.skipNewlines(); // Skip newlines after THEN, before the next command
+                        this.skipNewlines(); 
 
-                        // Ensure THEN is followed by a command and not end of input or another VAR
                         if (this.isAtEnd() || (this.peek().type === TokenType.KEYWORD && this.peek().value === 'VAR')) {
                             this.error(`'THEN' must be followed by another command within VAR "${variableName}".`);
                         }
@@ -219,22 +215,16 @@
                         if (command) {
                             commands.push(command);
                         } else {
-                             // parseCommand returning null here is unexpected if not EOF.
                             this.error(`Expected a command after 'THEN' in VAR "${variableName}" block.`);
                         }
                     } else {
-                        // No more THEN, so this VAR block's pipeline ends.
-                        // Break if it's a new VAR block or EOF.
                         if ((this.peek().type === TokenType.KEYWORD && this.peek().value === 'VAR') || this.isAtEnd()) {
                            break;
                         }
-                        // Otherwise, it's an unexpected token.
                         this.error(`Unexpected token '${this.peek().value}' in VAR "${variableName}" block. Expected 'THEN' or start of new VAR block.`);
                     }
                 }
 
-                // This check is a safeguard; the logic above should ideally prevent commands.length from being 0
-                // if the VAR...THEN structure was validly followed by at least one command.
                 if (commands.length === 0) {
                     this.error(`VAR "${variableName}" processing failed to identify commands (internal check).`);
                 }
@@ -248,7 +238,7 @@
             }
             
             parseCommand() { 
-                this.skipNewlines(); // Ensure we skip any leading newlines before a command
+                this.skipNewlines(); 
                 const t = this.peek(); 
                 if (t.type === TokenType.EOF) return null;
 
@@ -269,22 +259,11 @@
                     case 'EXPORT_EXCEL': return this.parseExportExcel(); 
                     case 'PEEK': return this.parsePeek();
                     default: 
-                        // If it's a keyword but not a command starter (like THEN, WHERE, VAR, etc.)
-                        // this means it's an unexpected keyword at this position.
                         this.error(`Unexpected keyword '${t.value}' found where a command was expected.`);
-                        return null; // Should not be reached due to error
+                        return null; 
                 }
             }
-            // ... (rest of parseLoadCsv, parseKeepColumns, etc. methods remain largely the same)
-            parseLoadCsv() {
-                this.consume(TokenType.KEYWORD, 'LOAD_CSV');
-                // Optionally accept 'FILE' and a string literal
-                let file = null;
-                if (this.match(TokenType.KEYWORD, 'FILE')) {
-                    file = this.consume(TokenType.STRING_LITERAL).value;
-                }
-                return { command: 'LOAD_CSV', args: { file } };
-            }
+            parseLoadCsv() { this.consume(TokenType.KEYWORD, 'LOAD_CSV'); this.consume(TokenType.KEYWORD, 'FILE'); const f = this.consume(TokenType.STRING_LITERAL).value; return { command: 'LOAD_CSV', args: { file: f } }; }
             parseLoadExcel() { this.consume(TokenType.KEYWORD, 'LOAD_EXCEL'); this.consume(TokenType.KEYWORD, 'FILE'); const f = this.consume(TokenType.STRING_LITERAL).value; let s = null; if (this.match(TokenType.KEYWORD, 'SHEET')) s = this.consume(TokenType.STRING_LITERAL).value; return { command: 'LOAD_EXCEL', args: { file: f, sheet: s } }; }
             parseColumnList() { const c = []; do { if (this.peek().type === TokenType.STRING_LITERAL) c.push(this.consume(TokenType.STRING_LITERAL).value); else if (this.peek().type === TokenType.IDENTIFIER) c.push(this.consume(TokenType.IDENTIFIER).value); else this.error("Expected column name (identifier or string literal)."); } while (this.match(TokenType.PUNCTUATION, ',')); return c; }
             parseKeepColumns() { this.consume(TokenType.KEYWORD, 'KEEP_COLUMNS'); const c = this.parseColumnList(); return { command: 'KEEP_COLUMNS', args: { columns: c } }; }
@@ -324,8 +303,6 @@
             error(message) { const t = this.peek() || this.previous() || {line: 'Unknown', value: 'N/A'}; throw new Error(`Parse Error (Line ${t.line}, near '${t.value}'): ${message}`); }
         }
 
-        // --- Interpreter ---
-        // (Interpreter class remains the same as the previous version with VAR logic)
         class Interpreter {
             constructor() {
                 this.variables = {}; 
@@ -527,9 +504,6 @@
             }
         }
 
-        // In script.js
-
-        // --- Syntax Highlighting Logic ---
         function escapeHtml(unsafe) {
             return unsafe
                  .replace(/&/g, "&amp;")
@@ -540,34 +514,60 @@
         }
 
         function applySyntaxHighlighting(text) {
-            const tokens = tokenizeForHighlighting(text); 
+            const tokens = tokenizeForHighlighting(text);
             let html = '';
-            tokens.forEach(token => {
-                const escapedValue = escapeHtml(token.value);
-                switch (token.type) {
-                    case TokenType.KEYWORD: html += `<span class="token-keyword">${escapedValue}</span>`; break;
-                    case TokenType.STRING_LITERAL: html += `<span class="token-string_literal">${escapedValue}</span>`; break;
-                    case TokenType.NUMBER_LITERAL: html += `<span class="token-number_literal">${escapedValue}</span>`; break;
-                    case TokenType.COMMENT: html += `<span class="token-comment">${escapedValue}</span>`; break;
-                    case TokenType.OPERATOR: html += `<span class="token-operator">${escapedValue}</span>`; break;
-                    case TokenType.IDENTIFIER: html += `<span class="token-identifier">${escapedValue}</span>`; break;
-                    case TokenType.PUNCTUATION: html += `<span class="token-punctuation">${escapedValue}</span>`; break;
-                    case TokenType.NEWLINE: html += '\n'; break; 
-                    case TokenType.WHITESPACE: html += escapedValue; break; 
-                    default: html += escapedValue; 
+            let currentVarBlockStyleIndex = 0;
+            const varBlockStyles = ['var-block-bg-1', 'var-block-bg-2', 'var-block-bg-3', 'var-block-bg-4'];
+            let inVarBlock = false;
+            let blockContentHtml = ''; // Stores HTML for the current block
+
+            function closeCurrentVarBlock() {
+                if (inVarBlock && blockContentHtml.trim() !== '') {
+                    html += `<div class="var-block ${varBlockStyles[currentVarBlockStyleIndex % varBlockStyles.length]}">${blockContentHtml}</div>`;
+                    currentVarBlockStyleIndex++;
+                } else if (blockContentHtml.trim() !== '') { // Content outside any var block
+                    html += blockContentHtml; 
                 }
-            });
-            // Add an extra newline to the end of the highlighted content.
-            // This helps ensure the overlay's scrollable height better matches the textarea's,
-            // especially for the last line and when scrolling to the very bottom.
-            return html + '\n\n'; 
+                blockContentHtml = '';
+                inVarBlock = false;
+            }
+            
+            for (let i = 0; i < tokens.length; i++) {
+                const token = tokens[i];
+                let tokenHtml = '';
+                const escapedValue = escapeHtml(token.value);
+
+                if (token.type === TokenType.KEYWORD && token.value.toUpperCase() === 'VAR') {
+                    closeCurrentVarBlock(); // Close previous block if any
+                    inVarBlock = true; 
+                    // VAR keyword itself starts the new block content
+                }
+                 switch (token.type) {
+                    case TokenType.KEYWORD: tokenHtml = `<span class="token-keyword">${escapedValue}</span>`; break;
+                    case TokenType.STRING_LITERAL: tokenHtml = `<span class="token-string_literal">${escapedValue}</span>`; break;
+                    case TokenType.NUMBER_LITERAL: tokenHtml = `<span class="token-number_literal">${escapedValue}</span>`; break;
+                    case TokenType.COMMENT: tokenHtml = `<span class="token-comment">${escapedValue}</span>`; break;
+                    case TokenType.OPERATOR: tokenHtml = `<span class="token-operator">${escapedValue}</span>`; break;
+                    case TokenType.IDENTIFIER: tokenHtml = `<span class="token-identifier">${escapedValue}</span>`; break;
+                    case TokenType.PUNCTUATION: tokenHtml = `<span class="token-punctuation">${escapedValue}</span>`; break;
+                    case TokenType.NEWLINE: tokenHtml = '\n'; break; 
+                    case TokenType.WHITESPACE: tokenHtml = escapedValue; break; 
+                    default: tokenHtml = escapedValue; 
+                }
+
+                if (inVarBlock) {
+                    blockContentHtml += tokenHtml;
+                } else {
+                    // Handles content before the first VAR block (e.g. initial comments, newlines)
+                    // This part might need adjustment if we strictly want ONLY var blocks to be possible
+                    html += tokenHtml; 
+                }
+            }
+            closeCurrentVarBlock(); // Close any last open block
+
+            return html + '\n\n'; // Retain the scrolling fix
         }
 
-
-        // ... rest of your script.js ...
-
-
-        // --- Main ---
         document.addEventListener('DOMContentLoaded', () => {
             const inputArea = document.getElementById('pipeDataInput');
             const highlightingOverlay = document.getElementById('highlightingOverlay'); 
@@ -581,13 +581,18 @@
             const defaultScript = `VAR "citiesData"
 THEN
     # Load CSV data into the "citiesData" variable
-    LOAD_CSV
+    LOAD_CSV FILE "cities.csv"
 THEN
     PEEK  # Shows the content of "citiesData"
+THEN
+    KEEP_COLUMNS "City", "Country", "Population" 
+    # Note: Column names are case-sensitive based on your CSV!
+THEN
+    PEEK # Shows modified "citiesData"
 
 VAR "weatherReport"
 THEN
-    LOAD_CSV
+    LOAD_CSV FILE "weather.csv"
 THEN
     PEEK # Shows "weatherReport"
 `;
@@ -600,8 +605,6 @@ THEN
                 highlightingOverlay.innerHTML = applySyntaxHighlighting(text);
                 highlightingOverlay.scrollTop = inputArea.scrollTop;
                 highlightingOverlay.scrollLeft = inputArea.scrollLeft;
-                // Log overlay vs input area scroll positions to debug
-                console.log(`Input Area Scroll: ${inputArea.scrollTop}, ${inputArea.scrollLeft}`);
             });
 
             inputArea.addEventListener('scroll', () => {
@@ -618,7 +621,7 @@ THEN
             csvFileInput.addEventListener('change', (event) => {
                 const file = event.target.files[0];
                 if (interpreter.fileResolve) { 
-                    interpreter.fileResolve(file);  // Pass the file object, or undefined if no file
+                    interpreter.fileResolve(file);  
                     interpreter.fileResolve = null; 
                 }
             });
@@ -657,4 +660,4 @@ THEN
                      document.getElementById('fileInputContainer').classList.add('hidden');
                 }
             });
-        }); 
+        });

@@ -52,16 +52,15 @@ body { font-family: 'Inter', sans-serif; }
         .code-editor-container {
             position: relative;
             width: 100%;
-            /* height: auto; Let content define height */
+            height: auto; 
         }
 
         #pipeDataInput, #highlightingOverlay {
             margin: 0;
             padding: 0.75rem; 
-            /* Ensure border is identical in style, width, and color for both */
             border-width: 1px;
             border-style: solid;
-            border-color: #d1d5db; /* Tailwind gray-300 */
+            border-color: #d1d5db; 
             border-radius: 0.5rem; 
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
             font-size: 0.875rem; 
@@ -69,16 +68,16 @@ body { font-family: 'Inter', sans-serif; }
             box-sizing: border-box;
             width: 100%;
             min-height: 240px; 
-            overflow: auto; /* Textarea handles actual scrolling */
+            overflow: auto; 
             white-space: pre; 
             word-wrap: normal; 
-            letter-spacing: normal; /* Ensure consistency */
-            word-spacing: normal;   /* Ensure consistency */
-            vertical-align: top;  /* Added for block-like alignment */
+            letter-spacing: normal; 
+            word-spacing: normal;  
+            vertical-align: top;  
         }
 
         #pipeDataInput {
-            display: block; /* Make textarea behave more like a block element */
+            display: block; 
             position: relative; 
             z-index: 1;
             color: transparent; 
@@ -88,19 +87,14 @@ body { font-family: 'Inter', sans-serif; }
         }
 
         #highlightingOverlay {
-            display: block; /* Ensure it's also block */
+            display: block; 
             position: absolute;
             top: 0;
             left: 0;
             z-index: 0; 
             pointer-events: none; 
-            overflow: hidden; /* Its scrolling is synced to the textarea */
+            overflow: hidden; 
             color: #374151; 
-            /* Border color for overlay should be transparent or same as background if issues persist,
-               but having it match textarea's border-color ensures box model is same.
-               If textarea's border is visually part of the design, overlay should match.
-               If textarea border is meant to be "inner", then overlay might need transparent or no border
-               and padding adjusted. For now, matching is safest for identical box calculation. */
         }
         
         /* Token Styles */
@@ -110,4 +104,19 @@ body { font-family: 'Inter', sans-serif; }
         .token-comment { color: #6b7280; font-style: italic; } 
         .token-operator { color: #ca8a04; } 
         .token-identifier { color: #1d4ed8; } 
-        .token-punctuation { color: #374151; }
+        .token-punctuation { color: #374151; } 
+
+        /* Styles for VAR blocks */
+        .var-block {
+            display: block; /* Ensures each block is on its own 'line' if needed, respects internal newlines */
+            padding-top: 0.1em;
+            padding-bottom: 0.1em;
+            /* margin-bottom: 0.25em; /* Optional: space between var blocks if not separated by empty lines */
+            border-radius: 8px; /* Subtle rounded corners for the background */
+            /* Ensure direct children (like spans from highlighting) don't break out if they are inline */
+            
+        }
+        .var-block-bg-1 { background-color: rgba(183, 197, 226, 0.4); } /* Lighter Tailwind gray-200 */
+        .var-block-bg-2 { background-color: rgba(139, 199, 255, 0.4); } /* Lighter blue */
+        .var-block-bg-3 { background-color: rgba(222, 255, 222, 0.4); } /* Lighter green */
+        .var-block-bg-4 { background-color: rgba(255, 240, 222, 0.4); } /* Lighter orange */
