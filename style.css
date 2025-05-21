@@ -1,220 +1,379 @@
-body { font-family: 'Inter', sans-serif; }
-        .output-box {
-            background-color: #1f2937; /* Tailwind gray-800 */
-            color: #d1d5db; /* Tailwind gray-300 */
-            padding: 1rem;
-            border-radius: 0.5rem;
-            overflow-x: auto;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            min-height: 150px; /* Default min-height */
-        }
-        .error-box {
-            background-color: #fee2e2; /* Tailwind red-100 */
-            color: #b91c1c; /* Tailwind red-700 */
-            border: 1px solid #f87171; /* Tailwind red-400 */
-        }
+body {
+    font-family: 'Inter', sans-serif;
+}
 
-        /* Styling for tables inside PEEK output */
-        .peek-content table, #peekOutputContainer table { /* Keep old ID for a bit if referenced */
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 0.875rem;
-            color: #d1d5db; /* Tailwind gray-300 for text inside dark box */
-        }
-        .peek-content th, .peek-content td,
-        #peekOutputContainer th, #peekOutputContainer td {
-            border: 1px solid #4b5563; /* gray-600 for borders inside dark box */
-            padding: 8px;
-            text-align: left;
-        }
-        .peek-content th, #peekOutputContainer th {
-            background-color: #374151; /* gray-700 for header inside dark box */
-            font-weight: bold;
-            color: #e5e7eb; /* gray-200 */
-        }
-         /* Placeholder style for peek output area before content loads */
-        #peekOutputsDisplayArea .output-box-placeholder {
-            color: #6b7280; /* gray-500 */
-            text-align: center;
-            padding: 2rem;
-            font-style: italic;
-        }
+.output-box {
+    background-color: #1f2937;
+    /* Tailwind gray-800 */
+    color: #d1d5db;
+    /* Tailwind gray-300 */
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    min-height: 150px;
+    /* Default min-height */
+}
 
+.error-box {
+    background-color: #fee2e2;
+    /* Tailwind red-100 */
+    color: #b91c1c;
+    /* Tailwind red-700 */
+    border: 1px solid #f87171;
+    /* Tailwind red-400 */
+}
 
-        #logOutput {
-            padding: 0.75rem;
-            min-height: 100px; 
-            font-family: monospace;
-            font-size: 0.8rem;
-        }
-        .file-input-container {
-            padding: 1rem;
-            background-color: #f9fafb; /* gray-50 */
-            border: 2px dashed #d1d5db; /* gray-300 */
-            border-radius: 0.5rem;
-            text-align: center;
-            margin-bottom: 1rem;
-        }
+/* Styling for tables inside PEEK output */
+.peek-content table,
+#peekOutputContainer table {
+    /* Keep old ID for a bit if referenced */
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 0.875rem;
+    color: #d1d5db;
+    /* Tailwind gray-300 for text inside dark box */
+}
 
-        .code-editor-container {
-            position: relative;
-            width: 100%;
-            height: auto; 
-        }
+.peek-content th,
+.peek-content td,
+#peekOutputContainer th,
+#peekOutputContainer td {
+    border: 1px solid #4b5563;
+    /* gray-600 for borders inside dark box */
+    padding: 8px;
+    text-align: left;
+}
 
-        #pipeDataInput, #highlightingOverlay {
-            margin: 0;
-            padding: 0.75rem; 
-            border-width: 1px;
-            border-style: solid;
-            border-color: #d1d5db; 
-            border-radius: 0.5rem; 
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-            font-size: 0.875rem; 
-            line-height: 1.5; 
-            box-sizing: border-box;
-            width: 100%;
-            overflow: auto; 
-            white-space: pre; 
-            word-wrap: normal; 
-            letter-spacing: normal; 
-            word-spacing: normal;  
-            vertical-align: top;  
-        }
+.peek-content th,
+#peekOutputContainer th {
+    background-color: #374151;
+    /* gray-700 for header inside dark box */
+    font-weight: bold;
+    color: #e5e7eb;
+    /* gray-200 */
+}
 
-        #pipeDataInput {
-            display: block; 
-            position: relative; 
-            z-index: 1;
-            color: transparent; 
-            background-color: transparent; 
-            caret-color: #4f46e5; 
-            resize: vertical; 
-        }
-
-        #highlightingOverlay {
-            display: block; 
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 0; 
-            pointer-events: none; 
-            overflow: hidden; 
-            color: #374151; 
-        }
-        
-        .token-keyword { color: #be185d; font-weight: bold; } 
-        .token-string_literal { color: #059669; } 
-        .token-number_literal { color: #2563eb; } 
-        .token-comment { color: #6b7280; font-style: italic; } 
-        .token-operator { color: #ca8a04; } 
-        .token-identifier { color: #1d4ed8; } 
-        .token-punctuation { color: #374151; } 
-
-        .var-block {
-            display: block;
-            padding-top: 0.1em;
-            padding-bottom: 0.1em;
-            border-radius: 8px; 
-        }
-        .var-block-bg-1 { background-color: rgba(183, 197, 226, 0.4); }
-        .var-block-bg-2 { background-color: rgba(139, 199, 255, 0.4); }
-        .var-block-bg-3 { background-color: rgba(222, 255, 222, 0.4); }
-        .var-block-bg-4 { background-color: rgba(255, 240, 222, 0.4); }
-
-        .editor-prominent #pipeDataInput, .editor-prominent #highlightingOverlay {
-            min-height: 350px; 
-        }
-        
-        /* Container for the tabbed PEEK outputs, not an output-box itself */
-        .peek-output-area-container {
-            border: 1px solid #d1d5db; /* gray-300 */
-            border-top: none; /* Tabs container provides top border */
-            border-radius: 0 0 0.5rem 0.5rem; /* Rounded bottom corners */
-            min-height: 300px; /* Prominent height */
-            background-color: #1f2937; /* Tailwind gray-800, same as output-box */
-            color: #d1d5db; /* Tailwind gray-300 */
-            padding: 0; /* Padding will be on individual peek-content */
-            overflow: hidden; /* To contain rounded corners of children */
-        }
+/* Placeholder style for peek output area before content loads */
+#peekOutputsDisplayArea .output-box-placeholder {
+    color: #6b7280;
+    /* gray-500 */
+    text-align: center;
+    padding: 2rem;
+    font-style: italic;
+}
 
 
-        .output-collapsible summary::-webkit-details-marker {
-            display: none; 
-        }
-        .output-collapsible summary {
-            list-style: none; 
-            position: relative;
-            padding-left: 1.8rem; 
-        }
-        .output-collapsible summary::before {
-            content: '►'; 
-            position: absolute;
-            left: 0.75rem;
-            top: 50%;
-            transform: translateY(-50%) rotate(0deg);
-            transition: transform 0.2s ease-in-out;
-            font-size: 0.8em;
-        }
-        .output-collapsible[open] > summary::before {
-            transform: translateY(-50%) rotate(90deg); 
-        }
-        .output-box-collapsible-content {
-            border-top: 1px solid #d1d5db; 
-            border-radius: 0 0 0.5rem 0.5rem; 
-            background-color: #1f2937; 
-            color: #d1d5db;
-        }
+#logOutput {
+    padding: 0.75rem;
+    min-height: 100px;
+    font-family: monospace;
+    font-size: 0.8rem;
+}
 
-        /* Styles for PEEK Tabs */
-        #peekTabsContainer .peek-tab {
-            padding: 0.5rem 1rem;
-            margin-right: 0.25rem;
-            margin-bottom: -1px; /* Overlap border-bottom of container */
-            border: 1px solid #d1d5db; /* gray-300 */
-            border-bottom: none; /* Tab itself doesn't have bottom border */
-            border-radius: 0.375rem 0.375rem 0 0; /* Rounded top corners */
-            background-color: #f9fafb; /* gray-50 */
-            color: #374151; /* gray-700 */
-            cursor: pointer;
-            font-size: 0.875rem;
-            line-height: 1.25rem;
-            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-        }
+.file-input-container {
+    padding: 1rem;
+    background-color: #f9fafb;
+    /* gray-50 */
+    border: 2px dashed #d1d5db;
+    /* gray-300 */
+    border-radius: 0.5rem;
+    text-align: center;
+    margin-bottom: 1rem;
+}
 
-        #peekTabsContainer .peek-tab:hover {
-            background-color: #f3f4f6; /* gray-100 */
-            border-color: #9ca3af; /* gray-400 */
-        }
+.code-editor-container {
+    position: relative;
+    width: 100%;
+    height: auto;
+}
 
-        #peekTabsContainer .peek-tab.active-peek-tab {
-            background-color: #1f2937; /* Tailwind gray-800, to match content area */
-            color: #f9fafb; /* gray-50, light text on dark tab */
-            border-color: #d1d5db #d1d5db #1f2937; /* Match border, bottom transparent to merge */
-            position: relative; 
-            z-index: 1;
-        }
+#pipeDataInput,
+#highlightingOverlay {
+    margin: 0;
+    padding: 0.75rem;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #d1d5db;
+    border-radius: 0.5rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    box-sizing: border-box;
+    width: 100%;
+    overflow: auto;
+    white-space: pre;
+    word-wrap: normal;
+    letter-spacing: normal;
+    word-spacing: normal;
+    vertical-align: top;
+}
 
-        /* Individual PEEK content (initially hidden) */
-        .peek-content {
-            display: none; /* Hidden by default */
-            padding: 1rem; /* Padding inside each peek view */
-            /* min-height is on peek-output-area-container */
-            /* background-color and color are inherited from peek-output-area-container */
-            white-space: pre-wrap; /* Copied from .output-box */
-            word-wrap: break-word; /* Copied from .output-box */
-            overflow-x: auto; /* Copied from .output-box */
-        }
+#pipeDataInput {
+    display: block;
+    position: relative;
+    z-index: 1;
+    color: transparent;
+    background-color: transparent;
+    caret-color: #4f46e5;
+    resize: vertical;
+}
 
-        .peek-content.active-peek-content {
-            display: block; /* Shown when active */
-        }
-        .token-keyword.active-peek-line-highlight {
-            background-color: rgba(255, 223, 100, 0.6); /* A distinct yellow/orange highlight */
-            border-radius: 3px;
-            box-shadow: 0 0 5px rgba(255, 165, 0, 0.7);
-            padding: 0px 2px; /* Minimal padding to not disrupt flow too much */
-            display: inline-block; /* Ensures background and padding apply correctly */
-        }
+#highlightingOverlay {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    color: #374151;
+}
+
+.token-keyword {
+    color: #be185d;
+    font-weight: bold;
+}
+
+.token-string_literal {
+    color: #059669;
+}
+
+.token-number_literal {
+    color: #2563eb;
+}
+
+.token-comment {
+    color: #6b7280;
+    font-style: italic;
+}
+
+.token-operator {
+    color: #ca8a04;
+}
+
+.token-identifier {
+    color: #1d4ed8;
+}
+
+.token-punctuation {
+    color: #374151;
+}
+
+.var-block {
+    display: block;
+    padding-top: 0.1em;
+    padding-bottom: 0.1em;
+    border-radius: 8px;
+}
+
+.var-block-bg-1 {
+    background-color: rgba(183, 197, 226, 0.4);
+}
+
+.var-block-bg-2 {
+    background-color: rgba(139, 199, 255, 0.4);
+}
+
+.var-block-bg-3 {
+    background-color: rgba(222, 255, 222, 0.4);
+}
+
+.var-block-bg-4 {
+    background-color: rgba(255, 240, 222, 0.4);
+}
+
+.editor-prominent #pipeDataInput,
+.editor-prominent #highlightingOverlay {
+    min-height: 350px;
+}
+
+/* Container for the tabbed PEEK outputs, not an output-box itself */
+.peek-output-area-container {
+    border: 1px solid #d1d5db;
+    /* gray-300 */
+    border-top: none;
+    /* Tabs container provides top border */
+    border-radius: 0 0 0.5rem 0.5rem;
+    /* Rounded bottom corners */
+    min-height: 300px;
+    /* Prominent height */
+    background-color: #1f2937;
+    /* Tailwind gray-800, same as output-box */
+    color: #d1d5db;
+    /* Tailwind gray-300 */
+    padding: 0;
+    /* Padding will be on individual peek-content */
+    overflow: hidden;
+    /* To contain rounded corners of children */
+}
+
+
+.output-collapsible summary::-webkit-details-marker {
+    display: none;
+}
+
+.output-collapsible summary {
+    list-style: none;
+    position: relative;
+    padding-left: 1.8rem;
+}
+
+.output-collapsible summary::before {
+    content: '►';
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%) rotate(0deg);
+    transition: transform 0.2s ease-in-out;
+    font-size: 0.8em;
+}
+
+.output-collapsible[open]>summary::before {
+    transform: translateY(-50%) rotate(90deg);
+}
+
+.output-box-collapsible-content {
+    border-top: 1px solid #d1d5db;
+    border-radius: 0 0 0.5rem 0.5rem;
+    background-color: #1f2937;
+    color: #d1d5db;
+}
+
+/* Styles for PEEK Tabs */
+#peekTabsContainer .peek-tab {
+    padding: 0.5rem 1rem;
+    margin-right: 0.25rem;
+    margin-bottom: -1px;
+    /* Overlap border-bottom of container */
+    border: 1px solid #d1d5db;
+    /* gray-300 */
+    border-bottom: none;
+    /* Tab itself doesn't have bottom border */
+    border-radius: 0.375rem 0.375rem 0 0;
+    /* Rounded top corners */
+    background-color: #f9fafb;
+    /* gray-50 */
+    color: #374151;
+    /* gray-700 */
+    cursor: pointer;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+#peekTabsContainer .peek-tab:hover {
+    background-color: #f3f4f6;
+    /* gray-100 */
+    border-color: #9ca3af;
+    /* gray-400 */
+}
+
+#peekTabsContainer .peek-tab.active-peek-tab {
+    background-color: #1f2937;
+    /* Tailwind gray-800, to match content area */
+    color: #f9fafb;
+    /* gray-50, light text on dark tab */
+    border-color: #d1d5db #d1d5db #1f2937;
+    /* Match border, bottom transparent to merge */
+    position: relative;
+    z-index: 1;
+}
+
+/* Individual PEEK content (initially hidden) */
+.peek-content {
+    display: none;
+    /* Hidden by default */
+    padding: 1rem;
+    /* Padding inside each peek view */
+    /* min-height is on peek-output-area-container */
+    /* background-color and color are inherited from peek-output-area-container */
+    white-space: pre-wrap;
+    /* Copied from .output-box */
+    word-wrap: break-word;
+    /* Copied from .output-box */
+    overflow-x: auto;
+    /* Copied from .output-box */
+}
+
+.peek-content.active-peek-content {
+    display: block;
+    /* Shown when active */
+}
+
+.token-keyword.active-peek-line-highlight {
+    background-color: rgba(255, 223, 100, 0.6);
+    /* A distinct yellow/orange highlight */
+    border-radius: 3px;
+    box-shadow: 0 0 5px rgba(255, 165, 0, 0.7);
+    padding: 0px 2px;
+    /* Minimal padding to not disrupt flow too much */
+    display: inline-block;
+    /* Ensures background and padding apply correctly */
+}
+
+/* Target the path within your animated SVG */
+.github-icon-animated path {
+    /* === IMPORTANT: Replace 157.9 with the actual path length you found === */
+    --path-length: 157.9;
+    /* Or your measured value */
+
+    stroke: currentColor;
+    /* Use the link's text color for the line drawing */
+    stroke-width: 0.5;
+    /* Adjust for desired line thickness. Given viewBox 0 0 24 24, 0.5 is a decent starting point */
+    fill: transparent;
+    /* Start with no fill */
+    stroke-dasharray: var(--path-length);
+    /* Dash pattern is the full length of the path */
+    stroke-dashoffset: var(--path-length);
+    /* Start with the dash offset so it's not visible */
+    opacity: 1;
+    /* Start visible for the drawing part */
+
+    /* Link the animation name, duration, timing function, and iteration count */
+    animation: drawAndFade 5s ease-in-out infinite;
+}
+
+/* Define the animation keyframes */
+@keyframes drawAndFade {
+
+    /* Stage 1: Draw the outline (0% to 40% of animation duration) */
+    0% {
+        stroke-dashoffset: var(--path-length);
+        fill: transparent;
+        opacity: 1;
+    }
+
+    40% {
+        stroke-dashoffset: 0;
+        /* Line is fully drawn */
+        fill: transparent;
+        opacity: 1;
+    }
+
+    /* Stage 2: Fill the icon (40% to 50%) */
+    50% {
+        stroke-dashoffset: 0;
+        fill: currentColor;
+        /* Fill with the link's text color */
+        opacity: 1;
+    }
+
+    /* Stage 3: Hold the filled icon (50% to 80%) */
+    80% {
+        stroke-dashoffset: 0;
+        fill: currentColor;
+        opacity: 1;
+    }
+
+    /* Stage 4: Fade out (80% to 100%) */
+    100% {
+        stroke-dashoffset: 0;
+        fill: currentColor;
+        opacity: 0;
+        /* Fade out */
+    }
+}
