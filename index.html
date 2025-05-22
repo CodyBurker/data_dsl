@@ -52,8 +52,14 @@
         </div>
         
         <div class="mb-6">
-            <label class="block text-lg font-medium text-gray-700 mb-2">PEEK Outputs:</label>
-            <div id="peekTabsContainer" class="flex flex-wrap border-b border-gray-300 mb-0">
+            <div class="flex justify-between items-center mb-0">
+                <label class="block text-lg font-medium text-gray-700">PEEK Outputs:</label>
+                <button id="exportPeekButton"
+                    class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1 px-3 rounded-lg shadow-md transition duration-150 ease-in-out transform hover:scale-105 text-xs hidden">
+                    Export Active PEEK (CSV)
+                </button>
+            </div>
+            <div id="peekTabsContainer" class="flex flex-wrap border-b border-gray-300">
                 </div>
             <div id="peekOutputsDisplayArea" class="peek-output-area-container">
                 <div class="output-box-placeholder">Peek results will appear here when a script is run.</div>

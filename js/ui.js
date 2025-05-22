@@ -21,6 +21,7 @@ function queryElements() {
     elements.csvFileInputEl = document.getElementById('csvFileInput');
     elements.fileInputContainerEl = document.getElementById('fileInputContainer');
     elements.filePromptMessageEl = document.getElementById('filePromptMessage');
+    elements.exportPeekButton = document.getElementById('exportPeekButton'); // <-- New element
 }
 
 
@@ -187,15 +188,19 @@ function renderPeekOutputsUI() {
 
     if (peekOutputs.length === 0) {
         elements.peekOutputsDisplayAreaEl.innerHTML = '<div class="output-box-placeholder">No PEEK outputs to display.</div>';
+        if (elements.exportPeekButton) elements.exportPeekButton.classList.add('hidden'); // <-- Hide export button
         clearEditorPeekHighlight();
         return;
     }
     
+    if (elements.exportPeekButton) elements.exportPeekButton.classList.remove('hidden'); // <-- Show export button
+
     peekOutputs.forEach((peekData, index) => {
         const tabButton = document.createElement('button');
         tabButton.classList.add('peek-tab');
         tabButton.textContent = `PEEK ${index + 1} (VAR "${peekData.varName}", L${peekData.line})`;
         tabButton.dataset.target = peekData.id;
+        tabButton.dataset.peekIndex = index; // Store index for easy data retrieval
 
         const contentDiv = document.createElement('div');
         contentDiv.id = peekData.id;
@@ -264,8 +269,63 @@ function clearOutputs() {
     if (elements.fileInputContainerEl) {
         elements.fileInputContainerEl.classList.add('hidden');
     }
+    if (elements.exportPeekButton) elements.exportPeekButton.classList.add('hidden'); // <-- Hide export button
     clearEditorPeekHighlight();
 }
+
+// --- START NEW FUNCTION ---
+function handleExportPeek() {
+    if (!uiInterpreterInstance || !elements.peekTabsContainerEl) return;
+
+    const activeTab = elements.peekTabsContainerEl.querySelector('.peek-tab.active-peek-tab');
+    if (!activeTab) {
+        alert("No active PEEK tab found to export.");
+        return;
+    }
+
+    const peekIndex = parseInt(activeTab.dataset.peekIndex, 10);
+    const peekDataEntry = uiInterpreterInstance.peekOutputs[peekIndex];
+
+    if (!peekDataEntry || !peekDataEntry.dataset) {
+        alert("Could not find data for the active PEEK tab.");
+        return;
+    }
+
+    const dataset = peekDataEntry.dataset;
+
+    if (dataset instanceof dfd.DataFrame) {
+        if (dataset.count() === 0) {
+            alert("The active PEEK tab contains an empty DataFrame. Nothing to export.");
+            return;
+        }
+        // Use Danfo.js toCSV method
+        dfd.toCSV(dataset, { download: true, fileName: `peek_export_${peekDataEntry.varName}_L${peekDataEntry.line}.csv` });
+        uiInterpreterInstance.log(`Exported PEEK data for VAR "${peekDataEntry.varName}" (Line ${peekDataEntry.line}) to CSV.`);
+    } else if (Array.isArray(dataset) && dataset.length > 0 && typeof dataset[0] === 'object') {
+        // Basic CSV conversion for array of objects
+        try {
+            const papaCSV = Papa.unparse(dataset);
+            const blob = new Blob([papaCSV], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `peek_export_${peekDataEntry.varName}_L${peekDataEntry.line}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            uiInterpreterInstance.log(`Exported PEEK data (array of objects) for VAR "${peekDataEntry.varName}" (Line ${peekDataEntry.line}) to CSV.`);
+        } catch (error) {
+            console.error("Error exporting array of objects to CSV:", error);
+            alert("Failed to export data to CSV. See console for details.");
+            uiInterpreterInstance.log(`Error exporting PEEK (array of objects) for VAR "${peekDataEntry.varName}" to CSV: ${error.message}`);
+        }
+    } else {
+        alert("The active PEEK tab data is not in a format that can be exported to CSV (requires DataFrame or Array of Objects).");
+        uiInterpreterInstance.log(`PEEK data for VAR "${peekDataEntry.varName}" (Line ${peekDataEntry.line}) is not exportable to CSV (type: ${typeof dataset})`);
+    }
+}
+// --- END NEW FUNCTION ---
 
 
 export function initUI(interpreter) {
@@ -343,6 +403,7 @@ THEN
         if (elements.logOutputEl) elements.logOutputEl.innerHTML = 'Logs will appear here...<br>';
         if (elements.peekTabsContainerEl) elements.peekTabsContainerEl.innerHTML = '';
         if (elements.peekOutputsDisplayAreaEl) elements.peekOutputsDisplayAreaEl.innerHTML = '<div class="output-box-placeholder">Peek results will appear here when a script is run.</div>';
+        if (elements.exportPeekButton) elements.exportPeekButton.classList.add('hidden'); // <-- Hide export on run
         clearEditorPeekHighlight();
         uiInterpreterInstance.clearInternalState(); 
 
@@ -369,4 +430,8 @@ THEN
     elements.clearButton?.addEventListener('click', () => {
         clearOutputs();
     });
+
+    // --- START NEW EVENT LISTENER ---
+    elements.exportPeekButton?.addEventListener('click', handleExportPeek);
+    // --- END NEW EVENT LISTENER ---
 }
