@@ -14,7 +14,7 @@ Run `npm run dev` to launch the React dev server.
 Run `npm run build` to generate a static site in `dist/` that replaces the old
 `index.html` setup. The build can be previewed with `npm run preview` and served
 from any static host.
-Node tests still run with `npm test`.
+Run `npm test` to execute Vitest UI tests and Node tests.
 
 
 --- 
