@@ -168,6 +168,7 @@ Run script jumps the cursor around - make it stay.
 After editing a line, the output of that is dirty and needs to be marked as such.
 Refactor into smaller files (maybe add doco about what is where too)
 Remove PEEK entirely
+Add tabs for variables in output in addition to selected line.
 
 Recommended Refactorings
 
