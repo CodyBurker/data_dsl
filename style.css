@@ -95,7 +95,9 @@ body {
     top: 0;
     left: 0;
     padding: 0.75rem 0.25rem;
-    width: 3ch;
+    width: 4ch;
+    height: 100%;
+    overflow: hidden;
     text-align: right;
     border-right: 1px solid #d1d5db;
     color: #9ca3af;
@@ -110,7 +112,7 @@ body {
 #highlightingOverlay {
     margin: 0;
     padding: 0.75rem;
-    padding-left: calc(0.75rem + 3.5ch);
+    padding-left: calc(0.75rem + 4.5ch);
     border-width: 1px;
     border-style: solid;
     border-color: #d1d5db;
