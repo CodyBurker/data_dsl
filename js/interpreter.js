@@ -1,4 +1,5 @@
 // interpreter.js
+import { cities as sampleCities, people as samplePeople } from './samples.js';
 
 export class Interpreter {
     constructor(uiElements) {
@@ -21,11 +22,14 @@ export class Interpreter {
     }
 
     clearInternalState() {
-        this.variables = {};
+        this.variables = {
+            cities: sampleCities.map(r => ({ ...r })),
+            people: samplePeople.map(r => ({ ...r }))
+        };
         this.activeVariableName = null;
         this.peekOutputs = [];
         this.fileResolve = null; // Should be reset if a run is interrupted
-        this.log('Interpreter state cleared.');
+        this.log('Interpreter state cleared. Built-in samples loaded.');
     }
 
     async requestCsvFile(fileNameHint, forVariable) {
@@ -94,6 +98,12 @@ export class Interpreter {
                     throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply JOIN.`);
                 }
                 this.variables[this.activeVariableName] = this.handleJoin(args, currentDataset);
+                break;
+            case 'FILTER_ROWS':
+                if (!Array.isArray(currentDataset)) {
+                    throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply FILTER_ROWS.`);
+                }
+                this.variables[this.activeVariableName] = this.handleFilterRows(args, currentDataset);
                 break;
             case 'PEEK':
                 // currentDataset is already what we want (array or null)
@@ -191,6 +201,37 @@ export class Interpreter {
         });
         this.log(`Kept columns: ${columnsToKeep.join(', ')} for VAR "${this.activeVariableName}".`);
         return newDataset;
+    }
+
+    handleFilterRows(args, currentDataset) {
+        const { condition } = args;
+        const { column, operator, value } = condition;
+        const getVal = row => {
+            if (value && value.type === 'COLUMN_REFERENCE') return row[value.name];
+            return value;
+        };
+        const cmp = (a, b) => {
+            switch (operator) {
+                case 'IS': return a === b;
+                case 'IS NOT': return a !== b;
+                case '!=': return a != b;
+                case '>': return a > b;
+                case '<': return a < b;
+                case '>=': return a >= b;
+                case '<=': return a <= b;
+                case 'CONTAINS': return String(a).includes(String(b));
+                case 'STARTSWITH': return String(a).startsWith(String(b));
+                case 'ENDSWITH': return String(a).endsWith(String(b));
+                default: throw new Error(`Unsupported operator ${operator}`);
+            }
+        };
+        const filtered = currentDataset.filter(row => {
+            const left = row[column];
+            const right = getVal(row);
+            return cmp(left, right);
+        });
+        this.log(`FILTER_ROWS kept ${filtered.length} of ${currentDataset.length} rows for VAR "${this.activeVariableName}".`);
+        return filtered;
     }
 
     handleJoin(args, currentDataset) {

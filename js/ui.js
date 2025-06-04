@@ -304,14 +304,12 @@ export function initUI(interpreter) {
 
     const defaultScript = `VAR "cities"
 THEN
-    LOAD_CSV FILE "exampleCities.csv"
-THEN
     PEEK
 VAR "people"
 THEN
-    LOAD_CSV FILE "examplePeople.csv"
-THEN
     KEEP_COLUMNS name, age, city_id
+THEN
+    FILTER_ROWS WHERE age > 27
 THEN
     JOIN cities ON city_id = id TYPE "LEFT"
 THEN

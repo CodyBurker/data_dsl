@@ -104,3 +104,27 @@ test('handleLoadCsv uses example files when present', async () => {
   assert.strictEqual(prompted, false);
   global.fetch = originalFetch;
 });
+
+test('clearInternalState loads sample datasets', () => {
+  const interp = new Interpreter({});
+  interp.clearInternalState();
+  assert.ok(Array.isArray(interp.variables.cities));
+  assert.strictEqual(interp.variables.cities.length, 3);
+  assert.ok(Array.isArray(interp.variables.people));
+  assert.strictEqual(interp.variables.people.length, 4);
+});
+
+test('handleFilterRows filters rows based on condition', () => {
+  const interp = new Interpreter({});
+  interp.activeVariableName = 'data';
+  const data = [
+    {A:1,B:2},
+    {A:3,B:4},
+    {A:5,B:6}
+  ];
+  const result = interp.handleFilterRows({ condition: { column:'A', operator:'>', value:2 } }, data);
+  assert.deepEqual(result, [
+    {A:3,B:4},
+    {A:5,B:6}
+  ]);
+});
