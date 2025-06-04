@@ -170,28 +170,19 @@ Refactor into smaller files (maybe add doco about what is where too)
 Remove PEEK entirely
 Add tabs for variables in output in addition to selected line.
 
-Recommended Refactorings
+Recommended Refactorings (completed)
 
-Split js/ui.js
+The UI logic now lives in dedicated modules under `js/ui/`:
 
-    Suggested submodules:
+- `elements.js` – caches DOM elements via `queryElements` and exports the `elements` object.
+- `highlight.js` – syntax highlighting helpers.
+- `peek.js` – renders PEEK output and handles export.
+- `fileOps.js` – script file loading/saving utilities.
+- `index.js` – orchestrates initialization and event binding.
 
-        js/ui/elements.js – element caching (queryElements and elements object)
+Interpreter operations have also been split out:
 
-        js/ui/highlight.js – escapeHtml and applySyntaxHighlighting
+- `csv.js` – `loadCsv`, `parseCsvInput`, and `exportCsv`.
+- `datasetOps.js` – `keepColumns`, `joinDatasets`, `filterRows`, and `withColumn`.
 
-        js/ui/peek.js – generatePeekHtmlForDisplay, renderPeekOutputsUI, clearEditorPeekHighlight, handleExportPeek
-
-        js/ui/fileOps.js – saveScriptToFile, loadScriptFromFile, and loadDefaultScript
-
-        js/ui/index.js – orchestration logic (initUI, event bindings, clearOutputs, etc.) importing the above helpers
-
-This separation would isolate concerns (highlighting, PEEK display, file management) and shorten the primary entry file.
-
-Consider modularizing js/interpreter.js
-
-    The class handles many command-specific operations (CSV loading, joins, filtering, column math, exporting). Creating helper modules (e.g., csv.js for handleLoadCsv/handleExportCsv, datasetOps.js for column/row transformations) could trim the file and clarify responsibilities.
-
-Optional: subdivide lengthy tests
-
-    tests/interpreter.test.js (271 lines) groups many behaviors. Splitting by feature (CSV handling, joins, filtering, export) can make individual tests easier to locate and maintain, though this is less urgent.
+Tests remain in `tests/` and may be subdivided in the future if they grow too large.

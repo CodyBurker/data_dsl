@@ -18,6 +18,8 @@ This project contains a browser-based DSL for manipulating CSV data. The JavaScr
 
 ## Helpful Context
 - The `js/` directory contains the tokenizer, parser, interpreter, and UI logic.
+- `js/csv.js` contains helper functions for CSV import/export used by the interpreter.
+- `js/datasetOps.js` contains dataset transformation helpers (joins, filtering, column math).
 - `index.html` loads PapaParse from a CDN for CSV processing in the browser.
 - Style rules live in `style.css`; maintain existing formatting when making UI tweaks.
 
@@ -31,4 +33,13 @@ UI-related code lives under `js/ui/` and is split into several modules:
 - `index.js` – orchestrates UI initialization, event bindings, and exports helpers used in tests.
 
 When modifying UI behavior keep these files in sync and update this guide if the structure changes.
+
+## Interpreter Helper Modules
+`js/interpreter.js` focuses on orchestrating pipeline execution. Heavy lifting is delegated to:
+
+- `csv.js` – `loadCsv`, `parseCsvInput`, `exportCsv`
+- `datasetOps.js` – `keepColumns`, `joinDatasets`, `filterRows`, `withColumn`
+
+## Maintenance
+Whenever the project structure changes, update this AGENTS.md to reflect the new organization so future agents can navigate quickly.
 
