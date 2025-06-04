@@ -8,5 +8,5 @@ THEN LOAD_CSV FILE "examplePeople.csv"
 THEN PEEK
 THEN JOIN cities ON city_id=id TYPE "LEFT"
 THEN SELECT name, age, population, population_millions
-THEN FILTER name STARTSWITH "A"
+THEN FILTER name STARTSWITH "A" OR age < 30
 THEN PEEK
