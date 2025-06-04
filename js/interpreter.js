@@ -1,4 +1,3 @@
-import { builtInSamples } from './samples.js';
 // interpreter.js
 
 export class Interpreter {
@@ -22,11 +21,11 @@ export class Interpreter {
     }
 
     clearInternalState() {
-        this.variables = JSON.parse(JSON.stringify(builtInSamples));
+        this.variables = {};
         this.activeVariableName = null;
         this.peekOutputs = [];
         this.fileResolve = null; // Should be reset if a run is interrupted
-        this.log('Loaded built-in sample datasets.');
+        this.log('Interpreter state cleared.');
     }
 
     async requestCsvFile(fileNameHint, forVariable) {
@@ -120,9 +119,27 @@ export class Interpreter {
     }
 
     async handleLoadCsv(args) {
-        if (!this.uiElements.csvFileInputEl) throw new Error("File input not available.");
-        const file = await this.requestCsvFile(args.file, this.activeVariableName);
+        const fileName = args.file;
+        if (!fileName) throw new Error('LOAD_CSV requires FILE argument.');
 
+        if (typeof fetch !== 'undefined') {
+            try {
+                const resp = await fetch(`examples/${fileName}`);
+                if (resp.ok) {
+                    const text = await resp.text();
+                    return await this.parseCsvInput(text, fileName);
+                }
+            } catch (err) {
+                this.log(`Fetch for example ${fileName} failed: ${err.message}`);
+            }
+        }
+
+        if (!this.uiElements.csvFileInputEl) throw new Error('File input not available.');
+        const file = await this.requestCsvFile(fileName, this.activeVariableName);
+        return this.parseCsvInput(file, file.name);
+    }
+
+    parseCsvInput(input, name) {
         return new Promise((resolve, reject) => {
             this.log(`Using PapaParse for CSV parsing for VAR "${this.activeVariableName}".`);
             if (typeof Papa === 'undefined') {
@@ -131,14 +148,13 @@ export class Interpreter {
                 reject(new Error('PapaParse library is not available.'));
                 return;
             }
-            Papa.parse(file, {
+            Papa.parse(input, {
                 header: true,
                 skipEmptyLines: true,
-                dynamicTyping: true, // Automatically convert numbers, booleans
+                dynamicTyping: true,
                 complete: (results) => {
-                    this.log(`Loaded ${results.data.length} rows for VAR "${this.activeVariableName}" from ${file.name}. Headers: ${results.meta.fields ? results.meta.fields.join(', ') : 'N/A'}`);
+                    this.log(`Loaded ${results.data.length} rows for VAR "${this.activeVariableName}" from ${name}. Headers: ${results.meta.fields ? results.meta.fields.join(', ') : 'N/A'}`);
                     if (this.uiElements.fileInputContainerEl) this.uiElements.fileInputContainerEl.classList.add('hidden');
-                    
                     const rows = results.data;
                     this.log(`Parsed CSV for VAR "${this.activeVariableName}". Rows: ${rows.length}`);
                     resolve(rows);

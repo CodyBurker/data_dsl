@@ -10,8 +10,10 @@ Mission: To provide a simple and intuitive way to manipulate tabular data in the
 
 **Language Guide:** [View the full DSL guide](guide.md)
 
-Sample datasets `cities` and `people` are loaded automatically when a script runs.
-Use them to try out column selection and joins without uploading a file.
+Example CSV files `exampleCities.csv` and `examplePeople.csv` live in the
+`examples/` folder. If you reference these filenames in a `LOAD_CSV` command,
+the interpreter loads them automatically so you can try joins without uploading
+anything.
 
 --- 
 

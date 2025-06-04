@@ -302,7 +302,14 @@ export function initUI(interpreter) {
     uiInterpreterInstance = interpreter; // Store interpreter instance for UI use
     queryElements(); // Get all DOM elements
 
-    const defaultScript = `VAR "people"
+    const defaultScript = `VAR "cities"
+THEN
+    LOAD_CSV FILE "exampleCities.csv"
+THEN
+    PEEK
+VAR "people"
+THEN
+    LOAD_CSV FILE "examplePeople.csv"
 THEN
     KEEP_COLUMNS name, age, city_id
 THEN

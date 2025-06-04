@@ -19,9 +19,11 @@ THEN SELECT name, population
 THEN PEEK
 ```
 
-### Built-in Samples
-The interpreter provides `cities` and `people` datasets out of the box. Use
-them to experiment with column selection and joins without uploading a CSV.
+### Example Data
+The `examples/` folder contains `exampleCities.csv` and `examplePeople.csv`.
+If a `LOAD_CSV` command references one of these filenames, the interpreter will
+fetch it automatically so you can explore joins and column selection without
+uploading a file.
 
 ## Commands
 

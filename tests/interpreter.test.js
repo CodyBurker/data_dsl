@@ -84,14 +84,23 @@ test('handleJoin with different keys', () => {
 test('handleLoadCsv returns array of objects', async () => {
   const interp = new Interpreter({ csvFileInputEl: {} });
   interp.activeVariableName = 'df';
+  const originalFetch = global.fetch;
+  global.fetch = async () => ({ ok: false });
   interp.requestCsvFile = async () => ({ name: 'fake.csv' });
   const data = await interp.handleLoadCsv({ file: 'fake.csv' });
   assert.deepEqual(data, [{A:1,B:2},{A:3,B:4}]);
+  global.fetch = originalFetch;
 });
 
-test('built-in samples loaded on clearInternalState', () => {
-  const interp = new Interpreter({});
-  interp.clearInternalState();
-  assert.ok(Array.isArray(interp.variables.cities));
-  assert.ok(interp.variables.people.some(p => p.name === 'Alice'));
+test('handleLoadCsv uses example files when present', async () => {
+  const interp = new Interpreter({ csvFileInputEl: {} });
+  interp.activeVariableName = 'ex';
+  let prompted = false;
+  interp.requestCsvFile = async () => { prompted = true; return { name: 'x.csv' }; };
+  const originalFetch = global.fetch;
+  global.fetch = async () => ({ ok: true, text: async () => 'A,B\n1,2\n3,4' });
+  const data = await interp.handleLoadCsv({ file: 'example.csv' });
+  assert.deepEqual(data, [{A:1,B:2},{A:3,B:4}]);
+  assert.strictEqual(prompted, false);
+  global.fetch = originalFetch;
 });
