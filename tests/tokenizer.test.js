@@ -46,3 +46,23 @@ test('tokenizeForParser recognizes SELECT as keyword', () => {
   const kw = tokens.find(t => t.value === 'SELECT');
   assert.ok(kw && kw.type === TokenType.KEYWORD);
 });
+
+test('tokenizeForParser recognizes JOIN and ON keywords', () => {
+  const tokens = tokenizeForParser('VAR "a" THEN JOIN b ON id');
+  const join = tokens.find(t => t.value === 'JOIN');
+  const on = tokens.find(t => t.value === 'ON');
+  assert.ok(join && join.type === TokenType.KEYWORD);
+  assert.ok(on && on.type === TokenType.KEYWORD);
+});
+
+test('tokenizeForParser recognizes TYPE keyword', () => {
+  const tokens = tokenizeForParser('VAR "a" THEN JOIN b ON id TYPE "LEFT"');
+  const typeKw = tokens.find(t => t.value === 'TYPE');
+  assert.ok(typeKw && typeKw.type === TokenType.KEYWORD);
+});
+
+test('tokenizeForParser recognizes = operator', () => {
+  const tokens = tokenizeForParser('VAR "x" THEN JOIN y ON a = b');
+  const eq = tokens.find(t => t.type === TokenType.OPERATOR && t.value === '=');
+  assert.ok(eq);
+});

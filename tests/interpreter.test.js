@@ -54,6 +54,33 @@ test('executeCommand SELECT uses handleKeepColumns', async () => {
   assert.deepEqual(interp.variables.sel, [{B:2}]);
 });
 
+test('handleJoin performs default inner join', () => {
+  const interp = new Interpreter({});
+  interp.activeVariableName = 'left';
+  interp.variables.left = [{id:1,val:'a'},{id:2,val:'b'}];
+  interp.variables.right = [{id:1,x:10},{id:3,x:30}];
+  const result = interp.handleJoin({ variable: 'right', leftKey: 'id', rightKey: 'id' }, interp.variables.left);
+  assert.deepEqual(result, [{id:1,val:'a',x:10}]);
+});
+
+test('handleJoin left join keeps unmatched', () => {
+  const interp = new Interpreter({});
+  interp.activeVariableName = 'l';
+  interp.variables.l = [{id:1,v:'a'},{id:2,v:'b'}];
+  interp.variables.r = [{id:1,x:10}];
+  const result = interp.handleJoin({ variable: 'r', leftKey: 'id', rightKey: 'id', type: 'LEFT' }, interp.variables.l);
+  assert.deepEqual(result, [{id:1,v:'a',x:10},{id:2,v:'b'}]);
+});
+
+test('handleJoin with different keys', () => {
+  const interp = new Interpreter({});
+  interp.activeVariableName = 'l';
+  interp.variables.l = [{name:'a'},{name:'b'}];
+  interp.variables.r = [{"full name":'a',x:1},{"full name":'c',x:2}];
+  const result = interp.handleJoin({ variable: 'r', leftKey: 'name', rightKey: 'full name' }, interp.variables.l);
+  assert.deepEqual(result, [{name:'a',"full name":'a',x:1}]);
+});
+
 test('handleLoadCsv returns array of objects', async () => {
   const interp = new Interpreter({ csvFileInputEl: {} });
   interp.activeVariableName = 'df';
