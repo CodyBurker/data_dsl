@@ -34,13 +34,50 @@ export function withColumn(interp, args, currentDataset) {
         throw new Error('WITH_COLUMN requires an expression.');
     }
 
+    const tokensToJs = (tokens) => {
+        let i = 0;
+        const convert = () => {
+            const out = [];
+            while (i < tokens.length) {
+                const t = tokens[i];
+                if (t.type === 'IDENTIFIER') {
+                    const upper = t.value.toUpperCase();
+                    if (['LOWER', 'UPPER', 'TRIM'].includes(upper) && tokens[i+1] && tokens[i+1].type === 'PUNCTUATION' && tokens[i+1].value === '(') {
+                        i += 2; // skip name and opening paren
+                        const inner = [];
+                        let depth = 1;
+                        while (i < tokens.length && depth > 0) {
+                            const tk = tokens[i];
+                            if (tk.type === 'PUNCTUATION' && tk.value === '(') depth++;
+                            else if (tk.type === 'PUNCTUATION' && tk.value === ')') {
+                                depth--;
+                                if (depth === 0) { i++; break; }
+                            }
+                            if (depth > 0) { inner.push(tk); i++; }
+                        }
+                        const argJs = tokensToJs(inner);
+                        const js = upper === 'LOWER' ? `(String(${argJs}).toLowerCase())` :
+                                   upper === 'UPPER' ? `(String(${argJs}).toUpperCase())` :
+                                   `(String(${argJs}).trim())`;
+                        out.push(js);
+                        continue;
+                    }
+                    out.push(`row["${t.value}"]`);
+                    i++;
+                    continue;
+                }
+                if (t.type === 'NUMBER_LITERAL') { out.push(t.value); i++; continue; }
+                if (t.type === 'STRING_LITERAL') { out.push(JSON.stringify(t.value)); i++; continue; }
+                if (t.type === 'OPERATOR' || (t.type === 'PUNCTUATION' && ['(', ')'].includes(t.value))) { out.push(t.value); i++; continue; }
+                throw new Error(`Unsupported token ${t.value} in expression`);
+            }
+            return out.join(' ');
+        };
+        return convert();
+    };
+
+    const exprStr = tokensToJs(expression);
     const evalExpr = (row) => {
-        const exprStr = expression.map(t => {
-            if (t.type === 'IDENTIFIER') return `row["${t.value}"]`;
-            if (t.type === 'NUMBER_LITERAL') return t.value;
-            if (t.type === 'OPERATOR' || (t.type === 'PUNCTUATION' && ['(', ')'].includes(t.value))) return t.value;
-            throw new Error(`Unsupported token ${t.value} in expression`);
-        }).join(' ');
         try {
             return Function('row', `return ${exprStr}`)(row);
         } catch (e) {
