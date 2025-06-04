@@ -90,7 +90,7 @@ using `AND`/`OR`:
 FILTER (col = 1 OR col = 2) AND (otherCol != 3)
 ```
 
-### WITH_COLUMN
+### WITH COLUMN
 Create or replace a column using arithmetic on existing columns.
 
 ```
