@@ -169,6 +169,7 @@ After editing a line, the output of that is dirty and needs to be marked as such
 Refactor into smaller files (maybe add doco about what is where too)
 Remove PEEK entirely
 Add tabs for variables in output in addition to selected line.
+Some commands have underscores and some don't - lose all of them?
 
 Recommended Refactorings (completed)
 
