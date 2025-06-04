@@ -83,13 +83,13 @@ export class Interpreter {
                 break;
             case 'KEEP_COLUMNS':
             case 'SELECT':
-                if (!(currentDataset instanceof dfd.DataFrame)) {
-                    throw new Error(`No valid DataFrame loaded for VAR "${this.activeVariableName}" to apply ${command}.`);
+                if (!Array.isArray(currentDataset)) {
+                    throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply ${command}.`);
                 }
                 this.variables[this.activeVariableName] = this.handleKeepColumns(args, currentDataset);
                 break;
             case 'PEEK':
-                // currentDataset is already what we want (DataFrame or null)
+                // currentDataset is already what we want (array or null)
                 const peekLine = commandNode.line;
                 const peekId = `peek-${this.activeVariableName || 'context'}-l${peekLine}-idx${this.peekOutputs.length}`;
 
@@ -97,7 +97,7 @@ export class Interpreter {
                     id: peekId,
                     varName: this.activeVariableName || 'Current Context',
                     line: peekLine,
-                    dataset: currentDataset // Store raw DataFrame (or null/other)
+                    dataset: currentDataset // Store raw dataset (array or other)
                 });
                 this.log(`PEEK data for VAR "${this.activeVariableName}" (Line ${peekLine}) captured.`);
                 break;
@@ -131,14 +131,9 @@ export class Interpreter {
                     this.log(`Loaded ${results.data.length} rows for VAR "${this.activeVariableName}" from ${file.name}. Headers: ${results.meta.fields ? results.meta.fields.join(', ') : 'N/A'}`);
                     if (this.uiElements.fileInputContainerEl) this.uiElements.fileInputContainerEl.classList.add('hidden');
                     
-                    // Convert to Danfo.js DataFrame
-                    if (typeof dfd === 'undefined') {
-                        reject(new Error('Danfo.js (dfd) library is not available.'));
-                        return;
-                    }
-                    const df = new dfd.DataFrame(results.data);
-                    this.log(`Converted to Danfo.js DataFrame for VAR "${this.activeVariableName}". Shape: (${df.shape[0]}, ${df.shape[1]})`);
-                    resolve(df); // Resolve with the DataFrame
+                    const rows = results.data;
+                    this.log(`Parsed CSV for VAR "${this.activeVariableName}". Rows: ${rows.length}`);
+                    resolve(rows);
                 },
                 error: (err) => {
                     this.log(`PapaParse error for VAR "${this.activeVariableName}": ${err.message}`);
@@ -149,52 +144,35 @@ export class Interpreter {
         });
     }
 
-    handleKeepColumns(args, currentDataset) { // currentDataset is now a Danfo.js DataFrame
-        // No need to check `!currentDataset` here as it's checked before calling in executeCommand
+    handleKeepColumns(args, currentDataset) {
+        // currentDataset is an array of objects
         const { columns } = args;
         if (!Array.isArray(columns)) {
             throw new Error(`Invalid columns argument for KEEP_COLUMNS in VAR "${this.activeVariableName}".`);
         }
+        if (!Array.isArray(currentDataset) || currentDataset.length === 0) {
+            return [];
+        }
+        const allCols = Object.keys(currentDataset[0]);
+        const columnsToKeep = columns.map(c => allCols.find(ac => ac.toLowerCase() === c.toLowerCase())).filter(Boolean);
 
-        // Danfo.js is case-sensitive. Find actual column names matching requested ones (case-insensitive)
-        // This is a common pattern if user input for column names might not match case exactly.
-        const dfColumns = currentDataset.columns;
-        const columnsToKeep = columns.map(requestedCol => {
-            const foundCol = dfColumns.find(dfCol => dfCol.toLowerCase() === requestedCol.toLowerCase());
-            if (!foundCol) {
-                this.log(`Warning: Column "${requestedCol}" not found in DataFrame for VAR "${this.activeVariableName}". Available columns: ${dfColumns.join(', ')}`);
-            }
-            return foundCol || requestedCol; // Keep original if not found to let Danfo.js handle the error or non-selection
-        }).filter(col => dfColumns.includes(col)); // Only keep columns that actually exist to avoid errors
-
-        if (columnsToKeep.length === 0 && columns.length > 0) {
-             throw new Error(`None of the specified columns for KEEP_COLUMNS were found in VAR "${this.activeVariableName}". Requested: ${columns.join(', ')}. Available: ${dfColumns.join(', ')}`);
+        if (columnsToKeep.length === 0) {
+            throw new Error(`None of the specified columns for KEEP_COLUMNS were found in VAR "${this.activeVariableName}".`);
         }
 
-
-        const newDataset = currentDataset.loc({ columns: columnsToKeep });
-        this.log(`Kept columns: ${columnsToKeep.join(', ')} for VAR "${this.activeVariableName}". New shape: (${newDataset.shape[0]}, ${newDataset.shape[1]}).`);
+        const newDataset = currentDataset.map(row => {
+            const obj = {};
+            columnsToKeep.forEach(col => { obj[col] = row[col]; });
+            return obj;
+        });
+        this.log(`Kept columns: ${columnsToKeep.join(', ')} for VAR "${this.activeVariableName}".`);
         return newDataset;
     }
 
     async handleExportCsv(args, dataset) {
         const fileName = args.file || 'export.csv';
 
-        if (dataset instanceof dfd.DataFrame) {
-            if (dataset.count() === 0) {
-                this.log(`EXPORT_CSV skipped: DataFrame in VAR "${this.activeVariableName}" is empty.`);
-                return;
-            }
-            const csvString = Papa.unparse(dataset.toJSON());
-            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            this.log(`Exported DataFrame from VAR "${this.activeVariableName}" to ${fileName}.`);
-        } else if (Array.isArray(dataset) && dataset.length > 0 && typeof dataset[0] === 'object') {
+        if (Array.isArray(dataset) && dataset.length > 0 && typeof dataset[0] === 'object') {
             const csvString = Papa.unparse(dataset);
             const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
@@ -203,7 +181,7 @@ export class Interpreter {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            this.log(`Exported array of objects from VAR "${this.activeVariableName}" to ${fileName}.`);
+            this.log(`Exported data from VAR "${this.activeVariableName}" to ${fileName}.`);
         } else {
             throw new Error(`EXPORT_CSV does not support dataset type: ${typeof dataset}`);
         }

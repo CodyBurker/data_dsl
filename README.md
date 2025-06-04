@@ -19,7 +19,7 @@ Mission: To provide a simple and intuitive way to manipulate tabular data in the
 * **Short Iterations & Visible Progress:** Each phase aims to deliver tangible results quickly.
 * **Focus on Core Value:** Prioritize features that directly address the goal of replacing spreadsheet vlookups and similar tasks.
 * **Flexibility:** This roadmap is a guide, not a rigid constraint. Pivots are okay based on engagement and emerging priorities.
-* **Leverage Existing Tools:** Use libraries like DataFrame.js/Danfo.js and PapaParse to reduce boilerplate and focus on unique features.
+* **Leverage Existing Tools:** Use libraries like PapaParse to reduce boilerplate and focus on unique features.
 * **Quick Wins & Feedback Loops:** Emphasize features that provide immediate visual feedback.
 
 ---
@@ -31,7 +31,7 @@ Mission: To provide a simple and intuitive way to manipulate tabular data in the
 **ADHD Strategy:** Lean into hyperfocus on getting the first end-to-end flow working. Keep it simple.
 
 1.  **Data Engine (Foundation First):**
-    * [X] **Integrate a DataFrame Library:** Switch to Danfo.js or DataFrame.js for robust data manipulation. (High Priority)
+    * [X] **Use Native Arrays:** Move away from external DataFrame libraries for a simpler core.
 2.  **I/O (Getting Data In & Out):**
     * [X] **LOAD_CSV (Better):** Implement `LOAD_CSV` using PapaParse.
     * [X] **Save to CSV:** Implement basic functionality to download the transformed data as a CSV.

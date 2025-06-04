@@ -7,7 +7,6 @@
     "test": "node --test"
   },
   "dependencies": {
-    "danfojs-node": "^1.2.0",
     "jsdom": "^26.1.0"
   }
 }
