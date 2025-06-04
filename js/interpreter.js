@@ -6,6 +6,7 @@ export class Interpreter {
         this.variables = {};
         this.activeVariableName = null;
         this.peekOutputs = [];
+        this.stepOutputs = [];
         this.fileResolve = null;
 
         // Store references to UI elements passed from ui.js
@@ -28,6 +29,7 @@ export class Interpreter {
         };
         this.activeVariableName = null;
         this.peekOutputs = [];
+        this.stepOutputs = [];
         this.fileResolve = null; // Should be reset if a run is interrupted
         this.log('Interpreter state cleared. Built-in samples loaded.');
     }
@@ -58,10 +60,14 @@ export class Interpreter {
             this.log(`Processing block for VAR "${this.activeVariableName}"`);
             this.variables[this.activeVariableName] = null;
 
-            for (const commandNode of varBlock.pipeline) {
+            for (let index = 0; index < varBlock.pipeline.length; index++) {
+                const commandNode = varBlock.pipeline[index];
                 this.log(`Executing: ${commandNode.command} for VAR "${this.activeVariableName}"` + (commandNode.line ? ` (Line ${commandNode.line})` : ''));
                 try {
                     await this.executeCommand(commandNode);
+                    const dataset = this.variables[this.activeVariableName];
+                    const stepId = `step-${this.activeVariableName}-l${commandNode.line}-${index}`;
+                    this.stepOutputs.push({ id: stepId, varName: this.activeVariableName, line: commandNode.line, dataset });
                 } catch (e) {
                     const err = e instanceof Error ? e.message : JSON.stringify(e);
                     this.log(`ERROR executing ${commandNode.command} for VAR "${this.activeVariableName}": ${err}`);

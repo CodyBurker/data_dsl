@@ -165,15 +165,58 @@ function renderPeekOutputsUI() {
     elements.peekOutputsDisplayAreaEl.innerHTML = '';
     
     const peekOutputs = uiInterpreterInstance.peekOutputs;
+    const stepOutputs = uiInterpreterInstance.stepOutputs;
 
-    if (peekOutputs.length === 0) {
+    if (peekOutputs.length === 0 && stepOutputs.length === 0) {
         elements.peekOutputsDisplayAreaEl.innerHTML = '<div class="output-box-placeholder">No PEEK outputs to display.</div>';
-        if (elements.exportPeekButton) elements.exportPeekButton.classList.add('hidden'); // <-- Hide export button
+        if (elements.exportPeekButton) elements.exportPeekButton.classList.add('hidden');
         clearEditorPeekHighlight();
         return;
     }
-    
-    if (elements.exportPeekButton) elements.exportPeekButton.classList.remove('hidden'); // <-- Show export button
+
+    if (elements.exportPeekButton) elements.exportPeekButton.classList.remove('hidden');
+
+    stepOutputs.forEach((stepData, index) => {
+        const tabButton = document.createElement('button');
+        tabButton.classList.add('peek-tab');
+        tabButton.textContent = `STEP ${index + 1} (VAR "${stepData.varName}", L${stepData.line})`;
+        tabButton.dataset.target = stepData.id;
+        tabButton.dataset.stepIndex = index;
+
+        const contentDiv = document.createElement('div');
+        contentDiv.id = stepData.id;
+        contentDiv.classList.add('peek-content');
+        contentDiv.innerHTML = generatePeekHtmlForDisplay(stepData.dataset, stepData.varName, stepData.line);
+
+        elements.peekTabsContainerEl.appendChild(tabButton);
+        elements.peekOutputsDisplayAreaEl.appendChild(contentDiv);
+
+        tabButton.addEventListener('click', () => {
+            elements.peekTabsContainerEl.querySelectorAll('.peek-tab').forEach(tab => tab.classList.remove('active-peek-tab'));
+            elements.peekOutputsDisplayAreaEl.querySelectorAll('.peek-content').forEach(content => content.classList.remove('active-peek-content'));
+
+            tabButton.classList.add('active-peek-tab');
+            contentDiv.classList.add('active-peek-content');
+
+            if (elements.inputArea && elements.highlightingOverlay) {
+                elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(elements.inputArea.value, stepData.line);
+                currentEditorHighlightLine = stepData.line;
+                const highlightedSpan = elements.highlightingOverlay.querySelector('#active-editor-peek-highlight');
+                if (highlightedSpan) {
+                    const scrollTargetOffset = highlightedSpan.offsetTop;
+                    const inputAreaVisibleHeight = elements.inputArea.clientHeight;
+                    const desiredScrollTop = scrollTargetOffset - (inputAreaVisibleHeight / 3);
+
+                    elements.inputArea.scrollTop = Math.max(0, desiredScrollTop);
+                    elements.highlightingOverlay.scrollTop = elements.inputArea.scrollTop;
+                }
+            }
+        });
+
+        if (index === 0 && peekOutputs.length === 0) {
+            tabButton.click();
+        }
+    });
 
     peekOutputs.forEach((peekData, index) => {
         const tabButton = document.createElement('button');
@@ -234,8 +277,9 @@ function clearOutputs() {
     if (uiInterpreterInstance) {
          // Clear interpreter's log output element
         if (elements.logOutputEl) elements.logOutputEl.innerHTML = 'Logs will appear here...<br>';
-        // Clear interpreter's peek data and related UI
-        uiInterpreterInstance.peekOutputs = []; // Clear stored peeks in interpreter
+        // Clear interpreter's peek and step data and related UI
+        uiInterpreterInstance.peekOutputs = [];
+        uiInterpreterInstance.stepOutputs = [];
     }
    
     if (elements.peekTabsContainerEl) elements.peekTabsContainerEl.innerHTML = '';

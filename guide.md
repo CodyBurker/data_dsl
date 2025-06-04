@@ -65,6 +65,9 @@ Display the current dataset in the Peek output area.
 PEEK
 ```
 
+Each command also records its result in a **Step Outputs** list. Selecting a
+step tab highlights that command in the editor so you can follow the pipeline.
+
 ### EXPORT_CSV
 Download the current dataset as a CSV file.
 

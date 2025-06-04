@@ -269,3 +269,17 @@ test('default script file runs without error', async () => {
   assert.strictEqual(interp.peekOutputs.length, 3);
   assert.deepEqual(interp.peekOutputs[1].dataset[0], { person_id: 1, name: 'Alice', age: 30, city_id: 1 });
 });
+
+test('run records step outputs for each command', async () => {
+  const script = `VAR "d"\nTHEN LOAD_CSV FILE "fake.csv"\nTHEN SELECT A\nTHEN PEEK`;
+  const tokens = tokenizeForParser(script);
+  const ast = new Parser(tokens).parse();
+  const interp = new Interpreter({ csvFileInputEl: {} });
+  interp.requestCsvFile = async () => ({ name: 'fake.csv' });
+  global.Papa = {
+    parse: (file, opts) => opts.complete({ data: [{A:1,B:2},{A:3,B:4}], meta:{ fields:['A','B'] } })
+  };
+  await interp.run(ast);
+  assert.strictEqual(interp.stepOutputs.length, ast[0].pipeline.length);
+  assert.deepEqual(interp.stepOutputs[1].dataset, [{A:1},{A:3}]);
+});

@@ -17,6 +17,10 @@ anything. Additionally the interpreter preloads `cities` and `people`
 variables with the same data so you can experiment without any `LOAD_CSV`
 commands.
 
+Every command execution now records its result in a **Step Outputs** list shown
+next to the PEEK outputs. Selecting a step highlights the corresponding line in
+the editor so you can trace pipeline execution.
+
 The editor automatically loads `examples/default.pd` on startup. The script shows
 how to compute `population_millions` with `WITH COLUMN`.
 
