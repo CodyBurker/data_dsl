@@ -340,7 +340,7 @@ export function initUI(interpreter) {
     queryElements(); // Get all DOM elements
 
     const defaultScript = `VAR "cities"
-        elements.inputArea.value = defaultScript;
+THEN LOAD_CSV FILE "exampleCities.csv"
 THEN SELECT population, id
 THEN PEEK
 VAR "people"
