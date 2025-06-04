@@ -32,7 +32,7 @@ Mission: To provide a simple and intuitive way to manipulate tabular data in the
     * [X] **Integrate a DataFrame Library:** Switch to Danfo.js or DataFrame.js for robust data manipulation. (High Priority)
 2.  **I/O (Getting Data In & Out):**
     * [X] **LOAD_CSV (Better):** Implement `LOAD_CSV` using PapaParse.
-    * [ ] **Save to CSV:** Implement basic functionality to download the transformed data as a CSV.
+    * [X] **Save to CSV:** Implement basic functionality to download the transformed data as a CSV.
 3.  **Transformations (The "VLOOKUP" Core):**
     * [ ] **SELECT:** Implement function to select specific columns.
     * [ ] **JOIN (Inner Join):** Implement function to perform an inner join on two datasets based on a common key.

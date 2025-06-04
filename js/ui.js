@@ -338,6 +338,8 @@ THEN
     LOAD_CSV FILE "cities.csv"
 THEN
     PEEK # Shows modified "citiesData"
+THEN
+    EXPORT_CSV TO "cities_out.csv" # Example export
 
 VAR "anotherVar"
 THEN
