@@ -26,6 +26,9 @@ that tab so you can quickly inspect results as you edit.
 Clicking on a line containing `VAR "name"` now shows the final value assigned to
 that variable after all of its commands run.
 
+The script editor now includes a subtle line number gutter so you can quickly
+reference line positions while tracing your pipelines.
+
 The editor automatically loads `examples/default.pd` on startup. The script shows
 how to compute `population_millions` with `WITH COLUMN`.
 
