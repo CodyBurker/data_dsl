@@ -119,23 +119,60 @@ export class Parser {
     parseKeepColumns() { this.consume(TokenType.KEYWORD, 'KEEP_COLUMNS'); const c = this.parseColumnList(); return { command: 'KEEP_COLUMNS', args: { columns: c } }; }
     parseSelect() { this.consume(TokenType.KEYWORD, 'SELECT'); const c = this.parseColumnList(); return { command: 'SELECT', args: { columns: c } }; }
     parseDropColumns() { this.consume(TokenType.KEYWORD, 'DROP_COLUMNS'); const c = this.parseColumnList(); return { command: 'DROP_COLUMNS', args: { columns: c } }; }
+    parseExpression() { const p = []; while(!this.isAtEnd() && this.peek().type !== TokenType.NEWLINE && !['THEN', 'STORE_AS', 'VAR'].includes(this.peek().value) ) { const t = this.peek(); if (['IDENTIFIER', 'STRING_LITERAL', 'NUMBER_LITERAL'].includes(t.type) || (t.type === TokenType.OPERATOR && ['*', '/', '+', '-'].includes(t.value))) p.push(this.advance()); else break; } if (p.length === 0) this.error("Expected expression for NEW_COLUMN."); return p.map(i => ({ type: i.type, value: i.value })); }
     parseFilter() {
         this.consume(TokenType.KEYWORD, 'FILTER');
         this.match(TokenType.KEYWORD, 'WHERE'); // optional WHERE keyword
-        const cond = { column: null, operator: null, value: null };
+        const expr = this.parseFilterExpression();
+        return { command: 'FILTER', args: expr };
+    }
+
+    parseFilterExpression() {
+        return this.parseOrExpression();
+    }
+
+    parseOrExpression() {
+        let left = this.parseAndExpression();
+        while (this.match(TokenType.KEYWORD, 'OR')) {
+            const right = this.parseAndExpression();
+            left = { type: 'OR', left, right };
+        }
+        return left;
+    }
+
+    parseAndExpression() {
+        let left = this.parsePrimaryExpression();
+        while (this.match(TokenType.KEYWORD, 'AND')) {
+            const right = this.parsePrimaryExpression();
+            left = { type: 'AND', left, right };
+        }
+        return left;
+    }
+
+    parsePrimaryExpression() {
+        if (this.match(TokenType.PUNCTUATION, '(')) {
+            const expr = this.parseFilterExpression();
+            this.consume(TokenType.PUNCTUATION, ')', "Expected ')' after expression");
+            return expr;
+        }
+        return this.parseFilterCondition();
+    }
+
+    parseFilterCondition() {
+        const cond = { type: 'condition', column: null, operator: null, value: null };
         if (this.peek().type === TokenType.IDENTIFIER) cond.column = this.consume(TokenType.IDENTIFIER).value;
         else if (this.peek().type === TokenType.STRING_LITERAL) cond.column = this.consume(TokenType.STRING_LITERAL).value;
         else this.error('Expected column name for filter condition.');
 
         const opToken = this.peek();
-        if (opToken.value.toUpperCase() === 'IS' &&
+        if (opToken.value && opToken.value.toUpperCase() === 'IS' &&
             this.lookAhead(1) && typeof this.lookAhead(1).value === 'string' &&
             this.lookAhead(1).value.toUpperCase() === 'NOT') {
             this.advance();
             this.advance();
             cond.operator = 'IS NOT';
         } else if ((opToken.type === TokenType.KEYWORD || opToken.type === TokenType.OPERATOR) &&
-            (CONDITION_OPERATORS.includes(opToken.value.toUpperCase()) || ['=', '!=', '>', '<', '>=', '<='].includes(opToken.value))) {
+            (CONDITION_OPERATORS.includes(opToken.value.toUpperCase()) || ['=','!=', '>', '<', '>=', '<='].includes(opToken.value))) {
             cond.operator = this.advance().value.toUpperCase();
         } else {
             this.error(`Expected filter operator (e.g., =, IS, >, CONTAINS) but got ${opToken.value}`);
@@ -145,10 +182,8 @@ export class Parser {
         else if (this.peek().type === TokenType.NUMBER_LITERAL) cond.value = this.consume(TokenType.NUMBER_LITERAL).value;
         else if (this.peek().type === TokenType.IDENTIFIER) cond.value = { type: 'COLUMN_REFERENCE', name: this.consume(TokenType.IDENTIFIER).value };
         else this.error('Expected value (string, number, or column identifier) for filter condition.');
-
-        return { command: 'FILTER', args: cond };
+        return cond;
     }
-    parseExpression() { const p = []; while(!this.isAtEnd() && this.peek().type !== TokenType.NEWLINE && !['THEN', 'STORE_AS', 'VAR'].includes(this.peek().value) ) { const t = this.peek(); if (['IDENTIFIER', 'STRING_LITERAL', 'NUMBER_LITERAL'].includes(t.type) || (t.type === TokenType.OPERATOR && ['*', '/', '+', '-'].includes(t.value))) p.push(this.advance()); else break; } if (p.length === 0) this.error("Expected expression for NEW_COLUMN."); return p.map(i => ({ type: i.type, value: i.value })); }
     parseNewColumn() { this.consume(TokenType.KEYWORD, 'NEW_COLUMN'); let n; if (this.peek().type === TokenType.STRING_LITERAL) n = this.consume(TokenType.STRING_LITERAL).value; else n = this.consume(TokenType.IDENTIFIER).value; this.consume(TokenType.KEYWORD, 'AS'); const e = this.parseExpression(); return { command: 'NEW_COLUMN', args: { newColumnName: n, expression: e } }; }
     parseRenameColumn() { this.consume(TokenType.KEYWORD, 'RENAME_COLUMN'); let o; if(this.peek().type === TokenType.STRING_LITERAL) o = this.consume(TokenType.STRING_LITERAL).value; else o = this.consume(TokenType.IDENTIFIER).value; this.consume(TokenType.KEYWORD, 'TO'); let n; if(this.peek().type === TokenType.STRING_LITERAL) n = this.consume(TokenType.STRING_LITERAL).value; else n = this.consume(TokenType.IDENTIFIER).value; return { command: 'RENAME_COLUMN', args: { oldName: o, newName: n } }; }
     parseSortBy() { this.consume(TokenType.KEYWORD, 'SORT_BY'); let c; if(this.peek().type === TokenType.STRING_LITERAL) c = this.consume(TokenType.STRING_LITERAL).value; else c = this.consume(TokenType.IDENTIFIER).value; let o = 'ASC'; if (this.match(TokenType.KEYWORD, 'ORDER')) { const ot = this.consume(TokenType.STRING_LITERAL); if (['ASC', 'DESC'].includes(ot.value.toUpperCase())) o = ot.value.toUpperCase(); else this.error("Sort order must be 'ASC' or 'DESC'."); } return { command: 'SORT_BY', args: { column: c, order: o } }; }
