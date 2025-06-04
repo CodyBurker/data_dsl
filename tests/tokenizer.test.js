@@ -7,6 +7,8 @@ const sampleScript = `VAR "data" THEN LOAD_CSV FILE "cities.csv"
 THEN KEEP_COLUMNS name, population
 THEN PEEK`;
 
+const selectScript = `VAR "d" THEN LOAD_CSV FILE "f.csv" THEN SELECT a, b`;
+
 test('tokenizeForParser produces expected token sequence', () => {
   const tokens = tokenizeForParser(sampleScript);
   const noNewlines = tokens.filter(t => t.type !== TokenType.NEWLINE);
@@ -37,4 +39,10 @@ test('tokenizeForHighlighting keeps comment and case', () => {
   const comment = tokens.find(t => t.type === TokenType.COMMENT);
   assert.ok(comment && comment.value.includes('#hello'));
   assert.strictEqual(tokens[0].value, 'Var');
+});
+
+test('tokenizeForParser recognizes SELECT as keyword', () => {
+  const tokens = tokenizeForParser(selectScript);
+  const kw = tokens.find(t => t.value === 'SELECT');
+  assert.ok(kw && kw.type === TokenType.KEYWORD);
 });

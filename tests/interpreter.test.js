@@ -72,3 +72,11 @@ test('handleExportCsv throws on unsupported type', async () => {
   interp.activeVariableName = 'data';
   await assert.rejects(() => interp.handleExportCsv({file:'x.csv'}, 5), /does not support/);
 });
+
+test('executeCommand SELECT uses handleKeepColumns', async () => {
+  const interp = new Interpreter({});
+  interp.activeVariableName = 'sel';
+  interp.variables.sel = new MockDataFrame([{A:1,B:2,C:3}]);
+  await interp.executeCommand({ command: 'SELECT', args: { columns: ['B'] } });
+  assert.deepEqual(interp.variables.sel.columns, ['B']);
+});

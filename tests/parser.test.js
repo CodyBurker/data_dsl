@@ -21,3 +21,10 @@ test('Parser throws on missing THEN', () => {
   const parser = new Parser(tokens);
   assert.throws(() => parser.parse(), /must be followed by 'THEN'/);
 });
+
+test('Parser parses SELECT command', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN LOAD_CSV FILE "f.csv" THEN SELECT A');
+  const ast = new Parser(tokens).parse();
+  assert.strictEqual(ast[0].pipeline[1].command, 'SELECT');
+  assert.deepEqual(ast[0].pipeline[1].args.columns, ['A']);
+});
