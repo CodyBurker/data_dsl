@@ -128,13 +128,15 @@ export class Parser {
         else this.error('Expected column name for filter condition.');
 
         const opToken = this.peek();
-        if ((opToken.type === TokenType.KEYWORD || opToken.type === TokenType.OPERATOR) &&
-            (CONDITION_OPERATORS.includes(opToken.value.toUpperCase()) || ['=', '!=', '>', '<', '>=', '<='].includes(opToken.value))) {
-            cond.operator = this.advance().value.toUpperCase();
-        } else if (opToken.value.toUpperCase() === 'IS' && this.lookAhead(1)?.value.toUpperCase() === 'NOT') {
+        if (opToken.value.toUpperCase() === 'IS' &&
+            this.lookAhead(1) && typeof this.lookAhead(1).value === 'string' &&
+            this.lookAhead(1).value.toUpperCase() === 'NOT') {
             this.advance();
             this.advance();
             cond.operator = 'IS NOT';
+        } else if ((opToken.type === TokenType.KEYWORD || opToken.type === TokenType.OPERATOR) &&
+            (CONDITION_OPERATORS.includes(opToken.value.toUpperCase()) || ['=', '!=', '>', '<', '>=', '<='].includes(opToken.value))) {
+            cond.operator = this.advance().value.toUpperCase();
         } else {
             this.error(`Expected filter operator (e.g., =, IS, >, CONTAINS) but got ${opToken.value}`);
         }
