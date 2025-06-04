@@ -108,6 +108,16 @@ body {
     pointer-events: none;
 }
 
+#varBlockIndicator {
+    position: absolute;
+    width: 2px;
+    background-color: #4f46e5;
+    opacity: 0.75;
+    z-index: 1;
+    pointer-events: none;
+    display: none;
+}
+
 #pipeDataInput,
 #highlightingOverlay {
     margin: 0;
