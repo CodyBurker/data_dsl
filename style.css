@@ -117,6 +117,10 @@ body {
     overflow: hidden;
     user-select: none;
     pointer-events: none;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    padding: 0.75rem 0;
+    box-sizing: border-box;
 }
 
 .line-success {
