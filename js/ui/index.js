@@ -15,6 +15,7 @@ import { saveScriptToFile, loadScriptFromFile, loadDefaultScript } from './fileO
 let uiInterpreterInstance = null;
 const highlightState = { currentLine: null };
 const scrollState = { suppressTabScroll: false };
+let debounceTimer = null;
 
 function getCursorLineNumber() {
     if (!elements.inputArea) return null;
@@ -33,6 +34,18 @@ function updateLineNumbers() {
     elements.lineNumbers.scrollTop = elements.inputArea.scrollTop;
 }
 
+function updateExecStatus(executed, total) {
+    if (!elements.execStatus) return;
+    const set = new Set(executed);
+    let html = '';
+    for (let i = 1; i <= total; i++) {
+        const cls = set.has(i) ? 'line-success' : 'line-pending';
+        html += `<div class="${cls}"></div>`;
+    }
+    elements.execStatus.innerHTML = html;
+    elements.execStatus.scrollTop = elements.inputArea.scrollTop;
+}
+
 function renderPeekOutputsUI() {
     renderPeekOutputsUIHelper(uiInterpreterInstance, {
         currentLineRef: highlightState,
@@ -47,6 +60,32 @@ function clearEditorPeekHighlight() {
 
 function handleExportPeek() {
     handleExportPeekHelper(uiInterpreterInstance);
+}
+
+async function runRealtime() {
+    if (!uiInterpreterInstance) return;
+    const script = elements.inputArea.value;
+    const lineCount = script.split(/\r?\n/).length || 1;
+    elements.astOutputArea.classList.remove('error-box');
+    try {
+        const tokens = tokenizeForParser(script);
+        const ast = new Parser(tokens).parse();
+        elements.astOutputArea.textContent = JSON.stringify(ast, null, 2);
+        await uiInterpreterInstance.run(ast);
+        updateExecStatus(uiInterpreterInstance.getExecutedLines(), lineCount);
+    } catch (e) {
+        elements.astOutputArea.classList.add('error-box');
+        const msg = e instanceof Error ? e.message : String(e);
+        elements.astOutputArea.textContent = `Error: ${msg}`;
+        updateExecStatus([], lineCount);
+    } finally {
+        renderPeekOutputsUI();
+    }
+}
+
+function scheduleRealtimeRun() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(runRealtime, 300);
 }
 
 function showOutputForLine(lineNumber) {
@@ -156,12 +195,15 @@ export async function initUI(interpreter) {
         elements.highlightingOverlay.scrollLeft = elements.inputArea.scrollLeft;
         const line = getCursorLineNumber();
         if (line) updateVarBlockIndicator(line);
+        updateExecStatus([], text.split(/\r?\n/).length || 1);
+        scheduleRealtimeRun();
     });
 
     elements.inputArea?.addEventListener('scroll', () => {
         elements.highlightingOverlay.scrollTop = elements.inputArea.scrollTop;
         elements.highlightingOverlay.scrollLeft = elements.inputArea.scrollLeft;
         updateLineNumbers();
+        if (elements.execStatus) elements.execStatus.scrollTop = elements.inputArea.scrollTop;
         const line = getCursorLineNumber();
         if (line) updateVarBlockIndicator(line);
     });
@@ -172,6 +214,9 @@ export async function initUI(interpreter) {
             elements.highlightingOverlay.style.width = elements.inputArea.clientWidth + 'px';
             if (elements.lineNumbers) {
                 elements.lineNumbers.style.height = elements.inputArea.clientHeight + 'px';
+            }
+            if (elements.execStatus) {
+                elements.execStatus.style.height = elements.inputArea.clientHeight + 'px';
             }
         }).observe(elements.inputArea);
     }

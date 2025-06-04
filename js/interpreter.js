@@ -213,4 +213,11 @@ export class Interpreter {
         }
     }
 
+    getExecutedLines() {
+        const lines = new Set();
+        for (const out of this.stepOutputs) {
+            if (typeof out.line === "number") lines.add(out.line);
+        }
+        return Array.from(lines);
+    }
 }
