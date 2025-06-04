@@ -57,6 +57,7 @@ export class Interpreter {
 
         for (const varBlock of ast) {
             this.activeVariableName = varBlock.variableName;
+            const varLine = varBlock.line;
             this.log(`Processing block for VAR "${this.activeVariableName}"`);
             this.variables[this.activeVariableName] = null;
 
@@ -77,6 +78,10 @@ export class Interpreter {
                     return; // Stop execution on error
                 }
             }
+            // record final dataset for the VAR line itself
+            const finalDataset = this.variables[this.activeVariableName];
+            const finalStepId = `step-${this.activeVariableName}-l${varLine}-final`;
+            this.stepOutputs.push({ id: finalStepId, varName: this.activeVariableName, line: varLine, dataset: finalDataset });
             this.log(`Finished block for VAR "${this.activeVariableName}"`);
         }
         this.log('Interpreter finished all blocks.');

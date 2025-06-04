@@ -280,6 +280,6 @@ test('run records step outputs for each command', async () => {
     parse: (file, opts) => opts.complete({ data: [{A:1,B:2},{A:3,B:4}], meta:{ fields:['A','B'] } })
   };
   await interp.run(ast);
-  assert.strictEqual(interp.stepOutputs.length, ast[0].pipeline.length);
+  assert.strictEqual(interp.stepOutputs.length, ast[0].pipeline.length + 1);
   assert.deepEqual(interp.stepOutputs[1].dataset, [{A:1},{A:3}]);
 });

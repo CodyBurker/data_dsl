@@ -100,7 +100,7 @@ THEN PEEK`;
 
   assert.strictEqual(ast[0].pipeline.length, 4);
   assert.strictEqual(interp.peekOutputs.length, 2);
-  assert.strictEqual(interp.stepOutputs.length, 4);
+  assert.strictEqual(interp.stepOutputs.length, 5);
   assert.deepEqual(interp.peekOutputs[0].dataset, [{A:1,B:2},{A:3,B:4}]);
   assert.deepEqual(interp.peekOutputs[1].dataset, [{A:1},{A:3}]);
 
@@ -153,7 +153,7 @@ THEN PEEK`;
 
   assert.strictEqual(ast.length, 2);
   assert.strictEqual(interp.peekOutputs.length, 3);
-  assert.strictEqual(interp.stepOutputs.length, 5);
+  assert.strictEqual(interp.stepOutputs.length, 7);
   assert.strictEqual(interp.peekOutputs[0].dataset.length, 12);
   assert.deepEqual(interp.peekOutputs[1].dataset[0], {A:1});
   assert.strictEqual(interp.peekOutputs[2].dataset, null);
