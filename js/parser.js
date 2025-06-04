@@ -100,6 +100,7 @@ export class Parser {
             case 'SELECT': return this.parseSelect();
             case 'DROP_COLUMNS': return this.parseDropColumns();
             case 'FILTER_ROWS': return this.parseFilterRows();
+            case 'FILTER': return this.parseFilter();
             case 'NEW_COLUMN': return this.parseNewColumn();
             case 'RENAME_COLUMN': return this.parseRenameColumn();
             case 'SORT_BY': return this.parseSortBy();
@@ -127,6 +128,15 @@ export class Parser {
         else this.error(`Expected filter operator (e.g., IS, >, CONTAINS) but got ${opToken.value}`);
         if (this.peek().type === TokenType.STRING_LITERAL) cond.value = this.consume(TokenType.STRING_LITERAL).value; else if (this.peek().type === TokenType.NUMBER_LITERAL) cond.value = this.consume(TokenType.NUMBER_LITERAL).value; else if (this.peek().type === TokenType.IDENTIFIER) cond.value = { type: 'COLUMN_REFERENCE', name: this.consume(TokenType.IDENTIFIER).value }; else this.error("Expected value (string, number, or column identifier) for filter condition.");
         return { command: 'FILTER_ROWS', args: { condition: cond } };
+    }
+    parseFilter() {
+        this.consume(TokenType.KEYWORD, 'FILTER');
+        let column;
+        if (this.peek().type === TokenType.STRING_LITERAL) column = this.consume(TokenType.STRING_LITERAL).value; else column = this.consume(TokenType.IDENTIFIER).value;
+        if (!this.match(TokenType.OPERATOR, '=')) this.error("Expected '=' in FILTER condition");
+        let value;
+        if (this.peek().type === TokenType.STRING_LITERAL) value = this.consume(TokenType.STRING_LITERAL).value; else if (this.peek().type === TokenType.NUMBER_LITERAL) value = this.consume(TokenType.NUMBER_LITERAL).value; else this.error("Expected string or number value for FILTER condition");
+        return { command: 'FILTER', args: { column, value } };
     }
     parseExpression() { const p = []; while(!this.isAtEnd() && this.peek().type !== TokenType.NEWLINE && !['THEN', 'STORE_AS', 'VAR'].includes(this.peek().value) ) { const t = this.peek(); if (['IDENTIFIER', 'STRING_LITERAL', 'NUMBER_LITERAL'].includes(t.type) || (t.type === TokenType.OPERATOR && ['*', '/', '+', '-'].includes(t.value))) p.push(this.advance()); else break; } if (p.length === 0) this.error("Expected expression for NEW_COLUMN."); return p.map(i => ({ type: i.type, value: i.value })); }
     parseNewColumn() { this.consume(TokenType.KEYWORD, 'NEW_COLUMN'); let n; if (this.peek().type === TokenType.STRING_LITERAL) n = this.consume(TokenType.STRING_LITERAL).value; else n = this.consume(TokenType.IDENTIFIER).value; this.consume(TokenType.KEYWORD, 'AS'); const e = this.parseExpression(); return { command: 'NEW_COLUMN', args: { newColumnName: n, expression: e } }; }

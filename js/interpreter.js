@@ -105,6 +105,12 @@ export class Interpreter {
                 }
                 this.variables[this.activeVariableName] = this.handleFilterRows(args, currentDataset);
                 break;
+            case 'FILTER':
+                if (!Array.isArray(currentDataset)) {
+                    throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply FILTER.`);
+                }
+                this.variables[this.activeVariableName] = this.handleFilter(args, currentDataset);
+                break;
             case 'PEEK':
                 // currentDataset is already what we want (array or null)
                 const peekLine = commandNode.line;
@@ -231,6 +237,15 @@ export class Interpreter {
             return cmp(left, right);
         });
         this.log(`FILTER_ROWS kept ${filtered.length} of ${currentDataset.length} rows for VAR "${this.activeVariableName}".`);
+        return filtered;
+    }
+
+    handleFilter(args, currentDataset) {
+        const { column, value } = args;
+        const filtered = currentDataset.filter(row => {
+            return row[column] == value;
+        });
+        this.log(`FILTER kept ${filtered.length} of ${currentDataset.length} rows for VAR "${this.activeVariableName}".`);
         return filtered;
     }
 

@@ -128,3 +128,14 @@ test('handleFilterRows filters rows based on condition', () => {
     {A:5,B:6}
   ]);
 });
+
+test('handleFilter filters rows using equality', () => {
+  const interp = new Interpreter({});
+  interp.activeVariableName = 'd';
+  const data = [
+    {name:'Alice',age:30},
+    {name:'Bob',age:40}
+  ];
+  const result = interp.handleFilter({ column:'age', value:30 }, data);
+  assert.deepEqual(result, [{name:'Alice',age:30}]);
+});

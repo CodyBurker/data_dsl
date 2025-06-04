@@ -66,7 +66,12 @@ With a supported browser you can **Open File** or **Save File** to work directly
     * [ ] **LOAD\_JSON:** Implement loading data from JSON files.
     * [X] **Save/Load Scripts:** Allow users to save and load their PipeData scripts (e.g., using file download/upload).
 3.  **Transformations (Expanding the Toolkit):**
-    * [ ] **FILTER:** Develop syntax and implement row filtering based on conditions.
+    * **FILTER:**
+        * [X] Basic equals filtering on strings and numbers.
+        * [ ] Support `<`, `>`, and `!=` comparisons.
+        * [ ] Allow grouped conditions with `AND`/`OR` using parentheses,
+          e.g., `(col=1 OR col=2) AND (otherCol != 3)`.
+        * [ ] Extensive unit and integration tests with syntax-highlighted docs.
     * [ ] **DROP:** Implement function to drop specified columns.
     * [ ] **WITH\_COLUMN (Basic):**
         * [ ] Implement arithmetic operations (e.g., `new_col = col1 + col2`).
