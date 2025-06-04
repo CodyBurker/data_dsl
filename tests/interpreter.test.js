@@ -2,59 +2,32 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Interpreter } from '../js/interpreter.js';
 
-class MockDataFrame {
-  constructor(data) {
-    this.data = data;
-    this.columns = data.length ? Object.keys(data[0]) : [];
-    this.shape = [data.length, this.columns.length];
-  }
-  count() { return this.data.length; }
-  loc({ columns }) {
-    const newData = this.data.map(row => {
-      const obj = {};
-      columns.forEach(col => { obj[col] = row[col]; });
-      return obj;
-    });
-    return new MockDataFrame(newData);
-  }
-  toJSON() { return this.data; }
-}
-
-global.dfd = { DataFrame: MockDataFrame };
-global.Papa = { unparse: data => { global.__unparseCalled = true; return 'csv'; } };
-
+// Minimal stubs for browser APIs used in exports
 global.document = {
-  createElement: () => ({ click: () => { global.__clickCalled = true; } , set href(v){}, get href(){return ''}, set download(v){}, style:{} }),
-  body: { appendChild: () => {}, removeChild: () => {} }
+  createElement: () => ({ click: () => { global.__clicked = true; }, set href(v){}, get href(){return ''}, set download(v){}, style:{} }),
+  body: { appendChild(){}, removeChild(){} }
+};
+
+global.Papa = {
+  unparse: data => { global.__unparseCalled = true; return 'csv'; },
+  parse: (file, opts) => opts.complete({ data: [{A:1,B:2},{A:3,B:4}], meta: { fields:['A','B'] } })
 };
 
 test('handleKeepColumns selects columns case-insensitively', () => {
   const interp = new Interpreter({});
   interp.activeVariableName = 'd';
-  const df = new MockDataFrame([{A:1,B:2,C:3},{A:4,B:5,C:6}]);
-  const result = interp.handleKeepColumns({ columns: ['a','C'] }, df);
-  assert.deepEqual(result.columns, ['A','C']);
-  assert.strictEqual(result.shape[1], 2);
+  const data = [{A:1,B:2,C:3},{A:4,B:5,C:6}];
+  const result = interp.handleKeepColumns({ columns: ['a','C'] }, data);
+  assert.deepEqual(result, [{A:1,C:3},{A:4,C:6}]);
 });
 
 test('executeCommand PEEK stores peek output', async () => {
   const interp = new Interpreter({});
   interp.activeVariableName = 'data';
-  interp.variables.data = new MockDataFrame([{A:1}]);
+  interp.variables.data = [{A:1}];
   await interp.executeCommand({ command: 'PEEK', args:{}, line:5 });
   assert.strictEqual(interp.peekOutputs.length, 1);
   assert.strictEqual(interp.peekOutputs[0].line, 5);
-});
-
-test('handleExportCsv exports DataFrame using Papa.unparse', async () => {
-  const interp = new Interpreter({});
-  interp.activeVariableName = 'data';
-  const df = new MockDataFrame([{A:1}]);
-  await interp.handleExportCsv({ file: 'out.csv' }, df);
-  assert.ok(global.__unparseCalled);
-  assert.ok(global.__clickCalled);
-  global.__unparseCalled = false;
-  global.__clickCalled = false;
 });
 
 test('handleExportCsv for array of objects uses Papa.unparse', async () => {
@@ -62,9 +35,9 @@ test('handleExportCsv for array of objects uses Papa.unparse', async () => {
   interp.activeVariableName = 'data';
   await interp.handleExportCsv({ file: 'arr.csv' }, [{A:1},{A:2}]);
   assert.ok(global.__unparseCalled);
-  assert.ok(global.__clickCalled);
+  assert.ok(global.__clicked);
   global.__unparseCalled = false;
-  global.__clickCalled = false;
+  global.__clicked = false;
 });
 
 test('handleExportCsv throws on unsupported type', async () => {
@@ -76,21 +49,15 @@ test('handleExportCsv throws on unsupported type', async () => {
 test('executeCommand SELECT uses handleKeepColumns', async () => {
   const interp = new Interpreter({});
   interp.activeVariableName = 'sel';
-  interp.variables.sel = new MockDataFrame([{A:1,B:2,C:3}]);
+  interp.variables.sel = [{A:1,B:2,C:3}];
   await interp.executeCommand({ command: 'SELECT', args: { columns: ['B'] } });
-  assert.deepEqual(interp.variables.sel.columns, ['B']);
+  assert.deepEqual(interp.variables.sel, [{B:2}]);
 });
 
-test('handleLoadCsv returns Danfo DataFrame', async () => {
-  const { DataFrame } = await import('danfojs-node');
-  global.dfd = await import('danfojs-node');
-  global.Papa = { parse: (file, opts) => opts.complete({ data:[{A:1},{A:2}], meta:{ fields:['A'] } }) };
+test('handleLoadCsv returns array of objects', async () => {
   const interp = new Interpreter({ csvFileInputEl: {} });
   interp.activeVariableName = 'df';
   interp.requestCsvFile = async () => ({ name: 'fake.csv' });
-  const df = await interp.handleLoadCsv({ file: 'fake.csv' });
-  assert.ok(df instanceof DataFrame);
-  assert.strictEqual(df.shape[0], 2);
-  assert.deepEqual(df.columns, ['A']);
-  global.dfd = { DataFrame: MockDataFrame }; // reset
+  const data = await interp.handleLoadCsv({ file: 'fake.csv' });
+  assert.deepEqual(data, [{A:1,B:2},{A:3,B:4}]);
 });

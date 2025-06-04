@@ -18,6 +18,6 @@ This project contains a browser-based DSL for manipulating CSV data. The JavaScr
 
 ## Helpful Context
 - The `js/` directory contains the tokenizer, parser, interpreter, and UI logic.
-- `index.html` loads Danfo.js and PapaParse from CDNs for CSV processing in the browser.
+- `index.html` loads PapaParse from a CDN for CSV processing in the browser.
 - Style rules live in `style.css`; maintain existing formatting when making UI tweaks.
 

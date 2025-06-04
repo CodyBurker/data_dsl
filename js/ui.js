@@ -109,13 +109,20 @@ function generatePeekHtmlForDisplay(datasetToPeek, varName, line) {
         return outputHTML;
     }
 
-    if (!(datasetToPeek instanceof dfd.DataFrame)) {
-        outputHTML += `<p class="text-gray-400">PEEKed data is not a DataFrame (Type: ${typeof datasetToPeek}). Preview may be limited.</p>`;
-        // Attempt a basic preview for non-DataFrame array of objects
-        if (Array.isArray(datasetToPeek) && datasetToPeek.length > 0 && typeof datasetToPeek[0] === 'object') {
-            const peekRowCount = 10;
-            const dataToDisplay = datasetToPeek.slice(0, peekRowCount);
-            const headers = Object.keys(dataToDisplay[0]);
+    if (!Array.isArray(datasetToPeek)) {
+        outputHTML += `<p class="text-gray-400">PEEKed data is not tabular (Type: ${typeof datasetToPeek}). Preview may be limited.</p>`;
+        if (typeof datasetToPeek === 'object') {
+            outputHTML += `<pre class="text-gray-400">${escapeHtml(JSON.stringify(datasetToPeek, null, 2))}</pre>`;
+        } else {
+            outputHTML += `<pre class="text-gray-400">${escapeHtml(String(datasetToPeek))}</pre>`;
+        }
+        return outputHTML;
+    }
+
+    if (datasetToPeek.length > 0 && typeof datasetToPeek[0] === 'object') {
+        const peekRowCount = 10;
+        const dataToDisplay = datasetToPeek.slice(0, peekRowCount);
+        const headers = Object.keys(dataToDisplay[0]);
             let tableHtml = '<table><thead><tr>';
             headers.forEach(header => tableHtml += `<th>${escapeHtml(String(header))}</th>`);
             tableHtml += '</tr></thead><tbody>';
@@ -134,44 +141,15 @@ function generatePeekHtmlForDisplay(datasetToPeek, varName, line) {
                 tableHtml += `<p class="text-xs text-gray-400 mt-2">Showing all ${datasetToPeek.length} rows (basic preview).</p>`;
             }
             outputHTML += tableHtml;
+        if (datasetToPeek.length > peekRowCount) {
+            outputHTML += `<p class="text-xs text-gray-400 mt-2">Showing first ${peekRowCount} of ${datasetToPeek.length} rows.</p>`;
         } else {
-            outputHTML += `<pre class="text-gray-400">${escapeHtml(JSON.stringify(datasetToPeek, null, 2))}</pre>`;
+            outputHTML += `<p class="text-xs text-gray-400 mt-2">Showing all ${datasetToPeek.length} rows.</p>`;
         }
         return outputHTML;
     }
-    
-    if (datasetToPeek.count() === 0) {
-        outputHTML += '<p class="text-gray-400">DataFrame is empty.</p>';
-    } else {
-        const peekRowCount = 10;
-        const headers = datasetToPeek.columns;
-        // Use dfd.toJSON to convert the head of the DataFrame for easier HTML table generation
-        const dataToDisplay = dfd.toJSON(datasetToPeek.head(peekRowCount)); // Returns array of objects
 
-        if (dataToDisplay.length === 0) { // Should not happen if df.isEmpty() was false, but good check
-            outputHTML += '<p class="text-gray-400">DataFrame has columns but no rows to display.</p>';
-        } else {
-            let tableHtml = '<table><thead><tr>';
-            headers.forEach(header => tableHtml += `<th>${escapeHtml(String(header))}</th>`);
-            tableHtml += '</tr></thead><tbody>';
-
-            dataToDisplay.forEach(rowObject => { // rowObject is an object like {col1: val1, col2: val2}
-                tableHtml += '<tr>';
-                headers.forEach(header => {
-                    const value = rowObject[header];
-                    tableHtml += `<td>${value === null || value === undefined ? '' : escapeHtml(String(value))}</td>`;
-                });
-                tableHtml += '</tr>';
-            });
-            tableHtml += `</tbody></table>`;
-            if (datasetToPeek.shape[0] > peekRowCount) {
-                tableHtml += `<p class="text-xs text-gray-400 mt-2">Showing first ${peekRowCount} of ${datasetToPeek.shape[0]} rows. Total columns: ${headers.length}.</p>`;
-            } else {
-                tableHtml += `<p class="text-xs text-gray-400 mt-2">Showing all ${datasetToPeek.shape[0]} rows. Total columns: ${headers.length}.</p>`;
-            }
-            outputHTML += tableHtml;
-        }
-    }
+    outputHTML += `<pre class="text-gray-400">${escapeHtml(JSON.stringify(datasetToPeek, null, 2))}</pre>`;
     return outputHTML;
 }
 
@@ -205,8 +183,8 @@ function renderPeekOutputsUI() {
         const contentDiv = document.createElement('div');
         contentDiv.id = peekData.id;
         contentDiv.classList.add('peek-content');
-        // Pass the raw dataset (which should be a DataFrame or other structure)
-        contentDiv.innerHTML = generatePeekHtmlForDisplay(peekData.dataset, peekData.varName, peekData.line); 
+        // Pass the raw dataset (array or other structure)
+        contentDiv.innerHTML = generatePeekHtmlForDisplay(peekData.dataset, peekData.varName, peekData.line);
 
         elements.peekTabsContainerEl.appendChild(tabButton);
         elements.peekOutputsDisplayAreaEl.appendChild(contentDiv);
@@ -293,15 +271,7 @@ function handleExportPeek() {
 
     const dataset = peekDataEntry.dataset;
 
-    if (dataset instanceof dfd.DataFrame) {
-        if (dataset.count() === 0) {
-            alert("The active PEEK tab contains an empty DataFrame. Nothing to export.");
-            return;
-        }
-        // Use Danfo.js toCSV method
-        dfd.toCSV(dataset, { download: true, fileName: `peek_export_${peekDataEntry.varName}_L${peekDataEntry.line}.csv` });
-        uiInterpreterInstance.log(`Exported PEEK data for VAR "${peekDataEntry.varName}" (Line ${peekDataEntry.line}) to CSV.`);
-    } else if (Array.isArray(dataset) && dataset.length > 0 && typeof dataset[0] === 'object') {
+    if (Array.isArray(dataset) && dataset.length > 0 && typeof dataset[0] === 'object') {
         // Basic CSV conversion for array of objects
         try {
             const papaCSV = Papa.unparse(dataset);
@@ -321,7 +291,7 @@ function handleExportPeek() {
             uiInterpreterInstance.log(`Error exporting PEEK (array of objects) for VAR "${peekDataEntry.varName}" to CSV: ${error.message}`);
         }
     } else {
-        alert("The active PEEK tab data is not in a format that can be exported to CSV (requires DataFrame or Array of Objects).");
+        alert("The active PEEK tab data is not in a format that can be exported to CSV.");
         uiInterpreterInstance.log(`PEEK data for VAR "${peekDataEntry.varName}" (Line ${peekDataEntry.line}) is not exportable to CSV (type: ${typeof dataset})`);
     }
 }
