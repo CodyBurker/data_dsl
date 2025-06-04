@@ -17,6 +17,9 @@ anything. Additionally the interpreter preloads `cities` and `people`
 variables with the same data so you can experiment without any `LOAD_CSV`
 commands.
 
+The editor automatically loads `examples/default.pd` on startup. The script shows
+how to compute `population_millions` with `WITH COLUMN`.
+
 With a supported browser you can **Open File** or **Save File** to work directly with `.pd` script files.
 
 --- 

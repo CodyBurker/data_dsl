@@ -109,4 +109,6 @@ parsed but currently have no effect in the interpreter.
 - When loading a file, the UI will prompt you to select it.
 - With a supported browser you can **Open File** or **Save File** to work
   with `.pd` files.
+- The editor loads `examples/default.pd` automatically so you can see a working
+  script right away.
 
