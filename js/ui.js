@@ -302,35 +302,18 @@ export function initUI(interpreter) {
     uiInterpreterInstance = interpreter; // Store interpreter instance for UI use
     queryElements(); // Get all DOM elements
 
-    const defaultScript = `VAR "citiesData"
+    const defaultScript = `VAR "cities"
 THEN
-    # Load CSV data into the "citiesData" variable
-    LOAD_CSV FILE "cities.csv"
+    PEEK
+VAR "people"
 THEN
-    SELECT name, population
+    KEEP_COLUMNS name, age, city_id
 THEN
-    PEEK # Shows modified "citiesData"
+    FILTER_ROWS WHERE age > 27
 THEN
-    EXPORT_CSV TO "cities_out.csv" # Example export
-
-VAR "anotherVar"
+    JOIN cities ON city_id = id TYPE "LEFT"
 THEN
-    LOAD_CSV FILE "another.csv"
-THEN
-    PEEK # This is a PEEK on a later line
-# Line
-# Line
-# Line
-# Line
-# Line
-# Line
-# Line
-# Line
-# Line
-# Line
-THEN
-    PEEK # Should show the same data as the PEEK above
-`;
+    PEEK`;
     if (elements.inputArea) {
         elements.inputArea.value = defaultScript;
         if (elements.highlightingOverlay) {

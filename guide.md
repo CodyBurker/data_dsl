@@ -19,6 +19,13 @@ THEN SELECT name, population
 THEN PEEK
 ```
 
+### Example Data
+The `examples/` folder contains `exampleCities.csv` and `examplePeople.csv`.
+If a `LOAD_CSV` command references one of these filenames, the interpreter will
+fetch it automatically so you can explore joins and column selection without
+uploading a file. The interpreter also preloads `cities` and `people` variables
+with this data so you can start filtering and joining immediately.
+
 ## Commands
 
 ### VAR
@@ -65,10 +72,19 @@ Download the current dataset as a CSV file.
 EXPORT_CSV TO "output.csv"
 ```
 
+### FILTER_ROWS
+Filter rows using simple conditions. You can compare against values or other
+columns.
+
+```
+FILTER_ROWS WHERE age > 30
+FILTER_ROWS WHERE city_id = other_id
+```
+
 ### Parsed but Not Yet Executed
 The tokenizer and parser recognize additional commands such as `LOAD_EXCEL`,
-`DROP_COLUMNS`, `FILTER_ROWS`, `NEW_COLUMN`, `RENAME_COLUMN`, and `SORT_BY`.
-These commands are parsed but currently have no effect in the interpreter.
+`DROP_COLUMNS`, `NEW_COLUMN`, `RENAME_COLUMN`, and `SORT_BY`. These commands are
+parsed but currently have no effect in the interpreter.
 
 ## Tips
 

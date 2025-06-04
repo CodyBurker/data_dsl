@@ -1,4 +1,5 @@
 // interpreter.js
+import { cities as sampleCities, people as samplePeople } from './samples.js';
 
 export class Interpreter {
     constructor(uiElements) {
@@ -21,12 +22,16 @@ export class Interpreter {
     }
 
     clearInternalState() {
-        this.variables = {};
+        this.variables = {
+            cities: sampleCities.map(r => ({ ...r })),
+            people: samplePeople.map(r => ({ ...r }))
+        };
         this.activeVariableName = null;
         this.peekOutputs = [];
         this.fileResolve = null; // Should be reset if a run is interrupted
+        this.log('Interpreter state cleared. Built-in samples loaded.');
     }
-    
+
     async requestCsvFile(fileNameHint, forVariable) {
         this.uiElements.fileInputContainerEl.classList.remove('hidden');
         this.uiElements.filePromptMessageEl.textContent = `Pipeline for VAR "${forVariable}": Select CSV for ${fileNameHint}.`;
@@ -94,6 +99,12 @@ export class Interpreter {
                 }
                 this.variables[this.activeVariableName] = this.handleJoin(args, currentDataset);
                 break;
+            case 'FILTER_ROWS':
+                if (!Array.isArray(currentDataset)) {
+                    throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply FILTER_ROWS.`);
+                }
+                this.variables[this.activeVariableName] = this.handleFilterRows(args, currentDataset);
+                break;
             case 'PEEK':
                 // currentDataset is already what we want (array or null)
                 const peekLine = commandNode.line;
@@ -118,9 +129,27 @@ export class Interpreter {
     }
 
     async handleLoadCsv(args) {
-        if (!this.uiElements.csvFileInputEl) throw new Error("File input not available.");
-        const file = await this.requestCsvFile(args.file, this.activeVariableName);
+        const fileName = args.file;
+        if (!fileName) throw new Error('LOAD_CSV requires FILE argument.');
 
+        if (typeof fetch !== 'undefined') {
+            try {
+                const resp = await fetch(`examples/${fileName}`);
+                if (resp.ok) {
+                    const text = await resp.text();
+                    return await this.parseCsvInput(text, fileName);
+                }
+            } catch (err) {
+                this.log(`Fetch for example ${fileName} failed: ${err.message}`);
+            }
+        }
+
+        if (!this.uiElements.csvFileInputEl) throw new Error('File input not available.');
+        const file = await this.requestCsvFile(fileName, this.activeVariableName);
+        return this.parseCsvInput(file, file.name);
+    }
+
+    parseCsvInput(input, name) {
         return new Promise((resolve, reject) => {
             this.log(`Using PapaParse for CSV parsing for VAR "${this.activeVariableName}".`);
             if (typeof Papa === 'undefined') {
@@ -129,14 +158,13 @@ export class Interpreter {
                 reject(new Error('PapaParse library is not available.'));
                 return;
             }
-            Papa.parse(file, {
+            Papa.parse(input, {
                 header: true,
                 skipEmptyLines: true,
-                dynamicTyping: true, // Automatically convert numbers, booleans
+                dynamicTyping: true,
                 complete: (results) => {
-                    this.log(`Loaded ${results.data.length} rows for VAR "${this.activeVariableName}" from ${file.name}. Headers: ${results.meta.fields ? results.meta.fields.join(', ') : 'N/A'}`);
+                    this.log(`Loaded ${results.data.length} rows for VAR "${this.activeVariableName}" from ${name}. Headers: ${results.meta.fields ? results.meta.fields.join(', ') : 'N/A'}`);
                     if (this.uiElements.fileInputContainerEl) this.uiElements.fileInputContainerEl.classList.add('hidden');
-                    
                     const rows = results.data;
                     this.log(`Parsed CSV for VAR "${this.activeVariableName}". Rows: ${rows.length}`);
                     resolve(rows);
@@ -173,6 +201,37 @@ export class Interpreter {
         });
         this.log(`Kept columns: ${columnsToKeep.join(', ')} for VAR "${this.activeVariableName}".`);
         return newDataset;
+    }
+
+    handleFilterRows(args, currentDataset) {
+        const { condition } = args;
+        const { column, operator, value } = condition;
+        const getVal = row => {
+            if (value && value.type === 'COLUMN_REFERENCE') return row[value.name];
+            return value;
+        };
+        const cmp = (a, b) => {
+            switch (operator) {
+                case 'IS': return a === b;
+                case 'IS NOT': return a !== b;
+                case '!=': return a != b;
+                case '>': return a > b;
+                case '<': return a < b;
+                case '>=': return a >= b;
+                case '<=': return a <= b;
+                case 'CONTAINS': return String(a).includes(String(b));
+                case 'STARTSWITH': return String(a).startsWith(String(b));
+                case 'ENDSWITH': return String(a).endsWith(String(b));
+                default: throw new Error(`Unsupported operator ${operator}`);
+            }
+        };
+        const filtered = currentDataset.filter(row => {
+            const left = row[column];
+            const right = getVal(row);
+            return cmp(left, right);
+        });
+        this.log(`FILTER_ROWS kept ${filtered.length} of ${currentDataset.length} rows for VAR "${this.activeVariableName}".`);
+        return filtered;
     }
 
     handleJoin(args, currentDataset) {
