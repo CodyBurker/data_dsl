@@ -272,7 +272,7 @@ test('debounced input updates execStatus', async () => {
   assert.ok(Array.from(bars).every(b => b.classList.contains('line-success')));
 });
 
-test('execStatus shows pending on parse error', async () => {
+test('execStatus highlights error line in red', async () => {
   setupDom();
   const interp = new Interpreter({});
   await initUI(interp);
@@ -282,6 +282,31 @@ test('execStatus shows pending on parse error', async () => {
   await new Promise(r => setTimeout(r, 400));
   const bars = document.querySelectorAll('#execStatus div');
   assert.strictEqual(bars.length, 1);
-  assert.ok(bars[0].classList.contains('line-pending'));
+  assert.ok(bars[0].classList.contains('line-error'));
+});
+
+test('blank lines remain uncolored', async () => {
+  setupDom();
+  global.Papa = { parse: (f, o) => o.complete({ data: [], meta: { fields: [] } }) };
+  const uiEls = {
+    logOutputEl: document.getElementById('logOutput'),
+    csvFileInputEl: document.getElementById('csvFileInput'),
+    fileInputContainerEl: document.getElementById('fileInputContainer'),
+    filePromptMessageEl: document.getElementById('filePromptMessage')
+  };
+  const interp = new Interpreter(uiEls);
+  await initUI(interp);
+
+  const input = document.getElementById('pipeDataInput');
+  input.value = 'VAR "a"\nTHEN PEEK\n\nVAR "b"\nTHEN PEEK\n';
+  input.dispatchEvent(new window.Event('input'));
+  await new Promise(r => setTimeout(r, 400));
+
+  const bars = document.querySelectorAll('#execStatus div');
+  assert.strictEqual(bars.length, 6);
+  assert.ok(!bars[2].classList.contains('line-pending'));
+  assert.ok(!bars[2].classList.contains('line-success'));
+  assert.ok(!bars[5].classList.contains('line-pending'));
+  assert.ok(!bars[5].classList.contains('line-success'));
 });
 

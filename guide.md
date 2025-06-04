@@ -74,9 +74,10 @@ Clicking on the `VAR` line for a pipeline shows the dataset after all of that
 variable's commands have executed.
 The editor shows line numbers so you can easily reference pipeline steps.
 Next to these numbers a thin gutter displays execution status. Lines that have
-run successfully show green bars, while lines after a parsing or runtime error
-remain yellow. The interpreter automatically reruns the script after brief
-pauses in typing so the preview stays current.
+run successfully show green bars, pending steps are yellow, and syntax errors
+highlight in red. Blank lines are left without color. The interpreter
+automatically reruns the script after brief pauses in typing so the preview
+stays current.
 
 ### EXPORT_CSV
 Download the current dataset as a CSV file.

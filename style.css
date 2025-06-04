@@ -129,6 +129,11 @@ body {
     height: 1.5em;
 }
 
+.line-error {
+    background-color: #f87171;
+    height: 1.5em;
+}
+
 #varBlockIndicator {
     position: absolute;
     width: 2px;

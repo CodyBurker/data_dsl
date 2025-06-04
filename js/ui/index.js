@@ -34,12 +34,21 @@ function updateLineNumbers() {
     elements.lineNumbers.scrollTop = elements.inputArea.scrollTop;
 }
 
-function updateExecStatus(executed, total) {
+function updateExecStatus(executed, total, errorLine = null, lines = []) {
     if (!elements.execStatus) return;
     const set = new Set(executed);
     let html = '';
     for (let i = 1; i <= total; i++) {
-        const cls = set.has(i) ? 'line-success' : 'line-pending';
+        const content = lines[i - 1] ?? '';
+        const isBlank = /^\s*$/.test(content);
+        let cls = '';
+        if (set.has(i)) {
+            cls = 'line-success';
+        } else if (i === errorLine) {
+            cls = 'line-error';
+        } else if (!isBlank) {
+            cls = 'line-pending';
+        }
         html += `<div class="${cls}"></div>`;
     }
     elements.execStatus.innerHTML = html;
@@ -65,19 +74,22 @@ function handleExportPeek() {
 async function runRealtime() {
     if (!uiInterpreterInstance) return;
     const script = elements.inputArea.value;
-    const lineCount = script.split(/\r?\n/).length || 1;
+    const lines = script.split(/\r?\n/);
+    const lineCount = lines.length || 1;
     elements.astOutputArea.classList.remove('error-box');
     try {
         const tokens = tokenizeForParser(script);
         const ast = new Parser(tokens).parse();
         elements.astOutputArea.textContent = JSON.stringify(ast, null, 2);
         await uiInterpreterInstance.run(ast);
-        updateExecStatus(uiInterpreterInstance.getExecutedLines(), lineCount);
+        updateExecStatus(uiInterpreterInstance.getExecutedLines(), lineCount, null, lines);
     } catch (e) {
         elements.astOutputArea.classList.add('error-box');
         const msg = e instanceof Error ? e.message : String(e);
         elements.astOutputArea.textContent = `Error: ${msg}`;
-        updateExecStatus([], lineCount);
+        const match = /Line (\d+)/.exec(msg);
+        const errLine = match ? parseInt(match[1], 10) : null;
+        updateExecStatus([], lineCount, errLine, lines);
     } finally {
         renderPeekOutputsUI();
     }
@@ -195,7 +207,8 @@ export async function initUI(interpreter) {
         elements.highlightingOverlay.scrollLeft = elements.inputArea.scrollLeft;
         const line = getCursorLineNumber();
         if (line) updateVarBlockIndicator(line);
-        updateExecStatus([], text.split(/\r?\n/).length || 1);
+        const lines = text.split(/\r?\n/);
+        updateExecStatus([], lines.length || 1, null, lines);
         scheduleRealtimeRun();
     });
 

@@ -30,8 +30,9 @@ The script editor now includes a subtle line number gutter so you can quickly
 reference line positions while tracing your pipelines.
 
 An adjacent status gutter now shows which lines executed. Green bars mark
-completed lines while yellow bars indicate lines that have yet to run when an
-error occurs. The interpreter runs automatically a moment after you stop typing.
+completed lines, yellow bars mark steps that haven't run yet, and red bars
+highlight syntax errors. Blank lines remain uncolored. The interpreter runs
+automatically a moment after you stop typing.
 
 The editor automatically loads `examples/default.pd` on startup. The script shows
 how to compute `population_millions` with `WITH COLUMN`.
