@@ -205,3 +205,22 @@ test('handleFilter evaluates grouped conditions', () => {
   const result = interp.handleFilter(cond, data);
   assert.deepEqual(result, [{name:'Alice',age:30}]);
 });
+
+test('handleWithColumn computes arithmetic expression', () => {
+  const interp = new Interpreter({});
+  interp.activeVariableName = 'd';
+  const data = [{a:1,b:2,c:3}];
+  const expr = [
+    { type: 'PUNCTUATION', value: '(' },
+    { type: 'IDENTIFIER', value: 'a' },
+    { type: 'OPERATOR', value: '+' },
+    { type: 'NUMBER_LITERAL', value: 2 },
+    { type: 'OPERATOR', value: '*' },
+    { type: 'IDENTIFIER', value: 'b' },
+    { type: 'PUNCTUATION', value: ')' },
+    { type: 'OPERATOR', value: '/' },
+    { type: 'IDENTIFIER', value: 'c' }
+  ];
+  const result = interp.handleWithColumn({ columnName:'res', expression: expr }, data);
+  assert.strictEqual(result[0].res, (1 + 2 * 2) / 3);
+});

@@ -80,3 +80,11 @@ test('tokenizeForParser recognizes parentheses as punctuation', () => {
   assert.ok(open);
   assert.ok(close);
 });
+
+test('tokenizeForParser recognizes WITH and COLUMN keywords', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN WITH COLUMN c = a + b');
+  const withKw = tokens.find(t => t.value === 'WITH');
+  const columnKw = tokens.find(t => t.value === 'COLUMN');
+  assert.ok(withKw && withKw.type === TokenType.KEYWORD);
+  assert.ok(columnKw && columnKw.type === TokenType.KEYWORD);
+});

@@ -127,3 +127,12 @@ test('Parser parses FILTER with grouped conditions', () => {
   };
   assert.deepEqual(filter.args, expected);
 });
+
+test('Parser parses WITH COLUMN command', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN WITH COLUMN total = (a + 2 * b) / c');
+  const ast = new Parser(tokens).parse();
+  const cmd = ast[0].pipeline[0];
+  assert.strictEqual(cmd.command, 'WITH_COLUMN');
+  assert.strictEqual(cmd.args.columnName, 'total');
+  assert.ok(Array.isArray(cmd.args.expression));
+});

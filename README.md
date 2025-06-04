@@ -73,8 +73,8 @@ With a supported browser you can **Open File** or **Save File** to work directly
           e.g., `(col=1 OR col=2) AND (otherCol != 3)`.
         * [ ] Extensive unit and integration tests with syntax-highlighted docs.
     * [ ] **DROP:** Implement function to drop specified columns.
-    * [ ] **WITH\_COLUMN (Basic):**
-        * [ ] Implement arithmetic operations (e.g., `new_col = col1 + col2`).
+    * [X] **WITH COLUMN (Basic):**
+        * [X] Implement arithmetic operations (e.g., `new_col = col1 + col2`).
         * [ ] Implement basic string operations (e.g., `new_col = concat(col1, " ", col2)`).
 4.  **UI Features (Better Feedback):**
     * [ ] **Clearer Error Messages:** Improve feedback for script errors.
@@ -99,7 +99,7 @@ With a supported browser you can **Open File** or **Save File** to work directly
     * [ ] **GROUP\_BY:** Implement grouping functionality.
     * [ ] **AGGREGATE:** Implement core aggregation functions (`SUM`, `AVG`, `COUNT`, `MIN`, `MAX`) for grouped data.
     * [ ] **SORT:** Implement data sorting based on column values.
-    * [ ] **WITH\_COLUMN (Enhanced):**
+    * [ ] **WITH COLUMN (Enhanced):**
         * [ ] Date operations (e.g., basic formatting).
         * [ ] Conditional operations (e.g., simple if/else).
         * [ ] Data type conversions.
