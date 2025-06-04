@@ -303,17 +303,16 @@ export function initUI(interpreter) {
     queryElements(); // Get all DOM elements
 
     const defaultScript = `VAR "cities"
-THEN
-    PEEK
+THEN LOAD_CSV FILE "exampleCities.csv"
+THEN PEEK
+THEN SELECT population, id
+THEN PEEK
 VAR "people"
-THEN
-    KEEP_COLUMNS name, age, city_id
-THEN
-    FILTER_ROWS WHERE age > 27
-THEN
-    JOIN cities ON city_id = id TYPE "LEFT"
-THEN
-    PEEK`;
+THEN LOAD_CSV FILE "examplePeople.csv"
+THEN PEEK
+THEN JOIN cities ON city_id=id TYPE "LEFT"
+THEN SELECT name, age, population
+THEN PEEK`;
     if (elements.inputArea) {
         elements.inputArea.value = defaultScript;
         if (elements.highlightingOverlay) {
