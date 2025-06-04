@@ -1,7 +1,8 @@
 VAR "cities"
 THEN LOAD_CSV FILE "exampleCities.csv"
-THEN SELECT population, id
 THEN WITH COLUMN population_millions = population / 1000000
+THEN WITH COLUMN city_of = "City of " + name
+THEN SELECT population, id, city_of
 THEN PEEK
 VAR "people"
 THEN LOAD_CSV FILE "examplePeople.csv"
