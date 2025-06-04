@@ -63,9 +63,9 @@ With a supported browser you can **Open File** or **Save File** to work directly
     * [X] **SELECT:** Implement function to select specific columns.
     * [X] **JOIN (Inner/Left):** Implement function to join two datasets on matching or distinct keys with inner or left semantics.
 4.  **UI Features (Minimal Viable Preview):**
-    * [ ] **Basic Script Input Area:** Simple textarea for script input.
-    * [ ] **"Run" Button:** Manual trigger for script execution.
-    * [ ] **Simple Tabular Preview:** Display the *final* output in a basic HTML table (replaces 'PEEK').
+    * [X] **Basic Script Input Area:** Simple textarea for script input.
+    * [X]  **"Run" Button:** Manual trigger for script execution.
+    * [X] **Simple Tabular Preview:** Display the *final* output in a basic HTML table (replaces 'PEEK').
 
 ---
 
@@ -86,7 +86,7 @@ With a supported browser you can **Open File** or **Save File** to work directly
         * [X] Support additional comparisons like `!=`, `>`, `<`, `>=`, `<=`, `IS`, and string operations.
         * [X] Allow grouped conditions with `AND`/`OR` using parentheses,
           e.g., `(col=1 OR col=2) AND (otherCol != 3)`.
-        * [ ] Extensive unit and integration tests with syntax-highlighted docs.
+        * [X] Extensive unit and integration tests with syntax-highlighted docs.
     * [ ] **DROP:** Implement function to drop specified columns.
     * [X] **WITH COLUMN (Basic):**
         * [X] Implement arithmetic operations (e.g., `new_col = col1 + col2`).
