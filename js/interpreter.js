@@ -82,8 +82,9 @@ export class Interpreter {
                 this.variables[this.activeVariableName] = await this.handleLoadCsv(args);
                 break;
             case 'KEEP_COLUMNS':
+            case 'SELECT':
                 if (!(currentDataset instanceof dfd.DataFrame)) {
-                    throw new Error(`No valid DataFrame loaded for VAR "${this.activeVariableName}" to apply KEEP_COLUMNS.`);
+                    throw new Error(`No valid DataFrame loaded for VAR "${this.activeVariableName}" to apply ${command}.`);
                 }
                 this.variables[this.activeVariableName] = this.handleKeepColumns(args, currentDataset);
                 break;
