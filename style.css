@@ -108,6 +108,32 @@ body {
     pointer-events: none;
 }
 
+#execStatus {
+    position: absolute;
+    top: 0;
+    left: 4ch;
+    width: 4px;
+    height: 100%;
+    overflow: hidden;
+    user-select: none;
+    pointer-events: none;
+}
+
+.line-success {
+    background-color: #34d399;
+    height: 1.5em;
+}
+
+.line-pending {
+    background-color: #facc15;
+    height: 1.5em;
+}
+
+.line-error {
+    background-color: #f87171;
+    height: 1.5em;
+}
+
 #varBlockIndicator {
     position: absolute;
     width: 2px;
@@ -122,7 +148,7 @@ body {
 #highlightingOverlay {
     margin: 0;
     padding: 0.75rem;
-    padding-left: calc(0.75rem + 4.5ch);
+    padding-left: calc(0.75rem + 4.5ch + 4px);
     border-width: 1px;
     border-style: solid;
     border-color: #d1d5db;

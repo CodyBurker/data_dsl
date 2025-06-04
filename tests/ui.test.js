@@ -10,6 +10,9 @@ function setupDom() {
   const dom = new JSDOM(`<!DOCTYPE html><body>
     <textarea id="pipeDataInput"></textarea>
     <div id="highlightingOverlay"></div>
+    <pre id="lineNumbers"></pre>
+    <div id="execStatus"></div>
+    <div id="varBlockIndicator"></div>
     <pre id="astOutput"></pre>
     <div id="logOutput"></div>
     <div id="peekTabsContainer"></div>
@@ -26,6 +29,13 @@ function setupDom() {
   global.document = dom.window.document;
   global.window = dom.window;
   global.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
+  global.getComputedStyle = () => ({
+    lineHeight: '16px',
+    paddingTop: '0',
+    paddingLeft: '0',
+    borderLeftWidth: '0',
+    borderTopWidth: '0'
+  });
 }
 
 test('renderPeekOutputsUI creates a tab for each PEEK output', async () => {
@@ -238,5 +248,65 @@ test('loading script from file populates editor', async () => {
   await new Promise(r => setTimeout(r, 0));
 
   assert.strictEqual(document.getElementById('pipeDataInput').value, 'VAR "z"');
+});
+
+test('debounced input updates execStatus', async () => {
+  setupDom();
+  global.Papa = { parse: (f, o) => o.complete({ data: [], meta: { fields: [] } }) };
+  const uiEls = {
+    logOutputEl: document.getElementById('logOutput'),
+    csvFileInputEl: document.getElementById('csvFileInput'),
+    fileInputContainerEl: document.getElementById('fileInputContainer'),
+    filePromptMessageEl: document.getElementById('filePromptMessage')
+  };
+  const interp = new Interpreter(uiEls);
+  await initUI(interp);
+
+  const input = document.getElementById('pipeDataInput');
+  input.value = 'VAR "x"\nTHEN PEEK';
+  input.dispatchEvent(new window.Event('input'));
+  await new Promise(r => setTimeout(r, 400));
+
+  const bars = document.querySelectorAll('#execStatus div');
+  assert.strictEqual(bars.length, 2);
+  assert.ok(Array.from(bars).every(b => b.classList.contains('line-success')));
+});
+
+test('execStatus highlights error line in red', async () => {
+  setupDom();
+  const interp = new Interpreter({});
+  await initUI(interp);
+  const input = document.getElementById('pipeDataInput');
+  input.value = 'VAR "x" PEEK';
+  input.dispatchEvent(new window.Event('input'));
+  await new Promise(r => setTimeout(r, 400));
+  const bars = document.querySelectorAll('#execStatus div');
+  assert.strictEqual(bars.length, 1);
+  assert.ok(bars[0].classList.contains('line-error'));
+});
+
+test('blank lines remain uncolored', async () => {
+  setupDom();
+  global.Papa = { parse: (f, o) => o.complete({ data: [], meta: { fields: [] } }) };
+  const uiEls = {
+    logOutputEl: document.getElementById('logOutput'),
+    csvFileInputEl: document.getElementById('csvFileInput'),
+    fileInputContainerEl: document.getElementById('fileInputContainer'),
+    filePromptMessageEl: document.getElementById('filePromptMessage')
+  };
+  const interp = new Interpreter(uiEls);
+  await initUI(interp);
+
+  const input = document.getElementById('pipeDataInput');
+  input.value = 'VAR "a"\nTHEN PEEK\n\nVAR "b"\nTHEN PEEK\n';
+  input.dispatchEvent(new window.Event('input'));
+  await new Promise(r => setTimeout(r, 400));
+
+  const bars = document.querySelectorAll('#execStatus div');
+  assert.strictEqual(bars.length, 6);
+  assert.ok(!bars[2].classList.contains('line-pending'));
+  assert.ok(!bars[2].classList.contains('line-success'));
+  assert.ok(!bars[5].classList.contains('line-pending'));
+  assert.ok(!bars[5].classList.contains('line-success'));
 });
 

@@ -15,6 +15,7 @@ import { saveScriptToFile, loadScriptFromFile, loadDefaultScript } from './fileO
 let uiInterpreterInstance = null;
 const highlightState = { currentLine: null };
 const scrollState = { suppressTabScroll: false };
+let debounceTimer = null;
 
 function getCursorLineNumber() {
     if (!elements.inputArea) return null;
@@ -33,6 +34,27 @@ function updateLineNumbers() {
     elements.lineNumbers.scrollTop = elements.inputArea.scrollTop;
 }
 
+function updateExecStatus(executed, total, errorLine = null, lines = []) {
+    if (!elements.execStatus) return;
+    const set = new Set(executed);
+    let html = '';
+    for (let i = 1; i <= total; i++) {
+        const content = lines[i - 1] ?? '';
+        const isBlank = /^\s*$/.test(content);
+        let cls = '';
+        if (set.has(i)) {
+            cls = 'line-success';
+        } else if (i === errorLine) {
+            cls = 'line-error';
+        } else if (!isBlank) {
+            cls = 'line-pending';
+        }
+        html += `<div class="${cls}"></div>`;
+    }
+    elements.execStatus.innerHTML = html;
+    elements.execStatus.scrollTop = elements.inputArea.scrollTop;
+}
+
 function renderPeekOutputsUI() {
     renderPeekOutputsUIHelper(uiInterpreterInstance, {
         currentLineRef: highlightState,
@@ -47,6 +69,35 @@ function clearEditorPeekHighlight() {
 
 function handleExportPeek() {
     handleExportPeekHelper(uiInterpreterInstance);
+}
+
+async function runRealtime() {
+    if (!uiInterpreterInstance) return;
+    const script = elements.inputArea.value;
+    const lines = script.split(/\r?\n/);
+    const lineCount = lines.length || 1;
+    elements.astOutputArea.classList.remove('error-box');
+    try {
+        const tokens = tokenizeForParser(script);
+        const ast = new Parser(tokens).parse();
+        elements.astOutputArea.textContent = JSON.stringify(ast, null, 2);
+        await uiInterpreterInstance.run(ast);
+        updateExecStatus(uiInterpreterInstance.getExecutedLines(), lineCount, null, lines);
+    } catch (e) {
+        elements.astOutputArea.classList.add('error-box');
+        const msg = e instanceof Error ? e.message : String(e);
+        elements.astOutputArea.textContent = `Error: ${msg}`;
+        const match = /Line (\d+)/.exec(msg);
+        const errLine = match ? parseInt(match[1], 10) : null;
+        updateExecStatus([], lineCount, errLine, lines);
+    } finally {
+        renderPeekOutputsUI();
+    }
+}
+
+function scheduleRealtimeRun() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(runRealtime, 300);
 }
 
 function showOutputForLine(lineNumber) {
@@ -156,12 +207,16 @@ export async function initUI(interpreter) {
         elements.highlightingOverlay.scrollLeft = elements.inputArea.scrollLeft;
         const line = getCursorLineNumber();
         if (line) updateVarBlockIndicator(line);
+        const lines = text.split(/\r?\n/);
+        updateExecStatus([], lines.length || 1, null, lines);
+        scheduleRealtimeRun();
     });
 
     elements.inputArea?.addEventListener('scroll', () => {
         elements.highlightingOverlay.scrollTop = elements.inputArea.scrollTop;
         elements.highlightingOverlay.scrollLeft = elements.inputArea.scrollLeft;
         updateLineNumbers();
+        if (elements.execStatus) elements.execStatus.scrollTop = elements.inputArea.scrollTop;
         const line = getCursorLineNumber();
         if (line) updateVarBlockIndicator(line);
     });
@@ -172,6 +227,9 @@ export async function initUI(interpreter) {
             elements.highlightingOverlay.style.width = elements.inputArea.clientWidth + 'px';
             if (elements.lineNumbers) {
                 elements.lineNumbers.style.height = elements.inputArea.clientHeight + 'px';
+            }
+            if (elements.execStatus) {
+                elements.execStatus.style.height = elements.inputArea.clientHeight + 'px';
             }
         }).observe(elements.inputArea);
     }
