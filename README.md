@@ -99,7 +99,7 @@ future logic evict the stalest datasets if memory becomes an issue.
 **ADHD Strategy:** Mix UI tasks with backend tasks. Allow for task switching if needed.
 
 1.  **Data Engine (Smarter Execution):**
-    * [ ] **Cache Inputs:** Allow re-running scripts without re-uploading files (e.g., session-based cache or allow local file paths if feasible securely).
+    * [X] **Cache Inputs:** Allow re-running scripts without re-uploading files (e.g., session-based cache or allow local file paths if feasible securely).
 2.  **I/O (More Formats & Script Management):**
     * [ ] **LOAD\_JSON:** Implement loading data from JSON files.
     * [X] **Save/Load Scripts:** Allow users to save and load their PipeData scripts (e.g., using file download/upload).
@@ -130,9 +130,9 @@ future logic evict the stalest datasets if memory becomes an issue.
 **ADHD Strategy:** Focus on intellectually stimulating features (like DAGs) or visually rewarding UI enhancements.
 
 1.  **Data Engine (Performance & Insight):**
-    * [ ] **Build DAG of Operations:** Internally represent the script as a Directed Acyclic Graph.
-    * [ ] **Cache Intermediate Results:** Use the DAG to cache results of intermediate steps for faster re-runs and dynamic updates.
-    * [ ] **Dynamically Run Script:** Explore running the script automatically (e.g., on pause after typing, or when script is valid) leveraging the cached results.
+    * [X] **Build DAG of Operations:** Internally represent the script as a Directed Acyclic Graph.
+    * [X] **Cache Intermediate Results:** Use the DAG to cache results of intermediate steps for faster re-runs and dynamic updates.
+    * [X] **Dynamically Run Script:** Explore running the script automatically (e.g., on pause after typing, or when script is valid) leveraging the cached results.
 2.  **I/O (Wider Compatibility):**
     * [ ] **LOAD\_EXCEL:** Implement loading data from Excel files (e.g., using SheetJS for .xlsx).
     * [ ] **Save to Excel:** Implement saving data to Excel format.
@@ -189,14 +189,16 @@ future logic evict the stalest datasets if memory becomes an issue.
 This roadmap will evolve. The key is consistent, focused effort on manageable chunks. Good luck!
 
 Random ideas:
-Realtime updates
-Run script jumps the cursor around - make it stay.
-After editing a line, the output of that is dirty and needs to be marked as such.
-Refactor into smaller files (maybe add doco about what is where too)
-Remove PEEK entirely
-Add tabs for variables in output in addition to selected line.
-Some commands have underscores and some don't - lose all of them?
-Tab key doesn't work. Ctrl + S doesn't work.
+* Realtime updates
+* Run script jumps the cursor around - make it stay.
+* After editing a line, the output of that is dirty and needs to be marked as such.
+~~* Refactor into smaller files (maybe add doco about what is where too)~~  
+* Remove PEEK entirely
+* Add tabs for variables in output in addition to selected line.
+* Some commands have underscores and some don't - lose all of them?
+* Tab key doesn't work. Ctrl + S doesn't work.
+* Realtime editing errors are hard to find. Also seems like they should be isolated to the line they are on (before next THEN?)
+* Dark mode?
 
 Recommended Refactorings (completed)
 
