@@ -163,3 +163,30 @@ Random ideas:
 Realtime updates
 Run script jumps the cursor around - make it stay.
 After editing a line, the output of that is dirty and needs to be marked as such.
+Refactor into smaller files (maybe add doco about what is where too)
+
+Recommended Refactorings
+
+Split js/ui.js
+
+    Suggested submodules:
+
+        js/ui/elements.js – element caching (queryElements and elements object)
+
+        js/ui/highlight.js – escapeHtml and applySyntaxHighlighting
+
+        js/ui/peek.js – generatePeekHtmlForDisplay, renderPeekOutputsUI, clearEditorPeekHighlight, handleExportPeek
+
+        js/ui/fileOps.js – saveScriptToFile, loadScriptFromFile, and loadDefaultScript
+
+        js/ui/index.js – orchestration logic (initUI, event bindings, clearOutputs, etc.) importing the above helpers
+
+This separation would isolate concerns (highlighting, PEEK display, file management) and shorten the primary entry file.
+
+Consider modularizing js/interpreter.js
+
+    The class handles many command-specific operations (CSV loading, joins, filtering, column math, exporting). Creating helper modules (e.g., csv.js for handleLoadCsv/handleExportCsv, datasetOps.js for column/row transformations) could trim the file and clarify responsibilities.
+
+Optional: subdivide lengthy tests
+
+    tests/interpreter.test.js (271 lines) groups many behaviors. Splitting by feature (CSV handling, joins, filtering, export) can make individual tests easier to locate and maintain, though this is less urgent.
