@@ -5,6 +5,7 @@ import { tokenizeForParser } from './tokenizer.js'; // Needed for the run button
 
 let currentEditorHighlightLine = null;
 let uiInterpreterInstance = null; // To store the interpreter instance
+let suppressTabScroll = false; // Prevent scroll when selecting tab programmatically
 
 function getCursorLineNumber() {
     if (!elements.inputArea) return null;
@@ -239,8 +240,10 @@ function renderPeekOutputsUI() {
                     const inputAreaVisibleHeight = elements.inputArea.clientHeight;
                     const desiredScrollTop = scrollTargetOffset - (inputAreaVisibleHeight / 3);
 
-                    elements.inputArea.scrollTop = Math.max(0, desiredScrollTop);
-                    elements.highlightingOverlay.scrollTop = elements.inputArea.scrollTop;
+                    if (!suppressTabScroll) {
+                        elements.inputArea.scrollTop = Math.max(0, desiredScrollTop);
+                        elements.highlightingOverlay.scrollTop = elements.inputArea.scrollTop;
+                    }
                 }
             }
         });
@@ -282,10 +285,12 @@ function renderPeekOutputsUI() {
                 if (highlightedSpan) {
                     const scrollTargetOffset = highlightedSpan.offsetTop;
                     const inputAreaVisibleHeight = elements.inputArea.clientHeight;
-                    const desiredScrollTop = scrollTargetOffset - (inputAreaVisibleHeight / 3); 
+                    const desiredScrollTop = scrollTargetOffset - (inputAreaVisibleHeight / 3);
 
-                    elements.inputArea.scrollTop = Math.max(0, desiredScrollTop); 
-                    elements.highlightingOverlay.scrollTop = elements.inputArea.scrollTop; 
+                    if (!suppressTabScroll) {
+                        elements.inputArea.scrollTop = Math.max(0, desiredScrollTop);
+                        elements.highlightingOverlay.scrollTop = elements.inputArea.scrollTop;
+                    }
                 }
             }
         });
@@ -314,7 +319,9 @@ function showOutputForLine(lineNumber) {
     for (const sel of tabSelectors) {
         const tab = elements.peekTabsContainerEl.querySelector(sel);
         if (tab) {
+            suppressTabScroll = true;
             tab.click();
+            suppressTabScroll = false;
             return;
         }
     }
