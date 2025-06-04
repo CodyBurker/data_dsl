@@ -364,6 +364,11 @@ function updateVarBlockIndicator(lineNumber) {
         if (/^\s*THEN\s+PEEK\b/i.test(lines[i])) { end = i + 1; break; }
     }
 
+    // Trim trailing empty lines so the indicator height matches syntax highlighting
+    while (end > start && /^\s*$/.test(lines[end - 1])) {
+        end--;
+    }
+
     const style = getComputedStyle(elements.inputArea);
     const lineHeight = parseFloat(style.lineHeight);
     const paddingTop = parseFloat(style.paddingTop);
@@ -373,7 +378,7 @@ function updateVarBlockIndicator(lineNumber) {
 
     const top = paddingTop + borderTop + (start - 1) * lineHeight - elements.inputArea.scrollTop;
     const height = (end - start + 1) * lineHeight;
-    const left = paddingLeft + borderLeft - elements.inputArea.scrollLeft - 2;
+    const left = paddingLeft + borderLeft - elements.inputArea.scrollLeft - 6; // small gap from text
 
     elements.varBlockIndicator.style.top = `${top}px`;
     elements.varBlockIndicator.style.left = `${left}px`;
