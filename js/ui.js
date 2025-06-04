@@ -348,6 +348,7 @@ THEN LOAD_CSV FILE "examplePeople.csv"
 THEN PEEK
 THEN JOIN cities ON city_id=id TYPE "LEFT"
 THEN SELECT name, age, population
+THEN FILTER age = 30
 THEN PEEK`;
     if (elements.inputArea) {
         elements.inputArea.value = defaultScript;
