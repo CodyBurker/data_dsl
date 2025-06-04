@@ -1,6 +1,6 @@
 // main.js
 import { Interpreter } from './interpreter.js';
-import { initUI } from './ui.js';
+import { initUI } from './ui/index.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Query elements needed by the interpreter here, or ensure ui.js does it and provides them.

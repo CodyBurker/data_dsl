@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
 import { Interpreter } from '../js/interpreter.js';
-import { initUI, renderPeekOutputsUI } from '../js/ui.js';
+import { initUI, renderPeekOutputsUI } from '../js/ui/index.js';
 
 import { TokenType, tokenizeForParser, tokenizeForHighlighting } from "../js/tokenizer.js";
 import { Parser } from "../js/parser.js";
