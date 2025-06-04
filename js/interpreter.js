@@ -100,6 +100,12 @@ export class Interpreter {
                 });
                 this.log(`PEEK data for VAR "${this.activeVariableName}" (Line ${peekLine}) captured.`);
                 break;
+            case 'EXPORT_CSV':
+                if (!currentDataset) {
+                    throw new Error(`No dataset available in VAR "${this.activeVariableName}" to export.`);
+                }
+                await this.handleExportCsv(args, currentDataset);
+                break;
             default: this.log(`Command ${command} for VAR "${this.activeVariableName}" is parsed but not yet fully implemented.`);
         }
     }
@@ -168,5 +174,37 @@ export class Interpreter {
         const newDataset = currentDataset.loc({ columns: columnsToKeep });
         this.log(`Kept columns: ${columnsToKeep.join(', ')} for VAR "${this.activeVariableName}". New shape: (${newDataset.shape[0]}, ${newDataset.shape[1]}).`);
         return newDataset;
+    }
+
+    async handleExportCsv(args, dataset) {
+        const fileName = args.file || 'export.csv';
+
+        if (dataset instanceof dfd.DataFrame) {
+            if (dataset.count() === 0) {
+                this.log(`EXPORT_CSV skipped: DataFrame in VAR "${this.activeVariableName}" is empty.`);
+                return;
+            }
+            const csvString = Papa.unparse(dataset.toJSON());
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            this.log(`Exported DataFrame from VAR "${this.activeVariableName}" to ${fileName}.`);
+        } else if (Array.isArray(dataset) && dataset.length > 0 && typeof dataset[0] === 'object') {
+            const csvString = Papa.unparse(dataset);
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            this.log(`Exported array of objects from VAR "${this.activeVariableName}" to ${fileName}.`);
+        } else {
+            throw new Error(`EXPORT_CSV does not support dataset type: ${typeof dataset}`);
+        }
     }
 }

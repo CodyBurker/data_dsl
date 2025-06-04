@@ -1,0 +1,9 @@
+{
+  "name": "data_dsl",
+  "version": "1.0.0",
+  "description": "DSL for manipulating CSV data in the browser",
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}
