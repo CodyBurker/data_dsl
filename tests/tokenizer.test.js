@@ -72,3 +72,11 @@ test('tokenizeForParser recognizes = operator', () => {
   const eq = tokens.find(t => t.type === TokenType.OPERATOR && t.value === '=');
   assert.ok(eq);
 });
+
+test('tokenizeForParser recognizes parentheses as punctuation', () => {
+  const tokens = tokenizeForParser('VAR "x" THEN FILTER (a = 1)');
+  const open = tokens.find(t => t.type === TokenType.PUNCTUATION && t.value === '(');
+  const close = tokens.find(t => t.type === TokenType.PUNCTUATION && t.value === ')');
+  assert.ok(open);
+  assert.ok(close);
+});

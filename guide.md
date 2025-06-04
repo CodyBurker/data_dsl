@@ -83,7 +83,8 @@ FILTER name STARTSWITH "A"
 FILTER city_id = other_id
 ```
 
-Future versions will add richer filtering like grouped conditions:
+You can also group conditions with parentheses and combine them
+using `AND`/`OR`:
 
 ```pipe
 FILTER (col = 1 OR col = 2) AND (otherCol != 3)

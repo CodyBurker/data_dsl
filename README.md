@@ -69,7 +69,7 @@ With a supported browser you can **Open File** or **Save File** to work directly
     * **FILTER:**
         * [X] Basic equals filtering on strings and numbers.
         * [X] Support additional comparisons like `!=`, `>`, `<`, `>=`, `<=`, `IS`, and string operations.
-        * [ ] Allow grouped conditions with `AND`/`OR` using parentheses,
+        * [X] Allow grouped conditions with `AND`/`OR` using parentheses,
           e.g., `(col=1 OR col=2) AND (otherCol != 3)`.
         * [ ] Extensive unit and integration tests with syntax-highlighted docs.
     * [ ] **DROP:** Implement function to drop specified columns.

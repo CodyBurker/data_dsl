@@ -184,3 +184,24 @@ test('handleFilter advanced operators and column references', () => {
     {name:'Carl',age:35, other:35}
   ]);
 });
+
+test('handleFilter evaluates grouped conditions', () => {
+  const interp = new Interpreter({});
+  interp.activeVariableName = 'd';
+  const data = [
+    {name:'Alice',age:30},
+    {name:'Bob',age:40},
+    {name:'Carl',age:20}
+  ];
+  const cond = {
+    type: 'AND',
+    left: {
+      type: 'OR',
+      left: { column:'age', operator:'=', value:30 },
+      right: { column:'age', operator:'=', value:40 }
+    },
+    right: { column:'name', operator:'!=', value:'Bob' }
+  };
+  const result = interp.handleFilter(cond, data);
+  assert.deepEqual(result, [{name:'Alice',age:30}]);
+});

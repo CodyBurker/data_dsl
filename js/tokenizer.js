@@ -95,7 +95,7 @@ export function tokenizeForHighlighting(input) {
             }
             continue;
         }
-        if (char === ',') {
+        if (char === ',' || char === '(' || char === ')') {
             tokens.push({ type: TokenType.PUNCTUATION, value: char, line: getLineNumber(input, cursor) });
             cursor++;
             continue;
@@ -147,7 +147,7 @@ export function tokenizeForParser(input) {
             tokens.push({ type: KEYWORDS.includes(upperValue) ? TokenType.KEYWORD : TokenType.IDENTIFIER, value: KEYWORDS.includes(upperValue) ? upperValue : value, line: getLineNumber(input, cursor) });
             continue;
         }
-        if (char === ',') { tokens.push({ type: TokenType.PUNCTUATION, value: ',', line: getLineNumber(input, cursor) }); cursor++; continue; }
+        if (char === ',' || char === '(' || char === ')') { tokens.push({ type: TokenType.PUNCTUATION, value: char, line: getLineNumber(input, cursor) }); cursor++; continue; }
         throw new Error(`Unexpected character: '${char}' at line ${getLineNumber(input, cursor)}`);
     }
     tokens.push({ type: TokenType.EOF, value: 'EOF', line: getLineNumber(input, cursor) });

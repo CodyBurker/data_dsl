@@ -204,15 +204,24 @@ export class Interpreter {
     }
 
 
-    handleFilter(args, currentDataset) {
-        const { column, operator = '=', value } = args;
-        const getVal = row => {
-            if (value && typeof value === 'object' && value.type === 'COLUMN_REFERENCE') {
-                return row[value.name];
+    handleFilter(condition, currentDataset) {
+        const evalCondition = (node, row) => {
+            if (!node) return false;
+            if (node.type === 'AND') {
+                return evalCondition(node.left, row) && evalCondition(node.right, row);
             }
-            return value;
-        };
-        const cmp = (a, b) => {
+            if (node.type === 'OR') {
+                return evalCondition(node.left, row) || evalCondition(node.right, row);
+            }
+            const { column, operator = '=', value } = node;
+            const getVal = () => {
+                if (value && typeof value === 'object' && value.type === 'COLUMN_REFERENCE') {
+                    return row[value.name];
+                }
+                return value;
+            };
+            const a = row[column];
+            const b = getVal();
             switch (operator) {
                 case '=':
                 case 'IS':
@@ -239,11 +248,8 @@ export class Interpreter {
                     throw new Error(`Unsupported operator ${operator}`);
             }
         };
-        const filtered = currentDataset.filter(row => {
-            const left = row[column];
-            const right = getVal(row);
-            return cmp(left, right);
-        });
+
+        const filtered = currentDataset.filter(row => evalCondition(condition, row));
         this.log(`FILTER kept ${filtered.length} of ${currentDataset.length} rows for VAR "${this.activeVariableName}".`);
         return filtered;
     }
