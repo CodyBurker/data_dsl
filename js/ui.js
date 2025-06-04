@@ -350,8 +350,7 @@ THEN JOIN cities ON city_id=id TYPE "LEFT"
 THEN SELECT name, age, population
 THEN PEEK`;
     if (elements.inputArea) {
-        const stored = localStorage.getItem('pipedata_saved_script');
-        elements.inputArea.value = stored || defaultScript;
+        elements.inputArea.value = defaultScript;
         if (elements.highlightingOverlay) {
             elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(elements.inputArea.value, null);
         }
