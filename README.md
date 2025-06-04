@@ -17,6 +17,8 @@ anything. Additionally the interpreter preloads `cities` and `people`
 variables with the same data so you can experiment without any `LOAD_CSV`
 commands.
 
+Scripts you write in the editor can be saved to your browser using the **Save Script** button and later restored with **Load Script**. The script is stored in `localStorage`.
+
 --- 
 
 # PipeData Development Roadmap
@@ -62,7 +64,7 @@ commands.
     * [ ] **Cache Inputs:** Allow re-running scripts without re-uploading files (e.g., session-based cache or allow local file paths if feasible securely).
 2.  **I/O (More Formats & Script Management):**
     * [ ] **LOAD\_JSON:** Implement loading data from JSON files.
-    * [ ] **Save/Load Scripts:** Allow users to save and load their PipeData scripts (e.g., using localStorage or file download/upload).
+    * [X] **Save/Load Scripts:** Allow users to save and load their PipeData scripts (e.g., using localStorage or file download/upload).
 3.  **Transformations (Expanding the Toolkit):**
     * [ ] **FILTER:** Develop syntax and implement row filtering based on conditions.
     * [ ] **DROP:** Implement function to drop specified columns.

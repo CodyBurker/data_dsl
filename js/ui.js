@@ -18,6 +18,8 @@ function queryElements() {
     elements.peekOutputsDisplayAreaEl = document.getElementById('peekOutputsDisplayArea');
     elements.runButton = document.getElementById('runButton');
     elements.clearButton = document.getElementById('clearButton');
+    elements.saveButton = document.getElementById('saveScriptButton');
+    elements.loadButton = document.getElementById('loadScriptButton');
     elements.csvFileInputEl = document.getElementById('csvFileInput');
     elements.fileInputContainerEl = document.getElementById('fileInputContainer');
     elements.filePromptMessageEl = document.getElementById('filePromptMessage');
@@ -297,6 +299,27 @@ function handleExportPeek() {
 }
 // --- END NEW FUNCTION ---
 
+function saveScriptToLocal() {
+    if (!elements.inputArea) return;
+    localStorage.setItem('pipedata_saved_script', elements.inputArea.value);
+    if (uiInterpreterInstance) uiInterpreterInstance.log('Script saved to localStorage.');
+}
+
+function loadScriptFromLocal() {
+    if (!elements.inputArea) return;
+    const script = localStorage.getItem('pipedata_saved_script');
+    if (script !== null) {
+        elements.inputArea.value = script;
+        if (elements.highlightingOverlay) {
+            elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(script, null);
+            currentEditorHighlightLine = null;
+        }
+        if (uiInterpreterInstance) uiInterpreterInstance.log('Loaded script from localStorage.');
+    } else {
+        alert('No saved script found.');
+    }
+}
+
 
 export function initUI(interpreter) {
     uiInterpreterInstance = interpreter; // Store interpreter instance for UI use
@@ -315,7 +338,8 @@ THEN
 THEN
     PEEK`;
     if (elements.inputArea) {
-        elements.inputArea.value = defaultScript;
+        const stored = localStorage.getItem('pipedata_saved_script');
+        elements.inputArea.value = stored || defaultScript;
         if (elements.highlightingOverlay) {
             elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(elements.inputArea.value, null);
         }
@@ -387,6 +411,9 @@ THEN
     elements.clearButton?.addEventListener('click', () => {
         clearOutputs();
     });
+
+    elements.saveButton?.addEventListener('click', saveScriptToLocal);
+    elements.loadButton?.addEventListener('click', loadScriptFromLocal);
 
     // --- START NEW EVENT LISTENER ---
     elements.exportPeekButton?.addEventListener('click', handleExportPeek);
