@@ -73,8 +73,8 @@ With a supported browser you can **Open File** or **Save File** to work directly
           e.g., `(col=1 OR col=2) AND (otherCol != 3)`.
         * [ ] Extensive unit and integration tests with syntax-highlighted docs.
     * [ ] **DROP:** Implement function to drop specified columns.
-    * [ ] **WITH\_COLUMN (Basic):**
-        * [ ] Implement arithmetic operations (e.g., `new_col = col1 + col2`).
+    * [X] **WITH\_COLUMN (Basic):**
+        * [X] Implement arithmetic operations (e.g., `new_col = col1 + col2`).
         * [ ] Implement basic string operations (e.g., `new_col = concat(col1, " ", col2)`).
 4.  **UI Features (Better Feedback):**
     * [ ] **Clearer Error Messages:** Improve feedback for script errors.

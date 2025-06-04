@@ -90,6 +90,13 @@ using `AND`/`OR`:
 FILTER (col = 1 OR col = 2) AND (otherCol != 3)
 ```
 
+### WITH_COLUMN
+Create or replace a column using arithmetic on existing columns.
+
+```
+WITH COLUMN result = (a + 2 * b) / c
+```
+
 ### Parsed but Not Yet Executed
 The tokenizer and parser recognize additional commands such as `LOAD_EXCEL`,
 `DROP_COLUMNS`, `NEW_COLUMN`, `RENAME_COLUMN`, and `SORT_BY`. These commands are

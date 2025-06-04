@@ -100,6 +100,7 @@ export class Parser {
             case 'SELECT': return this.parseSelect();
             case 'DROP_COLUMNS': return this.parseDropColumns();
             case 'FILTER': return this.parseFilter();
+            case 'WITH': return this.parseWithColumn();
             case 'NEW_COLUMN': return this.parseNewColumn();
             case 'RENAME_COLUMN': return this.parseRenameColumn();
             case 'SORT_BY': return this.parseSortBy();
@@ -119,7 +120,36 @@ export class Parser {
     parseKeepColumns() { this.consume(TokenType.KEYWORD, 'KEEP_COLUMNS'); const c = this.parseColumnList(); return { command: 'KEEP_COLUMNS', args: { columns: c } }; }
     parseSelect() { this.consume(TokenType.KEYWORD, 'SELECT'); const c = this.parseColumnList(); return { command: 'SELECT', args: { columns: c } }; }
     parseDropColumns() { this.consume(TokenType.KEYWORD, 'DROP_COLUMNS'); const c = this.parseColumnList(); return { command: 'DROP_COLUMNS', args: { columns: c } }; }
-    parseExpression() { const p = []; while(!this.isAtEnd() && this.peek().type !== TokenType.NEWLINE && !['THEN', 'STORE_AS', 'VAR'].includes(this.peek().value) ) { const t = this.peek(); if (['IDENTIFIER', 'STRING_LITERAL', 'NUMBER_LITERAL'].includes(t.type) || (t.type === TokenType.OPERATOR && ['*', '/', '+', '-'].includes(t.value))) p.push(this.advance()); else break; } if (p.length === 0) this.error("Expected expression for NEW_COLUMN."); return p.map(i => ({ type: i.type, value: i.value })); }
+    parseWithColumn() {
+        this.consume(TokenType.KEYWORD, 'WITH');
+        this.consume(TokenType.KEYWORD, 'COLUMN');
+        let n;
+        if (this.peek().type === TokenType.STRING_LITERAL) n = this.consume(TokenType.STRING_LITERAL).value; else n = this.consume(TokenType.IDENTIFIER).value;
+        this.consume(TokenType.OPERATOR, '=');
+        const e = this.parseExpression();
+        return { command: 'WITH_COLUMN', args: { columnName: n, expression: e } };
+    }
+    parseExpression() {
+        const p = [];
+        while(
+            !this.isAtEnd() &&
+            this.peek().type !== TokenType.NEWLINE &&
+            !['THEN', 'STORE_AS', 'VAR'].includes(this.peek().value)
+        ) {
+            const t = this.peek();
+            if (
+                ['IDENTIFIER', 'STRING_LITERAL', 'NUMBER_LITERAL'].includes(t.type) ||
+                (t.type === TokenType.OPERATOR && ['*', '/', '+', '-'].includes(t.value)) ||
+                (t.type === TokenType.PUNCTUATION && ['(', ')'].includes(t.value))
+            ) {
+                p.push(this.advance());
+            } else {
+                break;
+            }
+        }
+        if (p.length === 0) this.error('Expected expression for column operation.');
+        return p.map(i => ({ type: i.type, value: i.value }));
+    }
     parseFilter() {
         this.consume(TokenType.KEYWORD, 'FILTER');
         this.match(TokenType.KEYWORD, 'WHERE'); // optional WHERE keyword

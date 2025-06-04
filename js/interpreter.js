@@ -105,6 +105,12 @@ export class Interpreter {
                 }
                 this.variables[this.activeVariableName] = this.handleFilter(args, currentDataset);
                 break;
+            case 'WITH_COLUMN':
+                if (!Array.isArray(currentDataset)) {
+                    throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply WITH_COLUMN.`);
+                }
+                this.variables[this.activeVariableName] = this.handleWithColumn(args, currentDataset);
+                break;
             case 'PEEK':
                 // currentDataset is already what we want (array or null)
                 const peekLine = commandNode.line;
@@ -201,6 +207,31 @@ export class Interpreter {
         });
         this.log(`Kept columns: ${columnsToKeep.join(', ')} for VAR "${this.activeVariableName}".`);
         return newDataset;
+    }
+
+    handleWithColumn(args, currentDataset) {
+        const { columnName, expression } = args;
+        if (!Array.isArray(expression) || expression.length === 0) {
+            throw new Error('WITH_COLUMN requires an expression.');
+        }
+
+        const evalExpr = (row) => {
+            const exprStr = expression.map(t => {
+                if (t.type === 'IDENTIFIER') return `row["${t.value}"]`;
+                if (t.type === 'NUMBER_LITERAL') return t.value;
+                if (t.type === 'OPERATOR' || (t.type === 'PUNCTUATION' && ['(', ')'].includes(t.value))) return t.value;
+                throw new Error(`Unsupported token ${t.value} in expression`);
+            }).join(' ');
+            try {
+                return Function('row', `return ${exprStr}`)(row);
+            } catch (e) {
+                throw new Error(`Error evaluating expression '${exprStr}': ${e.message}`);
+            }
+        };
+
+        const result = currentDataset.map(row => ({ ...row, [columnName]: evalExpr(row) }));
+        this.log(`WITH_COLUMN '${columnName}' computed for VAR "${this.activeVariableName}".`);
+        return result;
     }
 
 
