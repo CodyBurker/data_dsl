@@ -8,6 +8,8 @@ Mission: To provide a simple and intuitive way to manipulate tabular data in the
 
 **Live Demo:** [Try PipeData DSL in your browser](https://codyburker.github.io/data_dsl/)
 
+**Language Guide:** [View the full DSL guide](guide.md)
+
 --- 
 
 # PipeData Development Roadmap
