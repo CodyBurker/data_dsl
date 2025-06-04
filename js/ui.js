@@ -65,10 +65,18 @@ export function applySyntaxHighlighting(text, activePeekLine = null) {
         inVarBlock = false;
     }
 
+    const firstTokenFound = new Set();
+
     for (let i = 0; i < tokens.length; i++) {
         const token = tokens[i];
         let tokenHtml = '';
         const escapedValue = escapeHtml(token.value);
+
+        const isFirstNonWhitespace =
+            !firstTokenFound.has(token.line) &&
+            token.type !== TokenType.WHITESPACE &&
+            token.type !== TokenType.NEWLINE;
+        if (isFirstNonWhitespace) firstTokenFound.add(token.line);
 
         if (token.type === TokenType.KEYWORD && token.value.toUpperCase() === 'VAR') {
             closeCurrentVarBlock();
@@ -78,24 +86,41 @@ export function applySyntaxHighlighting(text, activePeekLine = null) {
         let classes = '';
         let idAttribute = '';
 
+        const shouldHighlight = token.line === activePeekLine && isFirstNonWhitespace;
+
         switch (token.type) {
             case TokenType.KEYWORD:
                 classes = 'token-keyword';
-                if (token.value.toUpperCase() === 'PEEK' && token.line === activePeekLine) {
-                    classes += ' active-peek-line-highlight';
-                    idAttribute = ` id="${activePeekHighlightID}"`;
-                }
-                tokenHtml = `<span class="${classes}"${idAttribute}>${escapedValue}</span>`;
                 break;
-            case TokenType.STRING_LITERAL: tokenHtml = `<span class="token-string_literal">${escapedValue}</span>`; break;
-            case TokenType.NUMBER_LITERAL: tokenHtml = `<span class="token-number_literal">${escapedValue}</span>`; break;
-            case TokenType.COMMENT: tokenHtml = `<span class="token-comment">${escapedValue}</span>`; break;
-            case TokenType.OPERATOR: tokenHtml = `<span class="token-operator">${escapedValue}</span>`; break;
-            case TokenType.IDENTIFIER: tokenHtml = `<span class="token-identifier">${escapedValue}</span>`; break;
-            case TokenType.PUNCTUATION: tokenHtml = `<span class="token-punctuation">${escapedValue}</span>`; break;
+            case TokenType.STRING_LITERAL:
+                classes = 'token-string_literal';
+                break;
+            case TokenType.NUMBER_LITERAL:
+                classes = 'token-number_literal';
+                break;
+            case TokenType.COMMENT:
+                classes = 'token-comment';
+                break;
+            case TokenType.OPERATOR:
+                classes = 'token-operator';
+                break;
+            case TokenType.IDENTIFIER:
+                classes = 'token-identifier';
+                break;
+            case TokenType.PUNCTUATION:
+                classes = 'token-punctuation';
+                break;
             case TokenType.NEWLINE: tokenHtml = '\n'; break;
             case TokenType.WHITESPACE: tokenHtml = escapedValue; break;
             default: tokenHtml = escapedValue;
+        }
+
+        if (!tokenHtml) {
+            if (shouldHighlight) {
+                classes += ' active-peek-line-highlight';
+                idAttribute = ` id="${activePeekHighlightID}"`;
+            }
+            tokenHtml = `<span class="${classes}"${idAttribute}>${escapedValue}</span>`;
         }
 
         if (inVarBlock) {

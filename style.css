@@ -303,7 +303,7 @@ body {
     /* Shown when active */
 }
 
-.token-keyword.active-peek-line-highlight {
+.active-peek-line-highlight {
     background-color: rgba(255, 223, 100, 0.6);
     /* A distinct yellow/orange highlight */
     border-radius: 3px;
