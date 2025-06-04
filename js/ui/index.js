@@ -154,6 +154,12 @@ function updateVarBlockIndicator(lineNumber) {
     const height = (end - start + 1) * lineHeight;
     const left = paddingLeft + borderLeft - elements.inputArea.scrollLeft - 6;
 
+    const visibleHeight = elements.inputArea.clientHeight;
+    if (top + height <= 0 || top >= visibleHeight) {
+        elements.varBlockIndicator.style.display = 'none';
+        return;
+    }
+
     elements.varBlockIndicator.style.top = `${top}px`;
     elements.varBlockIndicator.style.left = `${left}px`;
     elements.varBlockIndicator.style.height = `${height}px`;
