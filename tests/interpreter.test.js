@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Interpreter } from '../js/interpreter.js';
+import { tokenizeForParser } from '../js/tokenizer.js';
+import { Parser } from '../js/parser.js';
 
 // Minimal stubs for browser APIs used in exports
 global.document = {
@@ -223,4 +225,47 @@ test('handleWithColumn computes arithmetic expression', () => {
   ];
   const result = interp.handleWithColumn({ columnName:'res', expression: expr }, data);
   assert.strictEqual(result[0].res, (1 + 2 * 2) / 3);
+});
+
+import fs from 'fs';
+import path from 'path';
+
+test('default script file runs without error', async () => {
+  const script = fs.readFileSync(path.join('examples', 'default.pd'), 'utf8');
+  const tokens = tokenizeForParser(script);
+  const ast = new Parser(tokens).parse();
+  const interp = new Interpreter({ csvFileInputEl: {} });
+  const originalFetch = global.fetch;
+  const originalPapa = global.Papa;
+  global.Papa = {
+    unparse: originalPapa.unparse,
+    parse: (text, opts) => {
+      const lines = text.trim().split(/\r?\n/);
+      const headers = lines.shift().split(',');
+      const data = lines.map(l => {
+        const vals = l.split(',');
+        const obj = {};
+        headers.forEach((h,i) => {
+          const num = Number(vals[i]);
+          obj[h] = isNaN(num) ? vals[i] : num;
+        });
+        return obj;
+      });
+      opts.complete({ data, meta: { fields: headers } });
+    }
+  };
+  global.fetch = async (url) => {
+    if (url.endsWith('exampleCities.csv')) {
+      return { ok: true, text: async () => fs.readFileSync(path.join('examples', 'exampleCities.csv'), 'utf8') };
+    }
+    if (url.endsWith('examplePeople.csv')) {
+      return { ok: true, text: async () => fs.readFileSync(path.join('examples', 'examplePeople.csv'), 'utf8') };
+    }
+    return { ok: false };
+  };
+  await interp.run(ast);
+  global.fetch = originalFetch;
+  global.Papa = originalPapa;
+  assert.strictEqual(interp.peekOutputs.length, 3);
+  assert.deepEqual(interp.peekOutputs[1].dataset[0], { person_id: 1, name: 'Alice', age: 30, city_id: 1 });
 });

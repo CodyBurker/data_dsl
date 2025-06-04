@@ -28,11 +28,11 @@ function setupDom() {
   global.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
 }
 
-test('renderPeekOutputsUI creates a tab for each PEEK output', () => {
+test('renderPeekOutputsUI creates a tab for each PEEK output', async () => {
   setupDom();
 
   const interp = new Interpreter({});
-  initUI(interp);
+  await initUI(interp);
   interp.peekOutputs = [
     { id: 'p1', varName: 'x', line: 1, dataset: [{A:1}] },
     { id: 'p2', varName: 'x', line: 2, dataset: [{A:2}] }
@@ -58,7 +58,7 @@ test('running script updates AST output and peek UI', async () => {
   };
 
   const interp = new Interpreter(uiEls);
-  initUI(interp);
+  await initUI(interp);
   interp.requestCsvFile = async () => ({ name: 'fake.csv' });
 
   const script = `VAR "d"
@@ -105,7 +105,7 @@ test('full chain handles multi-block script and empty dataset', async () => {
   };
 
   const interp = new Interpreter(uiEls);
-  initUI(interp);
+  await initUI(interp);
   interp.requestCsvFile = async () => ({ name: 'fake.csv' });
 
   const script = `VAR "main"
@@ -152,7 +152,7 @@ test('ui shows error message for invalid script', async () => {
     filePromptMessageEl: document.getElementById('filePromptMessage')
   };
   const interp = new Interpreter(uiEls);
-  initUI(interp);
+  await initUI(interp);
 
   const script = 'VAR "x" PEEK';
   document.getElementById('pipeDataInput').value = script;
@@ -181,7 +181,7 @@ test('ui shows error message for invalid script', async () => {
 test('saving script to file uses File System Access API', async () => {
   setupDom();
   const interp = new Interpreter({});
-  initUI(interp);
+  await initUI(interp);
 
   let data = null;
   let closed = false;
@@ -203,7 +203,7 @@ test('saving script to file uses File System Access API', async () => {
 test('loading script from file populates editor', async () => {
   setupDom();
   const interp = new Interpreter({});
-  initUI(interp);
+  await initUI(interp);
 
   window.showOpenFilePicker = async () => [{
     getFile: async () => new File(['VAR "z"'], 'script.pd')

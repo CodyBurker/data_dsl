@@ -335,25 +335,40 @@ async function loadScriptFromFile() {
 }
 
 
-export function initUI(interpreter) {
-    uiInterpreterInstance = interpreter; // Store interpreter instance for UI use
-    queryElements(); // Get all DOM elements
-
-    const defaultScript = `VAR "cities"
+const fallbackScript = `VAR "cities"
 THEN LOAD_CSV FILE "exampleCities.csv"
 THEN SELECT population, id
+THEN WITH COLUMN population_millions = population / 1000000
 THEN PEEK
 VAR "people"
 THEN LOAD_CSV FILE "examplePeople.csv"
 THEN PEEK
 THEN JOIN cities ON city_id=id TYPE "LEFT"
-THEN SELECT name, age, population
+THEN SELECT name, age, population, population_millions
 THEN FILTER name STARTSWITH "A"
 THEN PEEK`;
-    if (elements.inputArea) {
+
+async function loadDefaultScript() {
+    try {
+        const resp = await fetch('examples/default.pd');
+        if (resp.ok) {
+            return await resp.text();
+        }
+    } catch (e) {
+        // ignore and fall back
+    }
+    return fallbackScript;
+}
+
+export async function initUI(interpreter) {
+    uiInterpreterInstance = interpreter; // Store interpreter instance for UI use
+    queryElements(); // Get all DOM elements
+
+    const defaultScript = await loadDefaultScript();
+    if (elements.inputArea && elements.inputArea.value.trim() === '') {
         elements.inputArea.value = defaultScript;
         if (elements.highlightingOverlay) {
-            elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(elements.inputArea.value, null);
+            elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(defaultScript, null);
         }
     }
     clearOutputs(); // Initial clear

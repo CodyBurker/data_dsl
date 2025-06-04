@@ -2,7 +2,7 @@
 import { Interpreter } from './interpreter.js';
 import { initUI } from './ui.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Query elements needed by the interpreter here, or ensure ui.js does it and provides them.
     // For simplicity, ui.js will query all elements it needs, including those for the interpreter.
     // The interpreter constructor in interpreter.js expects an object of these elements.
@@ -20,5 +20,5 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // initUI now takes the interpreter instance.
     // Parser and tokenizers are used directly within ui.js for the run button logic.
-    initUI(interpreter); 
+    await initUI(interpreter);
 });
