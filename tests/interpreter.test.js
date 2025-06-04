@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { Interpreter } from '../js/interpreter.js';
 import { tokenizeForParser } from '../js/tokenizer.js';
 import { Parser } from '../js/parser.js';
+import { loadCsv, exportCsv } from '../js/csv.js';
+import { keepColumns, joinDatasets, filterRows, withColumn } from '../js/datasetOps.js';
 
 // Minimal stubs for browser APIs used in exports
 global.document = {
@@ -15,11 +17,11 @@ global.Papa = {
   parse: (file, opts) => opts.complete({ data: [{A:1,B:2},{A:3,B:4}], meta: { fields:['A','B'] } })
 };
 
-test('handleKeepColumns selects columns case-insensitively', () => {
+test('keepColumns selects columns case-insensitively', () => {
   const interp = new Interpreter({});
   interp.activeVariableName = 'd';
   const data = [{A:1,B:2,C:3},{A:4,B:5,C:6}];
-  const result = interp.handleKeepColumns({ columns: ['a','C'] }, data);
+  const result = keepColumns(interp, { columns: ['a','C'] }, data);
   assert.deepEqual(result, [{A:1,C:3},{A:4,C:6}]);
 });
 
@@ -32,23 +34,23 @@ test('executeCommand PEEK stores peek output', async () => {
   assert.strictEqual(interp.peekOutputs[0].line, 5);
 });
 
-test('handleExportCsv for array of objects uses Papa.unparse', async () => {
+test('exportCsv for array of objects uses Papa.unparse', async () => {
   const interp = new Interpreter({});
   interp.activeVariableName = 'data';
-  await interp.handleExportCsv({ file: 'arr.csv' }, [{A:1},{A:2}]);
+  await exportCsv(interp, { file: 'arr.csv' }, [{A:1},{A:2}]);
   assert.ok(global.__unparseCalled);
   assert.ok(global.__clicked);
   global.__unparseCalled = false;
   global.__clicked = false;
 });
 
-test('handleExportCsv throws on unsupported type', async () => {
+test('exportCsv throws on unsupported type', async () => {
   const interp = new Interpreter({});
   interp.activeVariableName = 'data';
-  await assert.rejects(() => interp.handleExportCsv({file:'x.csv'}, 5), /does not support/);
+  await assert.rejects(() => exportCsv(interp, {file:'x.csv'}, 5), /does not support/);
 });
 
-test('executeCommand SELECT uses handleKeepColumns', async () => {
+test('executeCommand SELECT uses keepColumns', async () => {
   const interp = new Interpreter({});
   interp.activeVariableName = 'sel';
   interp.variables.sel = [{A:1,B:2,C:3}];
@@ -56,52 +58,52 @@ test('executeCommand SELECT uses handleKeepColumns', async () => {
   assert.deepEqual(interp.variables.sel, [{B:2}]);
 });
 
-test('handleJoin performs default inner join', () => {
+test('joinDatasets performs default inner join', () => {
   const interp = new Interpreter({});
   interp.activeVariableName = 'left';
   interp.variables.left = [{id:1,val:'a'},{id:2,val:'b'}];
   interp.variables.right = [{id:1,x:10},{id:3,x:30}];
-  const result = interp.handleJoin({ variable: 'right', leftKey: 'id', rightKey: 'id' }, interp.variables.left);
+  const result = joinDatasets(interp, { variable: 'right', leftKey: 'id', rightKey: 'id' }, interp.variables.left);
   assert.deepEqual(result, [{id:1,val:'a',x:10}]);
 });
 
-test('handleJoin left join keeps unmatched', () => {
+test('joinDatasets left join keeps unmatched', () => {
   const interp = new Interpreter({});
   interp.activeVariableName = 'l';
   interp.variables.l = [{id:1,v:'a'},{id:2,v:'b'}];
   interp.variables.r = [{id:1,x:10}];
-  const result = interp.handleJoin({ variable: 'r', leftKey: 'id', rightKey: 'id', type: 'LEFT' }, interp.variables.l);
+  const result = joinDatasets(interp, { variable: 'r', leftKey: 'id', rightKey: 'id', type: 'LEFT' }, interp.variables.l);
   assert.deepEqual(result, [{id:1,v:'a',x:10},{id:2,v:'b'}]);
 });
 
-test('handleJoin with different keys', () => {
+test('joinDatasets with different keys', () => {
   const interp = new Interpreter({});
   interp.activeVariableName = 'l';
   interp.variables.l = [{name:'a'},{name:'b'}];
   interp.variables.r = [{"full name":'a',x:1},{"full name":'c',x:2}];
-  const result = interp.handleJoin({ variable: 'r', leftKey: 'name', rightKey: 'full name' }, interp.variables.l);
+  const result = joinDatasets(interp, { variable: 'r', leftKey: 'name', rightKey: 'full name' }, interp.variables.l);
   assert.deepEqual(result, [{name:'a',"full name":'a',x:1}]);
 });
 
-test('handleLoadCsv returns array of objects', async () => {
+test('loadCsv returns array of objects', async () => {
   const interp = new Interpreter({ csvFileInputEl: {} });
   interp.activeVariableName = 'df';
   const originalFetch = global.fetch;
   global.fetch = async () => ({ ok: false });
   interp.requestCsvFile = async () => ({ name: 'fake.csv' });
-  const data = await interp.handleLoadCsv({ file: 'fake.csv' });
+  const data = await loadCsv(interp, { file: 'fake.csv' });
   assert.deepEqual(data, [{A:1,B:2},{A:3,B:4}]);
   global.fetch = originalFetch;
 });
 
-test('handleLoadCsv uses example files when present', async () => {
+test('loadCsv uses example files when present', async () => {
   const interp = new Interpreter({ csvFileInputEl: {} });
   interp.activeVariableName = 'ex';
   let prompted = false;
   interp.requestCsvFile = async () => { prompted = true; return { name: 'x.csv' }; };
   const originalFetch = global.fetch;
   global.fetch = async () => ({ ok: true, text: async () => 'A,B\n1,2\n3,4' });
-  const data = await interp.handleLoadCsv({ file: 'example.csv' });
+  const data = await loadCsv(interp, { file: 'example.csv' });
   assert.deepEqual(data, [{A:1,B:2},{A:3,B:4}]);
   assert.strictEqual(prompted, false);
   global.fetch = originalFetch;
@@ -117,18 +119,18 @@ test('clearInternalState loads sample datasets', () => {
 });
 
 
-test('handleFilter filters rows using equality', () => {
+test('filterRows filters rows using equality', () => {
   const interp = new Interpreter({});
   interp.activeVariableName = 'd';
   const data = [
     {name:'Alice',age:30},
     {name:'Bob',age:40}
   ];
-  const result = interp.handleFilter({ column:'age', operator:'=', value:30 }, data);
+  const result = filterRows(interp, { column:'age', operator:'=', value:30 }, data);
   assert.deepEqual(result, [{name:'Alice',age:30}]);
 });
 
-test('handleFilter supports other comparisons', () => {
+test('filterRows supports other comparisons', () => {
   const interp = new Interpreter({});
   interp.activeVariableName = 'd';
   const data = [
@@ -136,23 +138,23 @@ test('handleFilter supports other comparisons', () => {
     {name:'Bob',age:40},
     {name:'Carl',age:25}
   ];
-  const greater = interp.handleFilter({ column:'age', operator:'>', value:30 }, data);
+  const greater = filterRows(interp, { column:'age', operator:'>', value:30 }, data);
   assert.deepEqual(greater, [{name:'Bob',age:40}]);
-  const less = interp.handleFilter({ column:'age', operator:'<', value:30 }, data);
+  const less = filterRows(interp, { column:'age', operator:'<', value:30 }, data);
   assert.deepEqual(less, [{name:'Carl',age:25}]);
-  const notEq = interp.handleFilter({ column:'name', operator:'!=', value:'Bob' }, data);
+  const notEq = filterRows(interp, { column:'name', operator:'!=', value:'Bob' }, data);
   assert.deepEqual(notEq, [
     {name:'Alice',age:30},
     {name:'Carl',age:25}
   ]);
-  const le = interp.handleFilter({ column:'age', operator:'<=', value:30 }, data);
+  const le = filterRows(interp, { column:'age', operator:'<=', value:30 }, data);
   assert.deepEqual(le, [
     {name:'Alice',age:30},
     {name:'Carl',age:25}
   ]);
 });
 
-test('handleFilter advanced operators and column references', () => {
+test('filterRows advanced operators and column references', () => {
   const interp = new Interpreter({});
   interp.activeVariableName = 'd';
   const data = [
@@ -160,34 +162,34 @@ test('handleFilter advanced operators and column references', () => {
     {name:'Bob',age:25, other:30},
     {name:'Carl',age:35, other:35}
   ];
-  const ge = interp.handleFilter({ column:'age', operator:'>=', value:30 }, data);
+  const ge = filterRows(interp, { column:'age', operator:'>=', value:30 }, data);
   assert.deepEqual(ge, [
     {name:'Alice',age:30, other:30},
     {name:'Carl',age:35, other:35}
   ]);
-  const sw = interp.handleFilter({ column:'name', operator:'STARTSWITH', value:'B' }, data);
+  const sw = filterRows(interp, { column:'name', operator:'STARTSWITH', value:'B' }, data);
   assert.deepEqual(sw, [{name:'Bob',age:25, other:30}]);
-  const colEq = interp.handleFilter({ column:'age', operator:'=', value:{type:'COLUMN_REFERENCE', name:'other'} }, data);
+  const colEq = filterRows(interp, { column:'age', operator:'=', value:{type:'COLUMN_REFERENCE', name:'other'} }, data);
   assert.deepEqual(colEq, [
     {name:'Alice',age:30, other:30},
     {name:'Carl',age:35, other:35}
   ]);
-  const contains = interp.handleFilter({ column:'name', operator:'CONTAINS', value:'a' }, data);
+  const contains = filterRows(interp, { column:'name', operator:'CONTAINS', value:'a' }, data);
   assert.deepEqual(contains, [
     {name:'Carl',age:35, other:35}
   ]);
-  const ends = interp.handleFilter({ column:'name', operator:'ENDSWITH', value:'e' }, data);
+  const ends = filterRows(interp, { column:'name', operator:'ENDSWITH', value:'e' }, data);
   assert.deepEqual(ends, [{name:'Alice',age:30, other:30}]);
-  const isop = interp.handleFilter({ column:'age', operator:'IS', value:30 }, data);
+  const isop = filterRows(interp, { column:'age', operator:'IS', value:30 }, data);
   assert.deepEqual(isop, [{name:'Alice',age:30, other:30}]);
-  const isNot = interp.handleFilter({ column:'age', operator:'IS NOT', value:25 }, data);
+  const isNot = filterRows(interp, { column:'age', operator:'IS NOT', value:25 }, data);
   assert.deepEqual(isNot, [
     {name:'Alice',age:30, other:30},
     {name:'Carl',age:35, other:35}
   ]);
 });
 
-test('handleFilter evaluates grouped conditions', () => {
+test('filterRows evaluates grouped conditions', () => {
   const interp = new Interpreter({});
   interp.activeVariableName = 'd';
   const data = [
@@ -204,11 +206,11 @@ test('handleFilter evaluates grouped conditions', () => {
     },
     right: { column:'name', operator:'!=', value:'Bob' }
   };
-  const result = interp.handleFilter(cond, data);
+  const result = filterRows(interp, cond, data);
   assert.deepEqual(result, [{name:'Alice',age:30}]);
 });
 
-test('handleWithColumn computes arithmetic expression', () => {
+test('withColumn computes arithmetic expression', () => {
   const interp = new Interpreter({});
   interp.activeVariableName = 'd';
   const data = [{a:1,b:2,c:3}];
@@ -223,7 +225,7 @@ test('handleWithColumn computes arithmetic expression', () => {
     { type: 'OPERATOR', value: '/' },
     { type: 'IDENTIFIER', value: 'c' }
   ];
-  const result = interp.handleWithColumn({ columnName:'res', expression: expr }, data);
+  const result = withColumn(interp, { columnName:'res', expression: expr }, data);
   assert.strictEqual(result[0].res, (1 + 2 * 2) / 3);
 });
 
