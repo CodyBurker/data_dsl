@@ -20,6 +20,8 @@ function queryElements() {
     elements.clearButton = document.getElementById('clearButton');
     elements.saveButton = document.getElementById('saveScriptButton');
     elements.loadButton = document.getElementById('loadScriptButton');
+    elements.openFileButton = document.getElementById('openScriptFileButton');
+    elements.saveFileButton = document.getElementById('saveScriptFileButton');
     elements.csvFileInputEl = document.getElementById('csvFileInput');
     elements.fileInputContainerEl = document.getElementById('fileInputContainer');
     elements.filePromptMessageEl = document.getElementById('filePromptMessage');
@@ -320,6 +322,40 @@ function loadScriptFromLocal() {
     }
 }
 
+async function saveScriptToFile() {
+    if (!elements.inputArea || typeof window.showSaveFilePicker !== 'function') return;
+    try {
+        const [handle] = await window.showSaveFilePicker({
+            types: [{ description: 'PipeData Script', accept: { 'text/plain': ['.pd'] } }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(elements.inputArea.value);
+        await writable.close();
+        if (uiInterpreterInstance) uiInterpreterInstance.log('Script saved to file.');
+    } catch (e) {
+        // User cancelled
+    }
+}
+
+async function loadScriptFromFile() {
+    if (!elements.inputArea || typeof window.showOpenFilePicker !== 'function') return;
+    try {
+        const [handle] = await window.showOpenFilePicker({
+            types: [{ description: 'PipeData Script', accept: { 'text/plain': ['.pd', '.txt'] } }]
+        });
+        const file = await handle.getFile();
+        const text = await file.text();
+        elements.inputArea.value = text;
+        if (elements.highlightingOverlay) {
+            elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(text, null);
+            currentEditorHighlightLine = null;
+        }
+        if (uiInterpreterInstance) uiInterpreterInstance.log('Loaded script from file.');
+    } catch (e) {
+        // User cancelled
+    }
+}
+
 
 export function initUI(interpreter) {
     uiInterpreterInstance = interpreter; // Store interpreter instance for UI use
@@ -413,6 +449,8 @@ THEN PEEK`;
 
     elements.saveButton?.addEventListener('click', saveScriptToLocal);
     elements.loadButton?.addEventListener('click', loadScriptFromLocal);
+    elements.saveFileButton?.addEventListener('click', saveScriptToFile);
+    elements.openFileButton?.addEventListener('click', loadScriptFromFile);
 
     // --- START NEW EVENT LISTENER ---
     elements.exportPeekButton?.addEventListener('click', handleExportPeek);

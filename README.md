@@ -17,7 +17,10 @@ anything. Additionally the interpreter preloads `cities` and `people`
 variables with the same data so you can experiment without any `LOAD_CSV`
 commands.
 
-Scripts you write in the editor can be saved to your browser using the **Save Script** button and later restored with **Load Script**. The script is stored in `localStorage`.
+Scripts you write in the editor can be saved to your browser using the **Save Script** button
+and later restored with **Load Script**. The script is stored in `localStorage`.
+On browsers that support the File System Access API you can also **Open File** or
+**Save File** to work directly with `.pd` script files.
 
 --- 
 
