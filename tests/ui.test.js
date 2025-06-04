@@ -205,12 +205,12 @@ test('saving script to file uses File System Access API', async () => {
 
   let data = null;
   let closed = false;
-  window.showSaveFilePicker = async () => [{
+  window.showSaveFilePicker = async () => ({
     createWritable: async () => ({
       write: async d => { data = d; },
       close: async () => { closed = true; }
     })
-  }];
+  });
 
   document.getElementById('pipeDataInput').value = 'VAR "x"';
   document.getElementById('saveScriptFileButton').click();

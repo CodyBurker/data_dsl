@@ -325,7 +325,7 @@ function loadScriptFromLocal() {
 async function saveScriptToFile() {
     if (!elements.inputArea || typeof window.showSaveFilePicker !== 'function') return;
     try {
-        const [handle] = await window.showSaveFilePicker({
+        const handle = await window.showSaveFilePicker({
             types: [{ description: 'PipeData Script', accept: { 'text/plain': ['.pd'] } }]
         });
         const writable = await handle.createWritable();
