@@ -88,3 +88,10 @@ test('handleLoadCsv returns array of objects', async () => {
   const data = await interp.handleLoadCsv({ file: 'fake.csv' });
   assert.deepEqual(data, [{A:1,B:2},{A:3,B:4}]);
 });
+
+test('built-in samples loaded on clearInternalState', () => {
+  const interp = new Interpreter({});
+  interp.clearInternalState();
+  assert.ok(Array.isArray(interp.variables.cities));
+  assert.ok(interp.variables.people.some(p => p.name === 'Alice'));
+});

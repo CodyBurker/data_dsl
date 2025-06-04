@@ -19,6 +19,10 @@ THEN SELECT name, population
 THEN PEEK
 ```
 
+### Built-in Samples
+The interpreter provides `cities` and `people` datasets out of the box. Use
+them to experiment with column selection and joins without uploading a CSV.
+
 ## Commands
 
 ### VAR

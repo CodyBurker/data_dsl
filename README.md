@@ -10,6 +10,9 @@ Mission: To provide a simple and intuitive way to manipulate tabular data in the
 
 **Language Guide:** [View the full DSL guide](guide.md)
 
+Sample datasets `cities` and `people` are loaded automatically when a script runs.
+Use them to try out column selection and joins without uploading a file.
+
 --- 
 
 # PipeData Development Roadmap

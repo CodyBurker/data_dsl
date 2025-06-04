@@ -1,3 +1,4 @@
+import { builtInSamples } from './samples.js';
 // interpreter.js
 
 export class Interpreter {
@@ -21,12 +22,13 @@ export class Interpreter {
     }
 
     clearInternalState() {
-        this.variables = {};
+        this.variables = JSON.parse(JSON.stringify(builtInSamples));
         this.activeVariableName = null;
         this.peekOutputs = [];
         this.fileResolve = null; // Should be reset if a run is interrupted
+        this.log('Loaded built-in sample datasets.');
     }
-    
+
     async requestCsvFile(fileNameHint, forVariable) {
         this.uiElements.fileInputContainerEl.classList.remove('hidden');
         this.uiElements.filePromptMessageEl.textContent = `Pipeline for VAR "${forVariable}": Select CSV for ${fileNameHint}.`;
