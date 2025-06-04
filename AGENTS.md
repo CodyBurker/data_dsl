@@ -21,3 +21,14 @@ This project contains a browser-based DSL for manipulating CSV data. The JavaScr
 - `index.html` loads PapaParse from a CDN for CSV processing in the browser.
 - Style rules live in `style.css`; maintain existing formatting when making UI tweaks.
 
+## UI Module Structure
+UI-related code lives under `js/ui/` and is split into several modules:
+
+- `elements.js` – caches DOM nodes via `queryElements` and exports the `elements` object.
+- `highlight.js` – provides `escapeHtml` and `applySyntaxHighlighting` for the editor overlay.
+- `peek.js` – handles PEEK output rendering and export with `generatePeekHtmlForDisplay`, `renderPeekOutputsUI`, `clearEditorPeekHighlight`, and `handleExportPeek`.
+- `fileOps.js` – browser file helpers `saveScriptToFile`, `loadScriptFromFile`, and `loadDefaultScript`.
+- `index.js` – orchestrates UI initialization, event bindings, and exports helpers used in tests.
+
+When modifying UI behavior keep these files in sync and update this guide if the structure changes.
+
