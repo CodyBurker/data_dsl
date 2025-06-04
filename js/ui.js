@@ -20,6 +20,7 @@ function queryElements() {
     elements.inputArea = document.getElementById('pipeDataInput');
     elements.highlightingOverlay = document.getElementById('highlightingOverlay');
     elements.lineNumbers = document.getElementById('lineNumbers');
+    elements.varBlockIndicator = document.getElementById('varBlockIndicator');
     elements.astOutputArea = document.getElementById('astOutput');
     elements.logOutputEl = document.getElementById('logOutput');
     elements.peekTabsContainerEl = document.getElementById('peekTabsContainer');
@@ -257,6 +258,7 @@ function renderPeekOutputsUI() {
                         elements.highlightingOverlay.scrollTop = elements.inputArea.scrollTop;
                     }
                 }
+                updateVarBlockIndicator(stepData.line);
             }
         });
 
@@ -304,6 +306,7 @@ function renderPeekOutputsUI() {
                         elements.highlightingOverlay.scrollTop = elements.inputArea.scrollTop;
                     }
                 }
+                updateVarBlockIndicator(peekData.line);
             }
         });
 
@@ -339,6 +342,50 @@ function showOutputForLine(lineNumber) {
     }
 }
 
+function updateVarBlockIndicator(lineNumber) {
+    if (!elements.varBlockIndicator || !elements.inputArea) return;
+    const lines = elements.inputArea.value.split(/\r?\n/);
+    if (lineNumber < 1 || lineNumber > lines.length) {
+        elements.varBlockIndicator.style.display = 'none';
+        return;
+    }
+
+    let start = null;
+    for (let i = lineNumber - 1; i >= 0; i--) {
+        if (/^\s*VAR\b/i.test(lines[i])) { start = i + 1; break; }
+    }
+    if (start === null) {
+        elements.varBlockIndicator.style.display = 'none';
+        return;
+    }
+    let end = lines.length;
+    for (let i = lineNumber; i < lines.length; i++) {
+        if (/^\s*VAR\b/i.test(lines[i])) { end = i; break; }
+        if (/^\s*THEN\s+PEEK\b/i.test(lines[i])) { end = i + 1; break; }
+    }
+
+    // Trim trailing empty lines so the indicator height matches syntax highlighting
+    while (end > start && /^\s*$/.test(lines[end - 1])) {
+        end--;
+    }
+
+    const style = getComputedStyle(elements.inputArea);
+    const lineHeight = parseFloat(style.lineHeight);
+    const paddingTop = parseFloat(style.paddingTop);
+    const paddingLeft = parseFloat(style.paddingLeft);
+    const borderLeft = parseFloat(style.borderLeftWidth);
+    const borderTop = parseFloat(style.borderTopWidth);
+
+    const top = paddingTop + borderTop + (start - 1) * lineHeight - elements.inputArea.scrollTop;
+    const height = (end - start + 1) * lineHeight;
+    const left = paddingLeft + borderLeft - elements.inputArea.scrollLeft - 6; // small gap from text
+
+    elements.varBlockIndicator.style.top = `${top}px`;
+    elements.varBlockIndicator.style.left = `${left}px`;
+    elements.varBlockIndicator.style.height = `${height}px`;
+    elements.varBlockIndicator.style.display = 'block';
+}
+
 
 function clearOutputs() {
     if (uiInterpreterInstance) {
@@ -362,6 +409,7 @@ function clearOutputs() {
     }
     if (elements.exportPeekButton) elements.exportPeekButton.classList.add('hidden'); // <-- Hide export button
     clearEditorPeekHighlight();
+    if (elements.varBlockIndicator) elements.varBlockIndicator.style.display = 'none';
 }
 
 // --- START NEW FUNCTION ---
@@ -484,6 +532,7 @@ export async function initUI(interpreter) {
         if (elements.highlightingOverlay) {
             elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(defaultScript, null);
         }
+        if (elements.varBlockIndicator) updateVarBlockIndicator(1);
     }
     clearOutputs(); // Initial clear
 
@@ -494,12 +543,16 @@ export async function initUI(interpreter) {
         currentEditorHighlightLine = null;
         elements.highlightingOverlay.scrollTop = elements.inputArea.scrollTop;
         elements.highlightingOverlay.scrollLeft = elements.inputArea.scrollLeft;
+        const line = getCursorLineNumber();
+        if (line) updateVarBlockIndicator(line);
     });
 
     elements.inputArea?.addEventListener('scroll', () => {
         elements.highlightingOverlay.scrollTop = elements.inputArea.scrollTop;
         elements.highlightingOverlay.scrollLeft = elements.inputArea.scrollLeft;
         updateLineNumbers();
+        const line = getCursorLineNumber();
+        if (line) updateVarBlockIndicator(line);
     });
 
     if (elements.inputArea) {
@@ -567,11 +620,17 @@ export async function initUI(interpreter) {
 
     elements.inputArea?.addEventListener('keyup', () => {
         const line = getCursorLineNumber();
-        if (line) showOutputForLine(line);
+        if (line) {
+            showOutputForLine(line);
+            updateVarBlockIndicator(line);
+        }
     });
     elements.inputArea?.addEventListener('click', () => {
         const line = getCursorLineNumber();
-        if (line) showOutputForLine(line);
+        if (line) {
+            showOutputForLine(line);
+            updateVarBlockIndicator(line);
+        }
     });
 }
 
