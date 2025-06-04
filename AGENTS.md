@@ -4,7 +4,7 @@ This project contains a browser-based DSL for manipulating CSV data. The JavaScr
 
 ## Environment Setup
 - Use Node **18+** (Node 20 is available in the Codex container).
-- Run `npm install` once to ensure dependencies are installed (currently there are none, but future dependencies may be added).
+- Run `npm install` once to ensure dependencies are installed
 - The demo can be viewed by opening `index.html` directly or by serving the repo with a simple HTTP server, e.g. `npx http-server` or `python -m http.server`.
 
 ## Testing
