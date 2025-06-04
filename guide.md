@@ -67,6 +67,8 @@ PEEK
 
 Each command also records its result in a **Step Outputs** list. Selecting a
 step tab highlights that command in the editor so you can follow the pipeline.
+Placing the cursor on a line that produced a peek or step output will also
+activate the corresponding tab automatically.
 
 ### EXPORT_CSV
 Download the current dataset as a CSV file.

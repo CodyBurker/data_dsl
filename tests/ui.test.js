@@ -40,6 +40,28 @@ test('renderPeekOutputsUI creates a tab for each PEEK output', async () => {
   renderPeekOutputsUI();
   const tabs = document.querySelectorAll('.peek-tab');
   assert.strictEqual(tabs.length, 2);
+  assert.strictEqual(tabs[1].dataset.line, '2');
+});
+
+test('moving cursor selects matching peek tab', async () => {
+  setupDom();
+
+  const interp = new Interpreter({});
+  await initUI(interp);
+  interp.peekOutputs = [
+    { id: 'p1', varName: 'x', line: 1, dataset: [{A:1}] },
+    { id: 'p2', varName: 'x', line: 2, dataset: [{A:2}] }
+  ];
+  renderPeekOutputsUI();
+
+  const input = document.getElementById('pipeDataInput');
+  input.value = 'LINE1\nLINE2';
+  input.setSelectionRange(6,6); // Start of line 2
+  input.dispatchEvent(new window.Event('keyup'));
+
+  const active = document.querySelector('.peek-tab.active-peek-tab');
+  assert.ok(active);
+  assert.strictEqual(active.dataset.line, '2');
 });
 
 test('running script updates AST output and peek UI', async () => {

@@ -6,6 +6,12 @@ import { tokenizeForParser } from './tokenizer.js'; // Needed for the run button
 let currentEditorHighlightLine = null;
 let uiInterpreterInstance = null; // To store the interpreter instance
 
+function getCursorLineNumber() {
+    if (!elements.inputArea) return null;
+    const value = elements.inputArea.value.slice(0, elements.inputArea.selectionStart);
+    return value.split(/\r?\n/).length;
+}
+
 // DOM Elements Cache
 const elements = {};
 
@@ -182,6 +188,7 @@ function renderPeekOutputsUI() {
         tabButton.textContent = `STEP ${index + 1} (VAR "${stepData.varName}", L${stepData.line})`;
         tabButton.dataset.target = stepData.id;
         tabButton.dataset.stepIndex = index;
+        tabButton.dataset.line = stepData.line;
 
         const contentDiv = document.createElement('div');
         contentDiv.id = stepData.id;
@@ -224,6 +231,7 @@ function renderPeekOutputsUI() {
         tabButton.textContent = `PEEK ${index + 1} (VAR "${peekData.varName}", L${peekData.line})`;
         tabButton.dataset.target = peekData.id;
         tabButton.dataset.peekIndex = index; // Store index for easy data retrieval
+        tabButton.dataset.line = peekData.line;
 
         const contentDiv = document.createElement('div');
         contentDiv.id = peekData.id;
@@ -269,6 +277,21 @@ function clearEditorPeekHighlight() {
         currentEditorHighlightLine = null;
     } else if (elements.inputArea && elements.highlightingOverlay && currentEditorHighlightLine === null) {
          elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(elements.inputArea.value, null);
+    }
+}
+
+function showOutputForLine(lineNumber) {
+    if (!elements.peekTabsContainerEl) return;
+    const tabSelectors = [
+        `.peek-tab[data-peek-index][data-line='${lineNumber}']`,
+        `.peek-tab[data-step-index][data-line='${lineNumber}']`
+    ];
+    for (const sel of tabSelectors) {
+        const tab = elements.peekTabsContainerEl.querySelector(sel);
+        if (tab) {
+            tab.click();
+            return;
+        }
     }
 }
 
@@ -489,6 +512,15 @@ export async function initUI(interpreter) {
     // --- START NEW EVENT LISTENER ---
     elements.exportPeekButton?.addEventListener('click', handleExportPeek);
     // --- END NEW EVENT LISTENER ---
+
+    elements.inputArea?.addEventListener('keyup', () => {
+        const line = getCursorLineNumber();
+        if (line) showOutputForLine(line);
+    });
+    elements.inputArea?.addEventListener('click', () => {
+        const line = getCursorLineNumber();
+        if (line) showOutputForLine(line);
+    });
 }
 
 export { renderPeekOutputsUI, generatePeekHtmlForDisplay, clearOutputs };
