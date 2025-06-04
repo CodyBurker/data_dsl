@@ -18,8 +18,6 @@ function queryElements() {
     elements.peekOutputsDisplayAreaEl = document.getElementById('peekOutputsDisplayArea');
     elements.runButton = document.getElementById('runButton');
     elements.clearButton = document.getElementById('clearButton');
-    elements.saveButton = document.getElementById('saveScriptButton');
-    elements.loadButton = document.getElementById('loadScriptButton');
     elements.openFileButton = document.getElementById('openScriptFileButton');
     elements.saveFileButton = document.getElementById('saveScriptFileButton');
     elements.csvFileInputEl = document.getElementById('csvFileInput');
@@ -301,26 +299,6 @@ function handleExportPeek() {
 }
 // --- END NEW FUNCTION ---
 
-function saveScriptToLocal() {
-    if (!elements.inputArea) return;
-    localStorage.setItem('pipedata_saved_script', elements.inputArea.value);
-    if (uiInterpreterInstance) uiInterpreterInstance.log('Script saved to localStorage.');
-}
-
-function loadScriptFromLocal() {
-    if (!elements.inputArea) return;
-    const script = localStorage.getItem('pipedata_saved_script');
-    if (script !== null) {
-        elements.inputArea.value = script;
-        if (elements.highlightingOverlay) {
-            elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(script, null);
-            currentEditorHighlightLine = null;
-        }
-        if (uiInterpreterInstance) uiInterpreterInstance.log('Loaded script from localStorage.');
-    } else {
-        alert('No saved script found.');
-    }
-}
 
 async function saveScriptToFile() {
     if (!elements.inputArea || typeof window.showSaveFilePicker !== 'function') return;
@@ -362,8 +340,7 @@ export function initUI(interpreter) {
     queryElements(); // Get all DOM elements
 
     const defaultScript = `VAR "cities"
-THEN LOAD_CSV FILE "exampleCities.csv"
-THEN PEEK
+        elements.inputArea.value = defaultScript;
 THEN SELECT population, id
 THEN PEEK
 VAR "people"
@@ -447,8 +424,6 @@ THEN PEEK`;
         clearOutputs();
     });
 
-    elements.saveButton?.addEventListener('click', saveScriptToLocal);
-    elements.loadButton?.addEventListener('click', loadScriptFromLocal);
     elements.saveFileButton?.addEventListener('click', saveScriptToFile);
     elements.openFileButton?.addEventListener('click', loadScriptFromFile);
 

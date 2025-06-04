@@ -14,8 +14,6 @@ function setupDom() {
     <div id="logOutput"></div>
     <div id="peekTabsContainer"></div>
     <div id="peekOutputsDisplayArea"></div>
-    <button id="loadScriptButton"></button>
-    <button id="saveScriptButton"></button>
     <button id="openScriptFileButton"></button>
     <button id="saveScriptFileButton"></button>
     <button id="runButton"></button>
@@ -27,7 +25,6 @@ function setupDom() {
   </body>`, { url: 'https://example.com' });
   global.document = dom.window.document;
   global.window = dom.window;
-  global.localStorage = dom.window.localStorage;
   global.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
 }
 
@@ -180,23 +177,6 @@ test('ui shows error message for invalid script', async () => {
   assert.ok(document.getElementById('peekOutputsDisplayArea').textContent.includes('No PEEK outputs'));
 });
 
-test('saving and loading script with localStorage', () => {
-  setupDom();
-  const uiEls = {
-    logOutputEl: document.getElementById('logOutput'),
-  };
-  const interp = new Interpreter(uiEls);
-  initUI(interp);
-
-  const script = 'VAR "x"\nTHEN PEEK';
-  document.getElementById('pipeDataInput').value = script;
-  document.getElementById('saveScriptButton').click();
-  assert.strictEqual(window.localStorage.getItem('pipedata_saved_script'), script);
-
-  document.getElementById('pipeDataInput').value = '';
-  document.getElementById('loadScriptButton').click();
-  assert.strictEqual(document.getElementById('pipeDataInput').value, script);
-});
 
 test('saving script to file uses File System Access API', async () => {
   setupDom();
