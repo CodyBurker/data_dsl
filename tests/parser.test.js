@@ -58,5 +58,35 @@ test('Parser parses FILTER command', () => {
   const ast = new Parser(tokens).parse();
   const filterCmd = ast[0].pipeline[0];
   assert.strictEqual(filterCmd.command, 'FILTER');
-  assert.deepEqual(filterCmd.args, { column: 'age', value: 30 });
+  assert.deepEqual(filterCmd.args, { column: 'age', operator: '=', value: 30 });
+});
+
+test('Parser parses FILTER with other operators', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN FILTER age > 25');
+  const ast = new Parser(tokens).parse();
+  const filterCmd = ast[0].pipeline[0];
+  assert.deepEqual(filterCmd.args, { column: 'age', operator: '>', value: 25 });
+  const tokens2 = tokenizeForParser('VAR "d" THEN FILTER name != "Bob"');
+  const ast2 = new Parser(tokens2).parse();
+  const filterCmd2 = ast2[0].pipeline[0];
+  assert.deepEqual(filterCmd2.args, { column: 'name', operator: '!=', value: 'Bob' });
+});
+
+test('Parser parses FILTER with advanced operators', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN FILTER age >= 30');
+  const ast = new Parser(tokens).parse();
+  const cmd = ast[0].pipeline[0];
+  assert.deepEqual(cmd.args, { column: 'age', operator: '>=', value: 30 });
+  const tokens2 = tokenizeForParser('VAR "d" THEN FILTER name STARTSWITH "A"');
+  const ast2 = new Parser(tokens2).parse();
+  const cmd2 = ast2[0].pipeline[0];
+  assert.deepEqual(cmd2.args, { column: 'name', operator: 'STARTSWITH', value: 'A' });
+  const tokens3 = tokenizeForParser('VAR "d" THEN FILTER city_id = other_id');
+  const ast3 = new Parser(tokens3).parse();
+  const cmd3 = ast3[0].pipeline[0];
+  assert.deepEqual(cmd3.args, { column: 'city_id', operator: '=', value: { type:'COLUMN_REFERENCE', name:'other_id' } });
+  const tokens4 = tokenizeForParser('VAR "d" THEN FILTER WHERE age <= 40');
+  const ast4 = new Parser(tokens4).parse();
+  const cmd4 = ast4[0].pipeline[0];
+  assert.deepEqual(cmd4.args, { column: 'age', operator: '<=', value: 40 });
 });

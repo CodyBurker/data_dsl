@@ -99,7 +99,6 @@ export class Parser {
             case 'KEEP_COLUMNS': return this.parseKeepColumns();
             case 'SELECT': return this.parseSelect();
             case 'DROP_COLUMNS': return this.parseDropColumns();
-            case 'FILTER_ROWS': return this.parseFilterRows();
             case 'FILTER': return this.parseFilter();
             case 'NEW_COLUMN': return this.parseNewColumn();
             case 'RENAME_COLUMN': return this.parseRenameColumn();
@@ -120,23 +119,32 @@ export class Parser {
     parseKeepColumns() { this.consume(TokenType.KEYWORD, 'KEEP_COLUMNS'); const c = this.parseColumnList(); return { command: 'KEEP_COLUMNS', args: { columns: c } }; }
     parseSelect() { this.consume(TokenType.KEYWORD, 'SELECT'); const c = this.parseColumnList(); return { command: 'SELECT', args: { columns: c } }; }
     parseDropColumns() { this.consume(TokenType.KEYWORD, 'DROP_COLUMNS'); const c = this.parseColumnList(); return { command: 'DROP_COLUMNS', args: { columns: c } }; }
-    parseFilterRows() { this.consume(TokenType.KEYWORD, 'FILTER_ROWS'); this.consume(TokenType.KEYWORD, 'WHERE'); const cond = { column: null, operator: null, value: null };
-        if (this.peek().type === TokenType.IDENTIFIER) cond.column = this.consume(TokenType.IDENTIFIER).value; else if (this.peek().type === TokenType.STRING_LITERAL) cond.column = this.consume(TokenType.STRING_LITERAL).value; else this.error("Expected column name for filter condition.");
-        const opToken = this.peek();
-        if ((opToken.type === TokenType.KEYWORD || opToken.type === TokenType.OPERATOR) && CONDITION_OPERATORS.includes(opToken.value.toUpperCase())) cond.operator = this.advance().value.toUpperCase();
-        else if (opToken.value.toUpperCase() === 'IS' && this.lookAhead(1)?.value.toUpperCase() === 'NOT') { this.advance(); this.advance(); cond.operator = 'IS NOT';}
-        else this.error(`Expected filter operator (e.g., IS, >, CONTAINS) but got ${opToken.value}`);
-        if (this.peek().type === TokenType.STRING_LITERAL) cond.value = this.consume(TokenType.STRING_LITERAL).value; else if (this.peek().type === TokenType.NUMBER_LITERAL) cond.value = this.consume(TokenType.NUMBER_LITERAL).value; else if (this.peek().type === TokenType.IDENTIFIER) cond.value = { type: 'COLUMN_REFERENCE', name: this.consume(TokenType.IDENTIFIER).value }; else this.error("Expected value (string, number, or column identifier) for filter condition.");
-        return { command: 'FILTER_ROWS', args: { condition: cond } };
-    }
     parseFilter() {
         this.consume(TokenType.KEYWORD, 'FILTER');
-        let column;
-        if (this.peek().type === TokenType.STRING_LITERAL) column = this.consume(TokenType.STRING_LITERAL).value; else column = this.consume(TokenType.IDENTIFIER).value;
-        if (!this.match(TokenType.OPERATOR, '=')) this.error("Expected '=' in FILTER condition");
-        let value;
-        if (this.peek().type === TokenType.STRING_LITERAL) value = this.consume(TokenType.STRING_LITERAL).value; else if (this.peek().type === TokenType.NUMBER_LITERAL) value = this.consume(TokenType.NUMBER_LITERAL).value; else this.error("Expected string or number value for FILTER condition");
-        return { command: 'FILTER', args: { column, value } };
+        this.match(TokenType.KEYWORD, 'WHERE'); // optional WHERE keyword
+        const cond = { column: null, operator: null, value: null };
+        if (this.peek().type === TokenType.IDENTIFIER) cond.column = this.consume(TokenType.IDENTIFIER).value;
+        else if (this.peek().type === TokenType.STRING_LITERAL) cond.column = this.consume(TokenType.STRING_LITERAL).value;
+        else this.error('Expected column name for filter condition.');
+
+        const opToken = this.peek();
+        if ((opToken.type === TokenType.KEYWORD || opToken.type === TokenType.OPERATOR) &&
+            (CONDITION_OPERATORS.includes(opToken.value.toUpperCase()) || ['=', '!=', '>', '<', '>=', '<='].includes(opToken.value))) {
+            cond.operator = this.advance().value.toUpperCase();
+        } else if (opToken.value.toUpperCase() === 'IS' && this.lookAhead(1)?.value.toUpperCase() === 'NOT') {
+            this.advance();
+            this.advance();
+            cond.operator = 'IS NOT';
+        } else {
+            this.error(`Expected filter operator (e.g., =, IS, >, CONTAINS) but got ${opToken.value}`);
+        }
+
+        if (this.peek().type === TokenType.STRING_LITERAL) cond.value = this.consume(TokenType.STRING_LITERAL).value;
+        else if (this.peek().type === TokenType.NUMBER_LITERAL) cond.value = this.consume(TokenType.NUMBER_LITERAL).value;
+        else if (this.peek().type === TokenType.IDENTIFIER) cond.value = { type: 'COLUMN_REFERENCE', name: this.consume(TokenType.IDENTIFIER).value };
+        else this.error('Expected value (string, number, or column identifier) for filter condition.');
+
+        return { command: 'FILTER', args: cond };
     }
     parseExpression() { const p = []; while(!this.isAtEnd() && this.peek().type !== TokenType.NEWLINE && !['THEN', 'STORE_AS', 'VAR'].includes(this.peek().value) ) { const t = this.peek(); if (['IDENTIFIER', 'STRING_LITERAL', 'NUMBER_LITERAL'].includes(t.type) || (t.type === TokenType.OPERATOR && ['*', '/', '+', '-'].includes(t.value))) p.push(this.advance()); else break; } if (p.length === 0) this.error("Expected expression for NEW_COLUMN."); return p.map(i => ({ type: i.type, value: i.value })); }
     parseNewColumn() { this.consume(TokenType.KEYWORD, 'NEW_COLUMN'); let n; if (this.peek().type === TokenType.STRING_LITERAL) n = this.consume(TokenType.STRING_LITERAL).value; else n = this.consume(TokenType.IDENTIFIER).value; this.consume(TokenType.KEYWORD, 'AS'); const e = this.parseExpression(); return { command: 'NEW_COLUMN', args: { newColumnName: n, expression: e } }; }

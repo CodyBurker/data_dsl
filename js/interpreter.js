@@ -99,12 +99,6 @@ export class Interpreter {
                 }
                 this.variables[this.activeVariableName] = this.handleJoin(args, currentDataset);
                 break;
-            case 'FILTER_ROWS':
-                if (!Array.isArray(currentDataset)) {
-                    throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply FILTER_ROWS.`);
-                }
-                this.variables[this.activeVariableName] = this.handleFilterRows(args, currentDataset);
-                break;
             case 'FILTER':
                 if (!Array.isArray(currentDataset)) {
                     throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply FILTER.`);
@@ -209,41 +203,46 @@ export class Interpreter {
         return newDataset;
     }
 
-    handleFilterRows(args, currentDataset) {
-        const { condition } = args;
-        const { column, operator, value } = condition;
+
+    handleFilter(args, currentDataset) {
+        const { column, operator = '=', value } = args;
         const getVal = row => {
-            if (value && value.type === 'COLUMN_REFERENCE') return row[value.name];
+            if (value && typeof value === 'object' && value.type === 'COLUMN_REFERENCE') {
+                return row[value.name];
+            }
             return value;
         };
         const cmp = (a, b) => {
             switch (operator) {
-                case 'IS': return a === b;
-                case 'IS NOT': return a !== b;
-                case '!=': return a != b;
-                case '>': return a > b;
-                case '<': return a < b;
-                case '>=': return a >= b;
-                case '<=': return a <= b;
-                case 'CONTAINS': return String(a).includes(String(b));
-                case 'STARTSWITH': return String(a).startsWith(String(b));
-                case 'ENDSWITH': return String(a).endsWith(String(b));
-                default: throw new Error(`Unsupported operator ${operator}`);
+                case '=':
+                case 'IS':
+                    return a === b;
+                case 'IS NOT':
+                    return a !== b;
+                case '!=':
+                    return a != b;
+                case '>':
+                    return a > b;
+                case '<':
+                    return a < b;
+                case '>=':
+                    return a >= b;
+                case '<=':
+                    return a <= b;
+                case 'CONTAINS':
+                    return String(a).includes(String(b));
+                case 'STARTSWITH':
+                    return String(a).startsWith(String(b));
+                case 'ENDSWITH':
+                    return String(a).endsWith(String(b));
+                default:
+                    throw new Error(`Unsupported operator ${operator}`);
             }
         };
         const filtered = currentDataset.filter(row => {
             const left = row[column];
             const right = getVal(row);
             return cmp(left, right);
-        });
-        this.log(`FILTER_ROWS kept ${filtered.length} of ${currentDataset.length} rows for VAR "${this.activeVariableName}".`);
-        return filtered;
-    }
-
-    handleFilter(args, currentDataset) {
-        const { column, value } = args;
-        const filtered = currentDataset.filter(row => {
-            return row[column] == value;
         });
         this.log(`FILTER kept ${filtered.length} of ${currentDataset.length} rows for VAR "${this.activeVariableName}".`);
         return filtered;
