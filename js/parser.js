@@ -27,9 +27,10 @@ export class Parser {
     }
 
     parseVarBlock() {
-        this.consume(TokenType.KEYWORD, 'VAR');
+        const varToken = this.consume(TokenType.KEYWORD, 'VAR');
         const variableNameToken = this.consume(TokenType.STRING_LITERAL, undefined, "Expected variable name as string literal after VAR (e.g., \"myVar\")");
         const variableName = variableNameToken.value;
+        const varLine = varToken.line;
 
         const commands = [];
         this.skipNewlines();
@@ -76,7 +77,7 @@ export class Parser {
         if (commands.length === 0) {
             this.error(`VAR "${variableName}" processing failed to identify commands (internal check).`);
         }
-        return { variableName: variableName, pipeline: commands };
+        return { variableName: variableName, line: varLine, pipeline: commands };
     }
 
     skipNewlines() {

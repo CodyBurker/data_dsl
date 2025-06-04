@@ -70,6 +70,8 @@ currently active output tab is shown, and each tab label displays the variable
 name only. Selecting a step tab highlights the first word of that command line
 so you can follow the pipeline. Placing the cursor on a line that produced a
 peek or step output will also activate the corresponding tab automatically.
+Clicking on the `VAR` line for a pipeline shows the dataset after all of that
+variable's commands have executed.
 
 ### EXPORT_CSV
 Download the current dataset as a CSV file.
