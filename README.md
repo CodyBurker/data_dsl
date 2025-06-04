@@ -10,7 +10,10 @@ Mission: To provide a simple and intuitive way to manipulate tabular data in the
 
 **Language Guide:** [View the full DSL guide](guide.md)
 ### Development Setup
-Run `npm run dev` to launch the React dev server. Use `npm run build` for production builds.
+Run `npm run dev` to launch the React dev server.
+Run `npm run build` to generate a static site in `dist/` that replaces the old
+`index.html` setup. The build can be previewed with `npm run preview` and served
+from any static host.
 Node tests still run with `npm test`.
 
 
