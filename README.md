@@ -170,6 +170,7 @@ Refactor into smaller files (maybe add doco about what is where too)
 Remove PEEK entirely
 Add tabs for variables in output in addition to selected line.
 Some commands have underscores and some don't - lose all of them?
+Tab key doesn't work. Ctrl + S doesn't work.
 
 Recommended Refactorings (completed)
 
