@@ -48,6 +48,9 @@ reused so the pipeline executes faster. PEEK results and step outputs come from
 the cache when a step is skipped, so the UI stays in sync. This cache persists
 across runs until you clear it using the **Clear Outputs** button (or calling
 `clearInternalState(true)` in code).
+Each cached entry also tracks `unusedCount`, incremented whenever a run doesn't
+need that node. The counter resets to `0` when a cached result is used, letting
+future logic evict the stalest datasets if memory becomes an issue.
 
 ---
 

@@ -11,6 +11,9 @@ export class Interpreter {
         this.peekOutputs = [];
         this.stepOutputs = [];
         this.fileResolve = null;
+        // Cache keyed by node id { fingerprint, dataset, unusedCount, usedThisRun }.
+        // unusedCount increments when a node isn't touched in a run so unused
+        // datasets can later be evicted based on their age.
         this.cache = {};
 
         // Store references to UI elements passed from ui.js
@@ -67,6 +70,10 @@ export class Interpreter {
         const nodeMap = {};
         for (const n of dag) nodeMap[n.id] = n;
 
+        for (const entry of Object.values(this.cache)) {
+            entry.usedThisRun = false;
+        }
+
         for (const varBlock of ast) {
             this.activeVariableName = varBlock.variableName;
             const varLine = varBlock.line;
@@ -96,6 +103,8 @@ export class Interpreter {
 
                 if (useCache) {
                     this.variables[this.activeVariableName] = cacheEntry.dataset;
+                    cacheEntry.usedThisRun = true;
+                    cacheEntry.unusedCount = 0;
                     if (commandNode.command === 'PEEK') {
                         const peekLine = commandNode.line;
                         const peekId = `peek-${this.activeVariableName || 'context'}-l${peekLine}-idx${this.peekOutputs.length}`;
@@ -110,7 +119,12 @@ export class Interpreter {
                 } else {
                     try {
                         await this.executeCommand(commandNode);
-                        this.cache[nodeId] = { fingerprint: nodeInfo.fingerprint, dataset: this.variables[this.activeVariableName] };
+                        this.cache[nodeId] = {
+                            fingerprint: nodeInfo.fingerprint,
+                            dataset: this.variables[this.activeVariableName],
+                            unusedCount: 0,
+                            usedThisRun: true
+                        };
                     } catch (e) {
                         const err = e instanceof Error ? e.message : JSON.stringify(e);
                         this.log(`ERROR executing ${commandNode.command} for VAR "${this.activeVariableName}": ${err}`);
@@ -131,6 +145,14 @@ export class Interpreter {
             this.log(`Finished block for VAR "${this.activeVariableName}"`);
         }
         this.log('Interpreter finished all blocks.');
+        for (const entry of Object.values(this.cache)) {
+            if (entry.usedThisRun) {
+                entry.unusedCount = 0;
+            } else {
+                entry.unusedCount = (entry.unusedCount || 0) + 1;
+            }
+            entry.usedThisRun = false;
+        }
         this.activeVariableName = null;
         if (this.uiElements.fileInputContainerEl) this.uiElements.fileInputContainerEl.classList.add('hidden');
     }

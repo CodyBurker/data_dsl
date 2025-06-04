@@ -131,4 +131,8 @@ parsed but currently have no effect in the interpreter.
     executing the step again. Step outputs and PEEK displays rely on these cached
     datasets when possible. The cache persists across runs until you clear it with
     the **Clear Outputs** button or by calling `clearInternalState(true)`.
+    Each cache entry tracks an `unusedCount` value that increments if a run
+    doesn't touch that node. When the entry is used again the counter resets to
+    zero. This can help future implementations decide which datasets to evict
+    when memory becomes constrained.
 

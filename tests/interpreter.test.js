@@ -403,3 +403,35 @@ test('join result updates when upstream step changes', async () => {
   assert.deepEqual(first, expectedFirst);
   assert.deepEqual(second, expectedSecond);
 });
+
+test('cache entries track unusedCount across runs', async () => {
+  const scriptD = `VAR "d" THEN LOAD_CSV FILE "f.csv" THEN PEEK`;
+  const scriptX = `VAR "x" THEN LOAD_CSV FILE "f.csv" THEN PEEK`;
+  const astD = new Parser(tokenizeForParser(scriptD)).parse();
+  const astX = new Parser(tokenizeForParser(scriptX)).parse();
+  const interp = new Interpreter({ csvFileInputEl: {} });
+  interp.requestCsvFile = async () => ({ name: 'f.csv' });
+
+  const orig = interp.executeCommand.bind(interp);
+  interp.executeCommand = async function(node) {
+    if (node.command === 'LOAD_CSV') {
+      this.variables[this.activeVariableName] = [{A:1}];
+    } else {
+      await orig(node);
+    }
+  };
+
+  await interp.run(astD);
+  assert.strictEqual(interp.cache['d-0'].unusedCount, 0);
+  assert.strictEqual(interp.cache['d-1'].unusedCount, 0);
+
+  await interp.run(astX);
+  assert.strictEqual(interp.cache['d-0'].unusedCount, 1);
+  assert.strictEqual(interp.cache['d-1'].unusedCount, 1);
+
+  await interp.run(astD);
+  assert.strictEqual(interp.cache['d-0'].unusedCount, 0);
+  assert.strictEqual(interp.cache['d-1'].unusedCount, 0);
+
+  interp.executeCommand = orig;
+});
