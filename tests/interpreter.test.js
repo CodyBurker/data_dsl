@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Interpreter } from '../js/interpreter.js';
+import { Interpreter } from '../src/lib/interpreter.js';
 
 // Minimal stubs for browser APIs used in exports
 global.document = {

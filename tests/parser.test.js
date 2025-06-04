@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { tokenizeForParser } from '../js/tokenizer.js';
-import { Parser } from '../js/parser.js';
+import { tokenizeForParser } from '../src/lib/tokenizer.js';
+import { Parser } from '../src/lib/parser.js';
 
 test('Parser handles multiple VAR blocks', () => {
   const script = `VAR "v1" THEN LOAD_CSV FILE "f.csv" THEN PEEK THEN EXPORT_CSV TO "out.csv"

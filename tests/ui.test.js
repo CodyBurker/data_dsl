@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { Interpreter } from '../js/interpreter.js';
-import { initUI, renderPeekOutputsUI } from '../js/ui.js';
+import { Interpreter } from '../src/lib/interpreter.js';
+import { initUI, renderPeekOutputsUI } from '../src/lib/ui.js';
 
-import { TokenType, tokenizeForParser, tokenizeForHighlighting } from "../js/tokenizer.js";
-import { Parser } from "../js/parser.js";
+import { TokenType, tokenizeForParser, tokenizeForHighlighting } from "../src/lib/tokenizer.js";
+import { Parser } from "../src/lib/parser.js";
 function setupDom() {
   const dom = new JSDOM(`<!DOCTYPE html><body>
     <textarea id="pipeDataInput"></textarea>

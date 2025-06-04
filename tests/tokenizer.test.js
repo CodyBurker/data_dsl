@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { tokenizeForParser, tokenizeForHighlighting, TokenType } from '../js/tokenizer.js';
+import { tokenizeForParser, tokenizeForHighlighting, TokenType } from '../src/lib/tokenizer.js';
 
 const sampleScript = `VAR "data" THEN LOAD_CSV FILE "cities.csv"
 # comment line

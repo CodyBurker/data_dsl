@@ -9,6 +9,10 @@ Mission: To provide a simple and intuitive way to manipulate tabular data in the
 **Live Demo:** [Try PipeData DSL in your browser](https://codyburker.github.io/data_dsl/)
 
 **Language Guide:** [View the full DSL guide](guide.md)
+### Development Setup
+Run `npm run dev` to launch the React dev server. Use `npm run build` for production builds.
+Node tests still run with `npm test`.
+
 
 --- 
 
