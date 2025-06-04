@@ -18,6 +18,8 @@ function queryElements() {
     elements.peekOutputsDisplayAreaEl = document.getElementById('peekOutputsDisplayArea');
     elements.runButton = document.getElementById('runButton');
     elements.clearButton = document.getElementById('clearButton');
+    elements.openFileButton = document.getElementById('openScriptFileButton');
+    elements.saveFileButton = document.getElementById('saveScriptFileButton');
     elements.csvFileInputEl = document.getElementById('csvFileInput');
     elements.fileInputContainerEl = document.getElementById('fileInputContainer');
     elements.filePromptMessageEl = document.getElementById('filePromptMessage');
@@ -298,13 +300,47 @@ function handleExportPeek() {
 // --- END NEW FUNCTION ---
 
 
+async function saveScriptToFile() {
+    if (!elements.inputArea || typeof window.showSaveFilePicker !== 'function') return;
+    try {
+        const handle = await window.showSaveFilePicker({
+            types: [{ description: 'PipeData Script', accept: { 'text/plain': ['.pd'] } }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(elements.inputArea.value);
+        await writable.close();
+        if (uiInterpreterInstance) uiInterpreterInstance.log('Script saved to file.');
+    } catch (e) {
+        // User cancelled
+    }
+}
+
+async function loadScriptFromFile() {
+    if (!elements.inputArea || typeof window.showOpenFilePicker !== 'function') return;
+    try {
+        const [handle] = await window.showOpenFilePicker({
+            types: [{ description: 'PipeData Script', accept: { 'text/plain': ['.pd', '.txt'] } }]
+        });
+        const file = await handle.getFile();
+        const text = await file.text();
+        elements.inputArea.value = text;
+        if (elements.highlightingOverlay) {
+            elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(text, null);
+            currentEditorHighlightLine = null;
+        }
+        if (uiInterpreterInstance) uiInterpreterInstance.log('Loaded script from file.');
+    } catch (e) {
+        // User cancelled
+    }
+}
+
+
 export function initUI(interpreter) {
     uiInterpreterInstance = interpreter; // Store interpreter instance for UI use
     queryElements(); // Get all DOM elements
 
     const defaultScript = `VAR "cities"
 THEN LOAD_CSV FILE "exampleCities.csv"
-THEN PEEK
 THEN SELECT population, id
 THEN PEEK
 VAR "people"
@@ -314,7 +350,8 @@ THEN JOIN cities ON city_id=id TYPE "LEFT"
 THEN SELECT name, age, population
 THEN PEEK`;
     if (elements.inputArea) {
-        elements.inputArea.value = defaultScript;
+        const stored = localStorage.getItem('pipedata_saved_script');
+        elements.inputArea.value = stored || defaultScript;
         if (elements.highlightingOverlay) {
             elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(elements.inputArea.value, null);
         }
@@ -386,6 +423,9 @@ THEN PEEK`;
     elements.clearButton?.addEventListener('click', () => {
         clearOutputs();
     });
+
+    elements.saveFileButton?.addEventListener('click', saveScriptToFile);
+    elements.openFileButton?.addEventListener('click', loadScriptFromFile);
 
     // --- START NEW EVENT LISTENER ---
     elements.exportPeekButton?.addEventListener('click', handleExportPeek);

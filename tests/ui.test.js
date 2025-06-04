@@ -14,13 +14,15 @@ function setupDom() {
     <div id="logOutput"></div>
     <div id="peekTabsContainer"></div>
     <div id="peekOutputsDisplayArea"></div>
+    <button id="openScriptFileButton"></button>
+    <button id="saveScriptFileButton"></button>
     <button id="runButton"></button>
     <button id="clearButton"></button>
     <input id="csvFileInput" />
     <div id="fileInputContainer"></div>
     <span id="filePromptMessage"></span>
     <button id="exportPeekButton"></button>
-  </body>`);
+  </body>`, { url: 'https://example.com' });
   global.document = dom.window.document;
   global.window = dom.window;
   global.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
@@ -173,5 +175,44 @@ test('ui shows error message for invalid script', async () => {
   assert.ok(document.getElementById('astOutput').classList.contains('error-box'));
   assert.strictEqual(interp.peekOutputs.length, 0);
   assert.ok(document.getElementById('peekOutputsDisplayArea').textContent.includes('No PEEK outputs'));
+});
+
+
+test('saving script to file uses File System Access API', async () => {
+  setupDom();
+  const interp = new Interpreter({});
+  initUI(interp);
+
+  let data = null;
+  let closed = false;
+  window.showSaveFilePicker = async () => ({
+    createWritable: async () => ({
+      write: async d => { data = d; },
+      close: async () => { closed = true; }
+    })
+  });
+
+  document.getElementById('pipeDataInput').value = 'VAR "x"';
+  document.getElementById('saveScriptFileButton').click();
+  await new Promise(r => setTimeout(r, 0));
+
+  assert.strictEqual(data, 'VAR "x"');
+  assert.ok(closed);
+});
+
+test('loading script from file populates editor', async () => {
+  setupDom();
+  const interp = new Interpreter({});
+  initUI(interp);
+
+  window.showOpenFilePicker = async () => [{
+    getFile: async () => new File(['VAR "z"'], 'script.pd')
+  }];
+
+  document.getElementById('pipeDataInput').value = '';
+  document.getElementById('openScriptFileButton').click();
+  await new Promise(r => setTimeout(r, 0));
+
+  assert.strictEqual(document.getElementById('pipeDataInput').value, 'VAR "z"');
 });
 

@@ -91,4 +91,6 @@ parsed but currently have no effect in the interpreter.
 - Chain multiple commands with `THEN` to build a pipeline.
 - Comments can appear on their own line or after a command.
 - When loading a file, the UI will prompt you to select it.
+- With a supported browser you can **Open File** or **Save File** to work
+  with `.pd` files.
 
