@@ -90,7 +90,10 @@ With a supported browser you can **Open File** or **Save File** to work directly
     * [ ] **DROP:** Implement function to drop specified columns.
     * [X] **WITH COLUMN (Basic):**
         * [X] Implement arithmetic operations (e.g., `new_col = col1 + col2`).
-        * [ ] Implement basic string operations (e.g., `new_col = concat(col1, " ", col2)`).
+        * [ ] Implement basic string operations:
+             * [ ] Concat by adding: `cola + colb` or `col1 + "!"`
+             * [ ] CASE: `LOWER(a)`, `UPPER(b)`
+             * [ ] TRIM: `TRIM(a)`
 4.  **UI Features (Better Feedback):**
     * [ ] **Clearer Error Messages:** Improve feedback for script errors.
     * [ ] **Data Preview Enhancement:** Consider options for previewing data after each step (if performance allows without caching) or ensure final preview is robust.
