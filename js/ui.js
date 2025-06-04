@@ -19,6 +19,7 @@ const elements = {};
 function queryElements() {
     elements.inputArea = document.getElementById('pipeDataInput');
     elements.highlightingOverlay = document.getElementById('highlightingOverlay');
+    elements.lineNumbers = document.getElementById('lineNumbers');
     elements.astOutputArea = document.getElementById('astOutput');
     elements.logOutputEl = document.getElementById('logOutput');
     elements.peekTabsContainerEl = document.getElementById('peekTabsContainer');
@@ -44,6 +45,17 @@ function escapeHtml(unsafe) {
          .replace(/>/g, "&gt;")
          .replace(/"/g, "&quot;")
          .replace(/'/g, "&#039;");
+}
+
+function updateLineNumbers() {
+    if (!elements.inputArea || !elements.lineNumbers) return;
+    const lineCount = elements.inputArea.value.split(/\r?\n/).length || 1;
+    let numbers = '';
+    for (let i = 1; i <= Math.min(lineCount, 999); i++) {
+        numbers += String(i).padStart(3, ' ') + '\n';
+    }
+    elements.lineNumbers.textContent = numbers;
+    elements.lineNumbers.scrollTop = elements.inputArea.scrollTop;
 }
 
 export function applySyntaxHighlighting(text, activePeekLine = null) {
@@ -423,6 +435,7 @@ async function loadScriptFromFile() {
         const file = await handle.getFile();
         const text = await file.text();
         elements.inputArea.value = text;
+        updateLineNumbers();
         if (elements.highlightingOverlay) {
             elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(text, null);
             currentEditorHighlightLine = null;
@@ -462,10 +475,12 @@ async function loadDefaultScript() {
 export async function initUI(interpreter) {
     uiInterpreterInstance = interpreter; // Store interpreter instance for UI use
     queryElements(); // Get all DOM elements
+    updateLineNumbers();
 
     const defaultScript = await loadDefaultScript();
     if (elements.inputArea && elements.inputArea.value.trim() === '') {
         elements.inputArea.value = defaultScript;
+        updateLineNumbers();
         if (elements.highlightingOverlay) {
             elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(defaultScript, null);
         }
@@ -474,6 +489,7 @@ export async function initUI(interpreter) {
 
     elements.inputArea?.addEventListener('input', () => {
         const text = elements.inputArea.value;
+        updateLineNumbers();
         elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(text, null); // Clear peek highlight on input
         currentEditorHighlightLine = null;
         elements.highlightingOverlay.scrollTop = elements.inputArea.scrollTop;
@@ -483,12 +499,16 @@ export async function initUI(interpreter) {
     elements.inputArea?.addEventListener('scroll', () => {
         elements.highlightingOverlay.scrollTop = elements.inputArea.scrollTop;
         elements.highlightingOverlay.scrollLeft = elements.inputArea.scrollLeft;
+        updateLineNumbers();
     });
 
     if (elements.inputArea) {
         new ResizeObserver(() => {
             elements.highlightingOverlay.style.height = elements.inputArea.clientHeight + 'px';
             elements.highlightingOverlay.style.width = elements.inputArea.clientWidth + 'px';
+            if (elements.lineNumbers) {
+                elements.lineNumbers.style.height = elements.inputArea.clientHeight + 'px';
+            }
         }).observe(elements.inputArea);
     }
 
