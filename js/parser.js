@@ -97,6 +97,7 @@ export class Parser {
             case 'LOAD_CSV': return this.parseLoadCsv();
             case 'LOAD_EXCEL': return this.parseLoadExcel();
             case 'KEEP_COLUMNS': return this.parseKeepColumns();
+            case 'SELECT': return this.parseSelect();
             case 'DROP_COLUMNS': return this.parseDropColumns();
             case 'FILTER_ROWS': return this.parseFilterRows();
             case 'NEW_COLUMN': return this.parseNewColumn();
@@ -115,6 +116,7 @@ export class Parser {
     parseLoadExcel() { this.consume(TokenType.KEYWORD, 'LOAD_EXCEL'); this.consume(TokenType.KEYWORD, 'FILE'); const f = this.consume(TokenType.STRING_LITERAL).value; let s = null; if (this.match(TokenType.KEYWORD, 'SHEET')) s = this.consume(TokenType.STRING_LITERAL).value; return { command: 'LOAD_EXCEL', args: { file: f, sheet: s } }; }
     parseColumnList() { const c = []; do { if (this.peek().type === TokenType.STRING_LITERAL) c.push(this.consume(TokenType.STRING_LITERAL).value); else if (this.peek().type === TokenType.IDENTIFIER) c.push(this.consume(TokenType.IDENTIFIER).value); else this.error("Expected column name (identifier or string literal)."); } while (this.match(TokenType.PUNCTUATION, ',')); return c; }
     parseKeepColumns() { this.consume(TokenType.KEYWORD, 'KEEP_COLUMNS'); const c = this.parseColumnList(); return { command: 'KEEP_COLUMNS', args: { columns: c } }; }
+    parseSelect() { this.consume(TokenType.KEYWORD, 'SELECT'); const c = this.parseColumnList(); return { command: 'SELECT', args: { columns: c } }; }
     parseDropColumns() { this.consume(TokenType.KEYWORD, 'DROP_COLUMNS'); const c = this.parseColumnList(); return { command: 'DROP_COLUMNS', args: { columns: c } }; }
     parseFilterRows() { this.consume(TokenType.KEYWORD, 'FILTER_ROWS'); this.consume(TokenType.KEYWORD, 'WHERE'); const cond = { column: null, operator: null, value: null };
         if (this.peek().type === TokenType.IDENTIFIER) cond.column = this.consume(TokenType.IDENTIFIER).value; else if (this.peek().type === TokenType.STRING_LITERAL) cond.column = this.consume(TokenType.STRING_LITERAL).value; else this.error("Expected column name for filter condition.");

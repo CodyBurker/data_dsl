@@ -337,6 +337,8 @@ THEN
     # Load CSV data into the "citiesData" variable
     LOAD_CSV FILE "cities.csv"
 THEN
+    SELECT name, population
+THEN
     PEEK # Shows modified "citiesData"
 THEN
     EXPORT_CSV TO "cities_out.csv" # Example export

@@ -1,0 +1,71 @@
+# PipeData Language Guide
+
+PipeData is a small domain-specific language for manipulating CSV data directly in the browser.
+This guide covers the core syntax and currently supported commands.
+
+## Basics
+
+- Scripts consist of commands chained with `THEN`.
+- Each pipeline starts with `VAR "variableName"` which sets the active dataset.
+- Comments start with `#` and run to the end of the line.
+- Strings use double quotes. Column names may be identifiers or quoted strings.
+
+### Example
+
+```
+VAR "cities"
+THEN LOAD_CSV FILE "cities.csv"
+THEN SELECT name, population
+THEN PEEK
+```
+
+## Commands
+
+### VAR
+Start a new pipeline for the specified variable.
+
+```
+VAR "myVar"
+```
+
+### LOAD_CSV
+Load data from a CSV file chosen in the browser.
+
+```
+LOAD_CSV FILE "file.csv"
+```
+
+### KEEP_COLUMNS / SELECT
+Keep only the specified columns. `SELECT` is an alias for `KEEP_COLUMNS`.
+
+```
+SELECT col1, col2
+# or
+KEEP_COLUMNS col1, col2
+```
+
+### PEEK
+Display the current dataset in the Peek output area.
+
+```
+PEEK
+```
+
+### EXPORT_CSV
+Download the current dataset as a CSV file.
+
+```
+EXPORT_CSV TO "output.csv"
+```
+
+### Parsed but Not Yet Executed
+The tokenizer and parser recognize additional commands such as `LOAD_EXCEL`,
+`DROP_COLUMNS`, `FILTER_ROWS`, `NEW_COLUMN`, `RENAME_COLUMN`, and `SORT_BY`.
+These commands are parsed but currently have no effect in the interpreter.
+
+## Tips
+
+- Chain multiple commands with `THEN` to build a pipeline.
+- Comments can appear on their own line or after a command.
+- When loading a file, the UI will prompt you to select it.
+
