@@ -12,10 +12,11 @@ export const KEYWORDS = [
     'LOAD_CSV', 'LOAD_EXCEL', 'THEN', 'KEEP_COLUMNS', 'SELECT', 'DROP_COLUMNS', 'FILTER_ROWS', 'WHERE',
     'NEW_COLUMN', 'AS', 'RENAME_COLUMN', 'TO', 'SORT_BY', 'ORDER', 'STORE_AS',
     'EXPORT_CSV', 'EXPORT_EXCEL', 'SHEET', 'FILE', 'PEEK', 'AND', 'OR',
+    'JOIN', 'ON', 'TYPE',
     'IS', 'CONTAINS', 'STARTSWITH', 'ENDSWITH'
 ];
 
-export const OPERATORS_REGEX = /^(\*|\+|\-|\/|==|!=|>=|<=|>|<)/;
+export const OPERATORS_REGEX = /^(\*|\+|\-|\/|==|!=|>=|<=|>|<|=)/;
 export const CONDITION_OPERATORS = ['IS', '!=', '>', '<', '>=', '<=', 'CONTAINS', 'STARTSWITH', 'ENDSWITH'];
 export const getLineNumber = (subInput, subCursor) => (subInput.substring(0, subCursor).match(/\n/g) || []).length + 1;
 export function tokenizeForHighlighting(input) {

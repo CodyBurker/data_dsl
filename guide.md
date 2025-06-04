@@ -44,6 +44,13 @@ SELECT col1, col2
 KEEP_COLUMNS col1, col2
 ```
 
+### JOIN
+Merge the current dataset with another variable. Specify the column from the current dataset and optionally a different column from the other variable. Use `TYPE "LEFT"` to keep unmatched rows.
+
+```
+JOIN otherVar ON name = "full name" TYPE "LEFT"
+```
+
 ### PEEK
 Display the current dataset in the Peek output area.
 

@@ -37,7 +37,7 @@ Mission: To provide a simple and intuitive way to manipulate tabular data in the
     * [X] **Save to CSV:** Implement basic functionality to download the transformed data as a CSV.
 3.  **Transformations (The "VLOOKUP" Core):**
     * [X] **SELECT:** Implement function to select specific columns.
-    * [ ] **JOIN (Inner Join):** Implement function to perform an inner join on two datasets based on a common key.
+    * [X] **JOIN (Inner/Left):** Implement function to join two datasets on matching or distinct keys with inner or left semantics.
 4.  **UI Features (Minimal Viable Preview):**
     * [ ] **Basic Script Input Area:** Simple textarea for script input.
     * [ ] **"Run" Button:** Manual trigger for script execution.

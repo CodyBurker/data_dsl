@@ -88,6 +88,12 @@ export class Interpreter {
                 }
                 this.variables[this.activeVariableName] = this.handleKeepColumns(args, currentDataset);
                 break;
+            case 'JOIN':
+                if (!Array.isArray(currentDataset)) {
+                    throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply JOIN.`);
+                }
+                this.variables[this.activeVariableName] = this.handleJoin(args, currentDataset);
+                break;
             case 'PEEK':
                 // currentDataset is already what we want (array or null)
                 const peekLine = commandNode.line;
@@ -167,6 +173,41 @@ export class Interpreter {
         });
         this.log(`Kept columns: ${columnsToKeep.join(', ')} for VAR "${this.activeVariableName}".`);
         return newDataset;
+    }
+
+    handleJoin(args, currentDataset) {
+        const { variable, leftKey, rightKey, type = 'INNER' } = args;
+        const other = this.variables[variable];
+        if (!Array.isArray(other)) {
+            throw new Error(`JOIN target VAR "${variable}" is not loaded or not an array.`);
+        }
+        if (!Array.isArray(currentDataset)) {
+            throw new Error(`Current dataset for VAR "${this.activeVariableName}" is not an array.`);
+        }
+
+        const map = new Map();
+        for (const row of other) {
+            if (row.hasOwnProperty(rightKey)) {
+                const key = row[rightKey];
+                if (!map.has(key)) map.set(key, []);
+                map.get(key).push(row);
+            }
+        }
+
+        const joined = [];
+        for (const lRow of currentDataset) {
+            const key = lRow[leftKey];
+            const matches = map.get(key);
+            if (matches) {
+                for (const rRow of matches) {
+                    joined.push({ ...lRow, ...rRow });
+                }
+            } else if (type === 'LEFT') {
+                joined.push({ ...lRow });
+            }
+        }
+        this.log(`JOIN ${type} completed using '${leftKey}' = '${rightKey}' with VAR "${variable}". Rows: ${joined.length}`);
+        return joined;
     }
 
     async handleExportCsv(args, dataset) {
