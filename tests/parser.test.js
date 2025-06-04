@@ -52,3 +52,11 @@ test('Parser parses JOIN with different keys', () => {
   assert.strictEqual(joinCmd.command, 'JOIN');
   assert.deepEqual(joinCmd.args, { variable: 'y', leftKey: 'name', rightKey: 'full name', type: 'INNER' });
 });
+
+test('Parser parses FILTER command', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN FILTER age = 30');
+  const ast = new Parser(tokens).parse();
+  const filterCmd = ast[0].pipeline[0];
+  assert.strictEqual(filterCmd.command, 'FILTER');
+  assert.deepEqual(filterCmd.args, { column: 'age', value: 30 });
+});

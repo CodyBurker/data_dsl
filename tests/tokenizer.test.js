@@ -61,6 +61,12 @@ test('tokenizeForParser recognizes TYPE keyword', () => {
   assert.ok(typeKw && typeKw.type === TokenType.KEYWORD);
 });
 
+test('tokenizeForParser recognizes FILTER keyword', () => {
+  const tokens = tokenizeForParser('VAR "x" THEN FILTER age = 30');
+  const filterKw = tokens.find(t => t.value === 'FILTER');
+  assert.ok(filterKw && filterKw.type === TokenType.KEYWORD);
+});
+
 test('tokenizeForParser recognizes = operator', () => {
   const tokens = tokenizeForParser('VAR "x" THEN JOIN y ON a = b');
   const eq = tokens.find(t => t.type === TokenType.OPERATOR && t.value === '=');

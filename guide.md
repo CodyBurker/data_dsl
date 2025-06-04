@@ -81,6 +81,20 @@ FILTER_ROWS WHERE age > 30
 FILTER_ROWS WHERE city_id = other_id
 ```
 
+### FILTER
+Keep rows where a column equals a value.
+
+```
+FILTER age = 30
+FILTER name = "Alice"
+```
+
+Future versions will add richer filtering:
+
+```pipe
+FILTER (col = 1 OR col = 2) AND (otherCol != 3)
+```
+
 ### Parsed but Not Yet Executed
 The tokenizer and parser recognize additional commands such as `LOAD_EXCEL`,
 `DROP_COLUMNS`, `NEW_COLUMN`, `RENAME_COLUMN`, and `SORT_BY`. These commands are
