@@ -2,6 +2,7 @@
 import { cities as sampleCities, people as samplePeople } from './samples.js';
 import { loadCsv, exportCsv } from './csv.js';
 import { keepColumns, withColumn, filterRows, joinDatasets } from './datasetOps.js';
+import { buildDag } from './dag.js';
 
 export class Interpreter {
     constructor(uiElements) {
@@ -10,6 +11,10 @@ export class Interpreter {
         this.peekOutputs = [];
         this.stepOutputs = [];
         this.fileResolve = null;
+        // Cache keyed by node id { fingerprint, dataset, unusedCount, usedThisRun }.
+        // unusedCount increments when a node isn't touched in a run so unused
+        // datasets can later be evicted based on their age.
+        this.cache = {};
 
         // Store references to UI elements passed from ui.js
         this.uiElements = uiElements;
@@ -24,7 +29,7 @@ export class Interpreter {
         }
     }
 
-    clearInternalState() {
+    clearInternalState(resetCache = false) {
         this.variables = {
             cities: sampleCities.map(r => ({ ...r })),
             people: samplePeople.map(r => ({ ...r }))
@@ -33,6 +38,10 @@ export class Interpreter {
         this.peekOutputs = [];
         this.stepOutputs = [];
         this.fileResolve = null; // Should be reset if a run is interrupted
+        if (resetCache) {
+            this.cache = {};
+            this.log('Interpreter cache cleared.');
+        }
         this.log('Interpreter state cleared. Built-in samples loaded.');
     }
 
@@ -57,6 +66,14 @@ export class Interpreter {
         this.log('Interpreter started.');
         this.clearInternalState(); // Clear state from previous runs
 
+        const dag = buildDag(ast);
+        const nodeMap = {};
+        for (const n of dag) nodeMap[n.id] = n;
+
+        for (const entry of Object.values(this.cache)) {
+            entry.usedThisRun = false;
+        }
+
         for (const varBlock of ast) {
             this.activeVariableName = varBlock.variableName;
             const varLine = varBlock.line;
@@ -65,20 +82,61 @@ export class Interpreter {
 
             for (let index = 0; index < varBlock.pipeline.length; index++) {
                 const commandNode = varBlock.pipeline[index];
+                const nodeId = `${this.activeVariableName}-${index}`;
+                const nodeInfo = nodeMap[nodeId];
                 this.log(`Executing: ${commandNode.command} for VAR "${this.activeVariableName}"` + (commandNode.line ? ` (Line ${commandNode.line})` : ''));
-                try {
-                    await this.executeCommand(commandNode);
-                    const dataset = this.variables[this.activeVariableName];
-                    const stepId = `step-${this.activeVariableName}-l${commandNode.line}-${index}`;
-                    this.stepOutputs.push({ id: stepId, varName: this.activeVariableName, line: commandNode.line, dataset });
-                } catch (e) {
-                    const err = e instanceof Error ? e.message : JSON.stringify(e);
-                    this.log(`ERROR executing ${commandNode.command} for VAR "${this.activeVariableName}": ${err}`);
-                    console.error(`Error details for ${commandNode.command} (VAR "${this.activeVariableName}"):`, e);
-                    if (this.uiElements.fileInputContainerEl) this.uiElements.fileInputContainerEl.classList.add('hidden');
-                    // UI will handle rendering peek outputs based on this.peekOutputs
-                    return; // Stop execution on error
+                let useCache = false;
+                const cacheEntry = this.cache[nodeId];
+                if (cacheEntry && cacheEntry.fingerprint === nodeInfo.fingerprint) {
+                    let depsOk = true;
+                    for (const dep of nodeInfo.dependencies) {
+                        if (nodeMap[dep]) {
+                            const depEntry = this.cache[dep];
+                            if (!depEntry || depEntry.fingerprint !== nodeMap[dep].fingerprint) {
+                                depsOk = false;
+                                break;
+                            }
+                        }
+                    }
+                    if (depsOk) useCache = true;
                 }
+
+                if (useCache) {
+                    this.variables[this.activeVariableName] = cacheEntry.dataset;
+                    cacheEntry.usedThisRun = true;
+                    cacheEntry.unusedCount = 0;
+                    if (commandNode.command === 'PEEK') {
+                        const peekLine = commandNode.line;
+                        const peekId = `peek-${this.activeVariableName || 'context'}-l${peekLine}-idx${this.peekOutputs.length}`;
+                        this.peekOutputs.push({
+                            id: peekId,
+                            varName: this.activeVariableName || 'Current Context',
+                            line: peekLine,
+                            dataset: cacheEntry.dataset
+                        });
+                    }
+                    this.log(`Using cached result for ${nodeId}`);
+                } else {
+                    try {
+                        await this.executeCommand(commandNode);
+                        this.cache[nodeId] = {
+                            fingerprint: nodeInfo.fingerprint,
+                            dataset: this.variables[this.activeVariableName],
+                            unusedCount: 0,
+                            usedThisRun: true
+                        };
+                    } catch (e) {
+                        const err = e instanceof Error ? e.message : JSON.stringify(e);
+                        this.log(`ERROR executing ${commandNode.command} for VAR "${this.activeVariableName}": ${err}`);
+                        console.error(`Error details for ${commandNode.command} (VAR "${this.activeVariableName}"):`, e);
+                        if (this.uiElements.fileInputContainerEl) this.uiElements.fileInputContainerEl.classList.add('hidden');
+                        return;
+                    }
+                }
+
+                const dataset = this.variables[this.activeVariableName];
+                const stepId = `step-${this.activeVariableName}-l${commandNode.line}-${index}`;
+                this.stepOutputs.push({ id: stepId, varName: this.activeVariableName, line: commandNode.line, dataset });
             }
             // record final dataset for the VAR line itself
             const finalDataset = this.variables[this.activeVariableName];
@@ -87,6 +145,14 @@ export class Interpreter {
             this.log(`Finished block for VAR "${this.activeVariableName}"`);
         }
         this.log('Interpreter finished all blocks.');
+        for (const entry of Object.values(this.cache)) {
+            if (entry.usedThisRun) {
+                entry.unusedCount = 0;
+            } else {
+                entry.unusedCount = (entry.unusedCount || 0) + 1;
+            }
+            entry.usedThisRun = false;
+        }
         this.activeVariableName = null;
         if (this.uiElements.fileInputContainerEl) this.uiElements.fileInputContainerEl.classList.add('hidden');
     }

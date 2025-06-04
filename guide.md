@@ -122,4 +122,17 @@ parsed but currently have no effect in the interpreter.
   with `.pd` files.
 - The editor loads `examples/default.pd` automatically so you can see a working
   script right away.
+  - Internally the parser output can be converted to a directed acyclic graph.
+    Each command node has a fingerprint that ignores line numbers and includes
+    the fingerprints of its dependencies, so formatting changes do not disrupt
+    caching and updates to earlier steps propagate automatically.
+  - The interpreter uses these fingerprints to cache datasets. When a command and
+    its dependencies are unchanged, the cached result is reused instead of
+    executing the step again. Step outputs and PEEK displays rely on these cached
+    datasets when possible. The cache persists across runs until you clear it with
+    the **Clear Outputs** button or by calling `clearInternalState(true)`.
+    Each cache entry tracks an `unusedCount` value that increments if a run
+    doesn't touch that node. When the entry is used again the counter resets to
+    zero. This can help future implementations decide which datasets to evict
+    when memory becomes constrained.
 
