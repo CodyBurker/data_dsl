@@ -262,6 +262,7 @@ body {
     font-size: 0.875rem;
     line-height: 1.25rem;
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    display: none;
 }
 
 #peekTabsContainer .peek-tab:hover {
@@ -280,6 +281,7 @@ body {
     /* Match border, bottom transparent to merge */
     position: relative;
     z-index: 1;
+    display: inline-block;
 }
 
 /* Individual PEEK content (initially hidden) */
@@ -303,15 +305,11 @@ body {
     /* Shown when active */
 }
 
-.token-keyword.active-peek-line-highlight {
+.active-peek-line-highlight {
     background-color: rgba(255, 223, 100, 0.6);
     /* A distinct yellow/orange highlight */
     border-radius: 3px;
     box-shadow: 0 0 5px rgba(255, 165, 0, 0.7);
-    padding: 0px 2px;
-    /* Minimal padding to not disrupt flow too much */
-    display: inline-block;
-    /* Ensures background and padding apply correctly */
 }
 
 /* Target the path within your animated SVG */

@@ -88,27 +88,31 @@ export class Parser {
     parseCommand() {
         this.skipNewlines();
         const t = this.peek();
+        const startLine = t.line;
         if (t.type === TokenType.EOF) return null;
 
         if (t.type !== TokenType.KEYWORD) {
             this.error(`Expected command keyword but got ${t.type} '${t.value}'`);
         }
         switch (t.value) {
-            case 'LOAD_CSV': return this.parseLoadCsv();
-            case 'LOAD_EXCEL': return this.parseLoadExcel();
-            case 'KEEP_COLUMNS': return this.parseKeepColumns();
-            case 'SELECT': return this.parseSelect();
-            case 'DROP_COLUMNS': return this.parseDropColumns();
-            case 'FILTER': return this.parseFilter();
-            case 'WITH': return this.parseWithColumn();
-            case 'NEW_COLUMN': return this.parseNewColumn();
-            case 'RENAME_COLUMN': return this.parseRenameColumn();
-            case 'SORT_BY': return this.parseSortBy();
-            case 'JOIN': return this.parseJoin();
+            case 'LOAD_CSV': return { ...this.parseLoadCsv(), line: startLine };
+            case 'LOAD_EXCEL': return { ...this.parseLoadExcel(), line: startLine };
+            case 'KEEP_COLUMNS': return { ...this.parseKeepColumns(), line: startLine };
+            case 'SELECT': return { ...this.parseSelect(), line: startLine };
+            case 'DROP_COLUMNS': return { ...this.parseDropColumns(), line: startLine };
+            case 'FILTER': return { ...this.parseFilter(), line: startLine };
+            case 'WITH': return { ...this.parseWithColumn(), line: startLine };
+            case 'NEW_COLUMN': return { ...this.parseNewColumn(), line: startLine };
+            case 'RENAME_COLUMN': return { ...this.parseRenameColumn(), line: startLine };
+            case 'SORT_BY': return { ...this.parseSortBy(), line: startLine };
+            case 'JOIN': return { ...this.parseJoin(), line: startLine };
             // case 'STORE_AS': return this.parseStoreAs();
-            case 'EXPORT_CSV': return this.parseExportCsv();
-            case 'EXPORT_EXCEL': return this.parseExportExcel();
-            case 'PEEK': return this.parsePeek();
+            case 'EXPORT_CSV': return { ...this.parseExportCsv(), line: startLine };
+            case 'EXPORT_EXCEL': return { ...this.parseExportExcel(), line: startLine };
+            case 'PEEK': {
+                const pk = this.parsePeek();
+                return { ...pk, line: pk.line ?? startLine };
+            }
             default:
                 this.error(`Unexpected keyword '${t.value}' found where a command was expected.`);
                 return null;

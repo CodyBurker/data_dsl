@@ -6,6 +6,12 @@ import { tokenizeForParser } from './tokenizer.js'; // Needed for the run button
 let currentEditorHighlightLine = null;
 let uiInterpreterInstance = null; // To store the interpreter instance
 
+function getCursorLineNumber() {
+    if (!elements.inputArea) return null;
+    const value = elements.inputArea.value.slice(0, elements.inputArea.selectionStart);
+    return value.split(/\r?\n/).length;
+}
+
 // DOM Elements Cache
 const elements = {};
 
@@ -59,10 +65,18 @@ export function applySyntaxHighlighting(text, activePeekLine = null) {
         inVarBlock = false;
     }
 
+    const firstTokenFound = new Set();
+
     for (let i = 0; i < tokens.length; i++) {
         const token = tokens[i];
         let tokenHtml = '';
         const escapedValue = escapeHtml(token.value);
+
+        const isFirstNonWhitespace =
+            !firstTokenFound.has(token.line) &&
+            token.type !== TokenType.WHITESPACE &&
+            token.type !== TokenType.NEWLINE;
+        if (isFirstNonWhitespace) firstTokenFound.add(token.line);
 
         if (token.type === TokenType.KEYWORD && token.value.toUpperCase() === 'VAR') {
             closeCurrentVarBlock();
@@ -72,24 +86,41 @@ export function applySyntaxHighlighting(text, activePeekLine = null) {
         let classes = '';
         let idAttribute = '';
 
+        const shouldHighlight = token.line === activePeekLine && isFirstNonWhitespace;
+
         switch (token.type) {
             case TokenType.KEYWORD:
                 classes = 'token-keyword';
-                if (token.value.toUpperCase() === 'PEEK' && token.line === activePeekLine) {
-                    classes += ' active-peek-line-highlight';
-                    idAttribute = ` id="${activePeekHighlightID}"`;
-                }
-                tokenHtml = `<span class="${classes}"${idAttribute}>${escapedValue}</span>`;
                 break;
-            case TokenType.STRING_LITERAL: tokenHtml = `<span class="token-string_literal">${escapedValue}</span>`; break;
-            case TokenType.NUMBER_LITERAL: tokenHtml = `<span class="token-number_literal">${escapedValue}</span>`; break;
-            case TokenType.COMMENT: tokenHtml = `<span class="token-comment">${escapedValue}</span>`; break;
-            case TokenType.OPERATOR: tokenHtml = `<span class="token-operator">${escapedValue}</span>`; break;
-            case TokenType.IDENTIFIER: tokenHtml = `<span class="token-identifier">${escapedValue}</span>`; break;
-            case TokenType.PUNCTUATION: tokenHtml = `<span class="token-punctuation">${escapedValue}</span>`; break;
+            case TokenType.STRING_LITERAL:
+                classes = 'token-string_literal';
+                break;
+            case TokenType.NUMBER_LITERAL:
+                classes = 'token-number_literal';
+                break;
+            case TokenType.COMMENT:
+                classes = 'token-comment';
+                break;
+            case TokenType.OPERATOR:
+                classes = 'token-operator';
+                break;
+            case TokenType.IDENTIFIER:
+                classes = 'token-identifier';
+                break;
+            case TokenType.PUNCTUATION:
+                classes = 'token-punctuation';
+                break;
             case TokenType.NEWLINE: tokenHtml = '\n'; break;
             case TokenType.WHITESPACE: tokenHtml = escapedValue; break;
             default: tokenHtml = escapedValue;
+        }
+
+        if (!tokenHtml) {
+            if (shouldHighlight) {
+                classes += ' active-peek-line-highlight';
+                idAttribute = ` id="${activePeekHighlightID}"`;
+            }
+            tokenHtml = `<span class="${classes}"${idAttribute}>${escapedValue}</span>`;
         }
 
         if (inVarBlock) {
@@ -165,22 +196,67 @@ function renderPeekOutputsUI() {
     elements.peekOutputsDisplayAreaEl.innerHTML = '';
     
     const peekOutputs = uiInterpreterInstance.peekOutputs;
+    const stepOutputs = uiInterpreterInstance.stepOutputs;
 
-    if (peekOutputs.length === 0) {
+    if (peekOutputs.length === 0 && stepOutputs.length === 0) {
         elements.peekOutputsDisplayAreaEl.innerHTML = '<div class="output-box-placeholder">No PEEK outputs to display.</div>';
-        if (elements.exportPeekButton) elements.exportPeekButton.classList.add('hidden'); // <-- Hide export button
+        if (elements.exportPeekButton) elements.exportPeekButton.classList.add('hidden');
         clearEditorPeekHighlight();
         return;
     }
-    
-    if (elements.exportPeekButton) elements.exportPeekButton.classList.remove('hidden'); // <-- Show export button
+
+    if (elements.exportPeekButton) elements.exportPeekButton.classList.remove('hidden');
+
+    stepOutputs.forEach((stepData, index) => {
+        const tabButton = document.createElement('button');
+        tabButton.classList.add('peek-tab');
+        tabButton.textContent = stepData.varName;
+        tabButton.dataset.target = stepData.id;
+        tabButton.dataset.stepIndex = index;
+        tabButton.dataset.line = stepData.line;
+
+        const contentDiv = document.createElement('div');
+        contentDiv.id = stepData.id;
+        contentDiv.classList.add('peek-content');
+        contentDiv.innerHTML = generatePeekHtmlForDisplay(stepData.dataset, stepData.varName, stepData.line);
+
+        elements.peekTabsContainerEl.appendChild(tabButton);
+        elements.peekOutputsDisplayAreaEl.appendChild(contentDiv);
+
+        tabButton.addEventListener('click', () => {
+            elements.peekTabsContainerEl.querySelectorAll('.peek-tab').forEach(tab => tab.classList.remove('active-peek-tab'));
+            elements.peekOutputsDisplayAreaEl.querySelectorAll('.peek-content').forEach(content => content.classList.remove('active-peek-content'));
+
+            tabButton.classList.add('active-peek-tab');
+            contentDiv.classList.add('active-peek-content');
+
+            if (elements.inputArea && elements.highlightingOverlay) {
+                elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(elements.inputArea.value, stepData.line);
+                currentEditorHighlightLine = stepData.line;
+                const highlightedSpan = elements.highlightingOverlay.querySelector('#active-editor-peek-highlight');
+                if (highlightedSpan) {
+                    const scrollTargetOffset = highlightedSpan.offsetTop;
+                    const inputAreaVisibleHeight = elements.inputArea.clientHeight;
+                    const desiredScrollTop = scrollTargetOffset - (inputAreaVisibleHeight / 3);
+
+                    elements.inputArea.scrollTop = Math.max(0, desiredScrollTop);
+                    elements.highlightingOverlay.scrollTop = elements.inputArea.scrollTop;
+                }
+            }
+        });
+
+        if (index === 0 && peekOutputs.length === 0) {
+            tabButton.click();
+        }
+    });
 
     peekOutputs.forEach((peekData, index) => {
         const tabButton = document.createElement('button');
         tabButton.classList.add('peek-tab');
-        tabButton.textContent = `PEEK ${index + 1} (VAR "${peekData.varName}", L${peekData.line})`;
+        tabButton.textContent = peekData.varName;
         tabButton.dataset.target = peekData.id;
         tabButton.dataset.peekIndex = index; // Store index for easy data retrieval
+        tabButton.dataset.line = peekData.line;
 
         const contentDiv = document.createElement('div');
         contentDiv.id = peekData.id;
@@ -229,13 +305,29 @@ function clearEditorPeekHighlight() {
     }
 }
 
+function showOutputForLine(lineNumber) {
+    if (!elements.peekTabsContainerEl) return;
+    const tabSelectors = [
+        `.peek-tab[data-peek-index][data-line='${lineNumber}']`,
+        `.peek-tab[data-step-index][data-line='${lineNumber}']`
+    ];
+    for (const sel of tabSelectors) {
+        const tab = elements.peekTabsContainerEl.querySelector(sel);
+        if (tab) {
+            tab.click();
+            return;
+        }
+    }
+}
+
 
 function clearOutputs() {
     if (uiInterpreterInstance) {
          // Clear interpreter's log output element
         if (elements.logOutputEl) elements.logOutputEl.innerHTML = 'Logs will appear here...<br>';
-        // Clear interpreter's peek data and related UI
-        uiInterpreterInstance.peekOutputs = []; // Clear stored peeks in interpreter
+        // Clear interpreter's peek and step data and related UI
+        uiInterpreterInstance.peekOutputs = [];
+        uiInterpreterInstance.stepOutputs = [];
     }
    
     if (elements.peekTabsContainerEl) elements.peekTabsContainerEl.innerHTML = '';
@@ -445,6 +537,15 @@ export async function initUI(interpreter) {
     // --- START NEW EVENT LISTENER ---
     elements.exportPeekButton?.addEventListener('click', handleExportPeek);
     // --- END NEW EVENT LISTENER ---
+
+    elements.inputArea?.addEventListener('keyup', () => {
+        const line = getCursorLineNumber();
+        if (line) showOutputForLine(line);
+    });
+    elements.inputArea?.addEventListener('click', () => {
+        const line = getCursorLineNumber();
+        if (line) showOutputForLine(line);
+    });
 }
 
 export { renderPeekOutputsUI, generatePeekHtmlForDisplay, clearOutputs };

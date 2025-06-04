@@ -40,6 +40,28 @@ test('renderPeekOutputsUI creates a tab for each PEEK output', async () => {
   renderPeekOutputsUI();
   const tabs = document.querySelectorAll('.peek-tab');
   assert.strictEqual(tabs.length, 2);
+  assert.strictEqual(tabs[1].dataset.line, '2');
+});
+
+test('moving cursor selects matching peek tab', async () => {
+  setupDom();
+
+  const interp = new Interpreter({});
+  await initUI(interp);
+  interp.peekOutputs = [
+    { id: 'p1', varName: 'x', line: 1, dataset: [{A:1}] },
+    { id: 'p2', varName: 'x', line: 2, dataset: [{A:2}] }
+  ];
+  renderPeekOutputsUI();
+
+  const input = document.getElementById('pipeDataInput');
+  input.value = 'LINE1\nLINE2';
+  input.setSelectionRange(6,6); // Start of line 2
+  input.dispatchEvent(new window.Event('keyup'));
+
+  const active = document.querySelector('.peek-tab.active-peek-tab');
+  assert.ok(active);
+  assert.strictEqual(active.dataset.line, '2');
 });
 
 test('running script updates AST output and peek UI', async () => {
@@ -78,13 +100,14 @@ THEN PEEK`;
 
   assert.strictEqual(ast[0].pipeline.length, 4);
   assert.strictEqual(interp.peekOutputs.length, 2);
+  assert.strictEqual(interp.stepOutputs.length, 4);
   assert.deepEqual(interp.peekOutputs[0].dataset, [{A:1,B:2},{A:3,B:4}]);
   assert.deepEqual(interp.peekOutputs[1].dataset, [{A:1},{A:3}]);
 
   const tabs = document.querySelectorAll('.peek-tab');
-  assert.strictEqual(tabs.length, 2);
+  assert.strictEqual(tabs.length, interp.peekOutputs.length + interp.stepOutputs.length);
   const contents = document.querySelectorAll('.peek-content');
-  assert.strictEqual(contents.length, 2);
+  assert.strictEqual(contents.length, interp.peekOutputs.length + interp.stepOutputs.length);
   assert.ok(document.getElementById('astOutput').textContent.includes('LOAD_CSV'));
 });
 
@@ -130,12 +153,13 @@ THEN PEEK`;
 
   assert.strictEqual(ast.length, 2);
   assert.strictEqual(interp.peekOutputs.length, 3);
+  assert.strictEqual(interp.stepOutputs.length, 5);
   assert.strictEqual(interp.peekOutputs[0].dataset.length, 12);
   assert.deepEqual(interp.peekOutputs[1].dataset[0], {A:1});
   assert.strictEqual(interp.peekOutputs[2].dataset, null);
 
   const tabs = document.querySelectorAll('.peek-tab');
-  assert.strictEqual(tabs.length, 3);
+  assert.strictEqual(tabs.length, interp.peekOutputs.length + interp.stepOutputs.length);
   const emptyHtml = document.getElementById(interp.peekOutputs[2].id).innerHTML;
   assert.ok(emptyHtml.includes('No dataset loaded to PEEK.'));
   const peekHtml = document.getElementById(interp.peekOutputs[0].id).innerHTML;

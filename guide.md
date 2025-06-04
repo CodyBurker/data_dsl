@@ -65,6 +65,12 @@ Display the current dataset in the Peek output area.
 PEEK
 ```
 
+Each command also records its result in a **Step Outputs** list. Only the
+currently active output tab is shown, and each tab label displays the variable
+name only. Selecting a step tab highlights the first word of that command line
+so you can follow the pipeline. Placing the cursor on a line that produced a
+peek or step output will also activate the corresponding tab automatically.
+
 ### EXPORT_CSV
 Download the current dataset as a CSV file.
 
