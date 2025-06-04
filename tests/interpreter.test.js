@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { Interpreter } from '../js/interpreter.js';
 import { tokenizeForParser } from '../js/tokenizer.js';
 import { Parser } from '../js/parser.js';
-import { loadCsv, exportCsv } from '../js/csv.js';
+import * as csv from '../js/csv.js';
 import { keepColumns, joinDatasets, filterRows, withColumn } from '../js/datasetOps.js';
 
 // Minimal stubs for browser APIs used in exports
@@ -37,7 +37,7 @@ test('executeCommand PEEK stores peek output', async () => {
 test('exportCsv for array of objects uses Papa.unparse', async () => {
   const interp = new Interpreter({});
   interp.activeVariableName = 'data';
-  await exportCsv(interp, { file: 'arr.csv' }, [{A:1},{A:2}]);
+  await csv.exportCsv(interp, { file: 'arr.csv' }, [{A:1},{A:2}]);
   assert.ok(global.__unparseCalled);
   assert.ok(global.__clicked);
   global.__unparseCalled = false;
@@ -47,7 +47,7 @@ test('exportCsv for array of objects uses Papa.unparse', async () => {
 test('exportCsv throws on unsupported type', async () => {
   const interp = new Interpreter({});
   interp.activeVariableName = 'data';
-  await assert.rejects(() => exportCsv(interp, {file:'x.csv'}, 5), /does not support/);
+  await assert.rejects(() => csv.exportCsv(interp, {file:'x.csv'}, 5), /does not support/);
 });
 
 test('executeCommand SELECT uses keepColumns', async () => {
@@ -91,7 +91,7 @@ test('loadCsv returns array of objects', async () => {
   const originalFetch = global.fetch;
   global.fetch = async () => ({ ok: false });
   interp.requestCsvFile = async () => ({ name: 'fake.csv' });
-  const data = await loadCsv(interp, { file: 'fake.csv' });
+  const data = await csv.loadCsv(interp, { file: 'fake.csv' });
   assert.deepEqual(data, [{A:1,B:2},{A:3,B:4}]);
   global.fetch = originalFetch;
 });
@@ -103,7 +103,7 @@ test('loadCsv uses example files when present', async () => {
   interp.requestCsvFile = async () => { prompted = true; return { name: 'x.csv' }; };
   const originalFetch = global.fetch;
   global.fetch = async () => ({ ok: true, text: async () => 'A,B\n1,2\n3,4' });
-  const data = await loadCsv(interp, { file: 'example.csv' });
+  const data = await csv.loadCsv(interp, { file: 'example.csv' });
   assert.deepEqual(data, [{A:1,B:2},{A:3,B:4}]);
   assert.strictEqual(prompted, false);
   global.fetch = originalFetch;
@@ -334,4 +334,34 @@ test('run records step outputs for each command', async () => {
   await interp.run(ast);
   assert.strictEqual(interp.stepOutputs.length, ast[0].pipeline.length + 1);
   assert.deepEqual(interp.stepOutputs[1].dataset, [{A:1},{A:3}]);
+});
+
+test('cached datasets persist between runs', async () => {
+  const script = `VAR "d" THEN LOAD_CSV FILE "f.csv" THEN PEEK`;
+  const tokens = tokenizeForParser(script);
+  const ast = new Parser(tokens).parse();
+  const interp = new Interpreter({ csvFileInputEl: {} });
+  interp.requestCsvFile = async () => ({ name: 'f.csv' });
+
+  const ds1 = [{A:1}];
+  const ds2 = [{A:2}];
+  const originalExec = interp.executeCommand.bind(interp);
+  let callCount = 0;
+  interp.executeCommand = async function(node) {
+    if (node.command === 'LOAD_CSV') {
+      callCount++;
+      this.variables[this.activeVariableName] = callCount === 1 ? ds1 : ds2;
+    } else {
+      await originalExec(node);
+    }
+  };
+
+  await interp.run(ast);
+  assert.deepEqual(interp.stepOutputs[1].dataset, ds1);
+
+  await interp.run(ast);
+  assert.deepEqual(interp.stepOutputs[1].dataset, ds1); // cached
+  assert.strictEqual(callCount, 1);
+
+  interp.executeCommand = originalExec;
 });

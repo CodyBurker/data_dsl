@@ -34,7 +34,20 @@ how to compute `population_millions` with `WITH COLUMN`.
 
 With a supported browser you can **Open File** or **Save File** to work directly with `.pd` script files.
 
---- 
+### DAG Representation
+
+A helper module `dag.js` converts the parsed script into a directed acyclic graph
+(DAG). Each command becomes a node with a stable fingerprint derived from the
+command, its arguments and dependencies. Because fingerprints ignore line
+numbers, reformatting a script will not affect future caching logic.
+The interpreter stores a cache of datasets keyed by these fingerprints. When you
+re-run a script without changing a step or its dependencies, the cached result is
+reused so the pipeline executes faster. PEEK results and step outputs come from
+the cache when a step is skipped, so the UI stays in sync. This cache persists
+across runs until you clear it using the **Clear Outputs** button (or calling
+`clearInternalState(true)` in code).
+
+---
 
 # PipeData Development Roadmap
 

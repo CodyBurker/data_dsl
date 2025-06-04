@@ -111,9 +111,8 @@ function updateVarBlockIndicator(lineNumber) {
 
 function clearOutputs() {
     if (uiInterpreterInstance) {
+        uiInterpreterInstance.clearInternalState(true);
         if (elements.logOutputEl) elements.logOutputEl.innerHTML = 'Logs will appear here...<br>';
-        uiInterpreterInstance.peekOutputs = [];
-        uiInterpreterInstance.stepOutputs = [];
     }
 
     if (elements.peekTabsContainerEl) elements.peekTabsContainerEl.innerHTML = '';
