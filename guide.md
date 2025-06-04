@@ -72,24 +72,18 @@ Download the current dataset as a CSV file.
 EXPORT_CSV TO "output.csv"
 ```
 
-### FILTER_ROWS
-Filter rows using simple conditions. You can compare against values or other
-columns.
-
-```
-FILTER_ROWS WHERE age > 30
-FILTER_ROWS WHERE city_id = other_id
-```
-
 ### FILTER
-Keep rows where a column equals a value.
+Filter rows using comparisons against values or other columns. Supported operators
+include `=`, `!=`, `>`, `<`, `>=`, `<=`, `IS`, `IS NOT`, `CONTAINS`, `STARTSWITH`,
+and `ENDSWITH`.
 
 ```
-FILTER age = 30
-FILTER name = "Alice"
+FILTER age >= 30
+FILTER name STARTSWITH "A"
+FILTER city_id = other_id
 ```
 
-Future versions will add richer filtering:
+Future versions will add richer filtering like grouped conditions:
 
 ```pipe
 FILTER (col = 1 OR col = 2) AND (otherCol != 3)

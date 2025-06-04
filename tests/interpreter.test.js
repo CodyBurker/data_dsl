@@ -114,20 +114,6 @@ test('clearInternalState loads sample datasets', () => {
   assert.strictEqual(interp.variables.people.length, 4);
 });
 
-test('handleFilterRows filters rows based on condition', () => {
-  const interp = new Interpreter({});
-  interp.activeVariableName = 'data';
-  const data = [
-    {A:1,B:2},
-    {A:3,B:4},
-    {A:5,B:6}
-  ];
-  const result = interp.handleFilterRows({ condition: { column:'A', operator:'>', value:2 } }, data);
-  assert.deepEqual(result, [
-    {A:3,B:4},
-    {A:5,B:6}
-  ]);
-});
 
 test('handleFilter filters rows using equality', () => {
   const interp = new Interpreter({});
@@ -136,6 +122,65 @@ test('handleFilter filters rows using equality', () => {
     {name:'Alice',age:30},
     {name:'Bob',age:40}
   ];
-  const result = interp.handleFilter({ column:'age', value:30 }, data);
+  const result = interp.handleFilter({ column:'age', operator:'=', value:30 }, data);
   assert.deepEqual(result, [{name:'Alice',age:30}]);
+});
+
+test('handleFilter supports other comparisons', () => {
+  const interp = new Interpreter({});
+  interp.activeVariableName = 'd';
+  const data = [
+    {name:'Alice',age:30},
+    {name:'Bob',age:40},
+    {name:'Carl',age:25}
+  ];
+  const greater = interp.handleFilter({ column:'age', operator:'>', value:30 }, data);
+  assert.deepEqual(greater, [{name:'Bob',age:40}]);
+  const less = interp.handleFilter({ column:'age', operator:'<', value:30 }, data);
+  assert.deepEqual(less, [{name:'Carl',age:25}]);
+  const notEq = interp.handleFilter({ column:'name', operator:'!=', value:'Bob' }, data);
+  assert.deepEqual(notEq, [
+    {name:'Alice',age:30},
+    {name:'Carl',age:25}
+  ]);
+  const le = interp.handleFilter({ column:'age', operator:'<=', value:30 }, data);
+  assert.deepEqual(le, [
+    {name:'Alice',age:30},
+    {name:'Carl',age:25}
+  ]);
+});
+
+test('handleFilter advanced operators and column references', () => {
+  const interp = new Interpreter({});
+  interp.activeVariableName = 'd';
+  const data = [
+    {name:'Alice',age:30, other:30},
+    {name:'Bob',age:25, other:30},
+    {name:'Carl',age:35, other:35}
+  ];
+  const ge = interp.handleFilter({ column:'age', operator:'>=', value:30 }, data);
+  assert.deepEqual(ge, [
+    {name:'Alice',age:30, other:30},
+    {name:'Carl',age:35, other:35}
+  ]);
+  const sw = interp.handleFilter({ column:'name', operator:'STARTSWITH', value:'B' }, data);
+  assert.deepEqual(sw, [{name:'Bob',age:25, other:30}]);
+  const colEq = interp.handleFilter({ column:'age', operator:'=', value:{type:'COLUMN_REFERENCE', name:'other'} }, data);
+  assert.deepEqual(colEq, [
+    {name:'Alice',age:30, other:30},
+    {name:'Carl',age:35, other:35}
+  ]);
+  const contains = interp.handleFilter({ column:'name', operator:'CONTAINS', value:'a' }, data);
+  assert.deepEqual(contains, [
+    {name:'Carl',age:35, other:35}
+  ]);
+  const ends = interp.handleFilter({ column:'name', operator:'ENDSWITH', value:'e' }, data);
+  assert.deepEqual(ends, [{name:'Alice',age:30, other:30}]);
+  const isop = interp.handleFilter({ column:'age', operator:'IS', value:30 }, data);
+  assert.deepEqual(isop, [{name:'Alice',age:30, other:30}]);
+  const isNot = interp.handleFilter({ column:'age', operator:'IS NOT', value:25 }, data);
+  assert.deepEqual(isNot, [
+    {name:'Alice',age:30, other:30},
+    {name:'Carl',age:35, other:35}
+  ]);
 });
