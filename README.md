@@ -18,10 +18,11 @@ variables with the same data so you can experiment without any `LOAD_CSV`
 commands.
 
 Every command execution now records its result in a **Step Outputs** list shown
-next to the PEEK outputs. Selecting a step highlights the first word of that
-line in the editor so you can trace pipeline execution. Moving the cursor onto a
-line with a recorded output automatically switches to that tab so you can
-quickly inspect results as you edit.
+next to the PEEK outputs. Only the active output tab is visible at any time and
+each tab label shows just the variable name. Selecting a step highlights the
+first word of that line in the editor so you can trace pipeline execution.
+Moving the cursor onto a line with a recorded output automatically switches to
+that tab so you can quickly inspect results as you edit.
 
 The editor automatically loads `examples/default.pd` on startup. The script shows
 how to compute `population_millions` with `WITH COLUMN`.

@@ -210,7 +210,7 @@ function renderPeekOutputsUI() {
     stepOutputs.forEach((stepData, index) => {
         const tabButton = document.createElement('button');
         tabButton.classList.add('peek-tab');
-        tabButton.textContent = `STEP ${index + 1} (VAR "${stepData.varName}", L${stepData.line})`;
+        tabButton.textContent = `STEP ${index + 1} (VAR "${stepData.varName}")`;
         tabButton.dataset.target = stepData.id;
         tabButton.dataset.stepIndex = index;
         tabButton.dataset.line = stepData.line;
@@ -253,7 +253,7 @@ function renderPeekOutputsUI() {
     peekOutputs.forEach((peekData, index) => {
         const tabButton = document.createElement('button');
         tabButton.classList.add('peek-tab');
-        tabButton.textContent = `PEEK ${index + 1} (VAR "${peekData.varName}", L${peekData.line})`;
+        tabButton.textContent = `PEEK ${index + 1} (VAR "${peekData.varName}")`;
         tabButton.dataset.target = peekData.id;
         tabButton.dataset.peekIndex = index; // Store index for easy data retrieval
         tabButton.dataset.line = peekData.line;
