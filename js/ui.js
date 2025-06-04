@@ -439,3 +439,5 @@ THEN
     elements.exportPeekButton?.addEventListener('click', handleExportPeek);
     // --- END NEW EVENT LISTENER ---
 }
+
+export { renderPeekOutputsUI, generatePeekHtmlForDisplay, clearOutputs };

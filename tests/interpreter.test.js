@@ -80,3 +80,17 @@ test('executeCommand SELECT uses handleKeepColumns', async () => {
   await interp.executeCommand({ command: 'SELECT', args: { columns: ['B'] } });
   assert.deepEqual(interp.variables.sel.columns, ['B']);
 });
+
+test('handleLoadCsv returns Danfo DataFrame', async () => {
+  const { DataFrame } = await import('danfojs-node');
+  global.dfd = await import('danfojs-node');
+  global.Papa = { parse: (file, opts) => opts.complete({ data:[{A:1},{A:2}], meta:{ fields:['A'] } }) };
+  const interp = new Interpreter({ csvFileInputEl: {} });
+  interp.activeVariableName = 'df';
+  interp.requestCsvFile = async () => ({ name: 'fake.csv' });
+  const df = await interp.handleLoadCsv({ file: 'fake.csv' });
+  assert.ok(df instanceof DataFrame);
+  assert.strictEqual(df.shape[0], 2);
+  assert.deepEqual(df.columns, ['A']);
+  global.dfd = { DataFrame: MockDataFrame }; // reset
+});
