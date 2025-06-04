@@ -229,6 +229,56 @@ test('withColumn computes arithmetic expression', () => {
   assert.strictEqual(result[0].res, (1 + 2 * 2) / 3);
 });
 
+test('withColumn concatenates strings and literals', () => {
+  const interp = new Interpreter({});
+  interp.activeVariableName = 'd';
+  const data = [{a:'hi', b:'there'}];
+  const expr1 = [
+    { type:'IDENTIFIER', value:'a' },
+    { type:'OPERATOR', value:'+' },
+    { type:'IDENTIFIER', value:'b' }
+  ];
+  const expr2 = [
+    { type:'IDENTIFIER', value:'a' },
+    { type:'OPERATOR', value:'+' },
+    { type:'STRING_LITERAL', value:'!' }
+  ];
+  const r1 = withColumn(interp, { columnName:'greet', expression: expr1 }, data);
+  const r2 = withColumn(interp, { columnName:'exclaim', expression: expr2 }, data);
+  assert.strictEqual(r1[0].greet, 'hithere');
+  assert.strictEqual(r2[0].exclaim, 'hi!');
+});
+
+test('withColumn applies string functions', () => {
+  const interp = new Interpreter({});
+  interp.activeVariableName = 'd';
+  const data = [{name:' Alice '}];
+  const lowerExpr = [
+    { type:'IDENTIFIER', value:'LOWER' },
+    { type:'PUNCTUATION', value:'(' },
+    { type:'IDENTIFIER', value:'name' },
+    { type:'PUNCTUATION', value:')' }
+  ];
+  const upperExpr = [
+    { type:'IDENTIFIER', value:'UPPER' },
+    { type:'PUNCTUATION', value:'(' },
+    { type:'IDENTIFIER', value:'name' },
+    { type:'PUNCTUATION', value:')' }
+  ];
+  const trimExpr = [
+    { type:'IDENTIFIER', value:'TRIM' },
+    { type:'PUNCTUATION', value:'(' },
+    { type:'IDENTIFIER', value:'name' },
+    { type:'PUNCTUATION', value:')' }
+  ];
+  const r1 = withColumn(interp, { columnName:'lower', expression: lowerExpr }, data);
+  const r2 = withColumn(interp, { columnName:'upper', expression: upperExpr }, data);
+  const r3 = withColumn(interp, { columnName:'trim', expression: trimExpr }, data);
+  assert.strictEqual(r1[0].lower, ' Alice '.toLowerCase());
+  assert.strictEqual(r2[0].upper, ' Alice '.toUpperCase());
+  assert.strictEqual(r3[0].trim, ' Alice '.trim());
+});
+
 import fs from 'fs';
 import path from 'path';
 

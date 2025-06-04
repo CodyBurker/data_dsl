@@ -100,10 +100,12 @@ FILTER (col = 1 OR col = 2) AND (otherCol != 3)
 ```
 
 ### WITH COLUMN
-Create or replace a column using arithmetic on existing columns.
+Create or replace a column using arithmetic or string operations.
 
 ```
 WITH COLUMN result = (a + 2 * b) / c
+WITH COLUMN name_lower = LOWER(name)
+WITH COLUMN greeting = name + "!"
 ```
 
 ### Parsed but Not Yet Executed
