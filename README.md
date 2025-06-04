@@ -158,3 +158,8 @@ With a supported browser you can **Open File** or **Save File** to work directly
 * **Celebrate Milestones:** Acknowledge and reward progress.
 
 This roadmap will evolve. The key is consistent, focused effort on manageable chunks. Good luck!
+
+Random ideas:
+Realtime updates
+Run script jumps the cursor around - make it stay.
+After editing a line, the output of that is dirty and needs to be marked as such.
