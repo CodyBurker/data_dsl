@@ -365,3 +365,41 @@ test('cached datasets persist between runs', async () => {
 
   interp.executeCommand = originalExec;
 });
+
+test('join result updates when upstream step changes', async () => {
+  const script1 = `VAR "cities" THEN LOAD_CSV FILE "c.csv" THEN WITH COLUMN city_of = "City of " + name THEN SELECT id, city_of THEN PEEK\nVAR "people" THEN LOAD_CSV FILE "p.csv" THEN JOIN cities ON city_id=id TYPE "LEFT" THEN PEEK`;
+  const script2 = `VAR "cities" THEN LOAD_CSV FILE "c.csv" THEN WITH COLUMN city_of = "City of a " + name THEN SELECT id, city_of THEN PEEK\nVAR "people" THEN LOAD_CSV FILE "p.csv" THEN JOIN cities ON city_id=id TYPE "LEFT" THEN PEEK`;
+  const ast1 = new Parser(tokenizeForParser(script1)).parse();
+  const ast2 = new Parser(tokenizeForParser(script2)).parse();
+  const interp = new Interpreter({ csvFileInputEl: {} });
+  const { cities, people } = await import('../js/samples.js');
+  const origExec = interp.executeCommand.bind(interp);
+  interp.executeCommand = async function(node) {
+    if (node.command === 'LOAD_CSV') {
+      this.variables[this.activeVariableName] = this.activeVariableName === 'cities'
+        ? cities.map(r => ({ ...r }))
+        : people.map(r => ({ ...r }));
+    } else {
+      await origExec(node);
+    }
+  };
+
+  await interp.run(ast1);
+  const first = interp.stepOutputs.find(s => s.varName === 'people' && s.id.endsWith('final')).dataset;
+
+  await interp.run(ast2);
+  const second = interp.stepOutputs.find(s => s.varName === 'people' && s.id.endsWith('final')).dataset;
+
+  const expectedFirst = people.map(p => {
+    const c = cities.find(c => c.id === p.city_id);
+    return { ...p, id: c.id, city_of: `City of ${c.name}` };
+  });
+
+  const expectedSecond = people.map(p => {
+    const c = cities.find(c => c.id === p.city_id);
+    return { ...p, id: c.id, city_of: `City of a ${c.name}` };
+  });
+
+  assert.deepEqual(first, expectedFirst);
+  assert.deepEqual(second, expectedSecond);
+});

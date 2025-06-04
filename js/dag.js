@@ -24,6 +24,7 @@ export function simpleHash(str) {
 export function buildDag(ast) {
     const nodes = [];
     const lastForVar = {};
+    const fingerprints = {};
 
     for (const varBlock of ast) {
         const varName = varBlock.variableName;
@@ -42,7 +43,8 @@ export function buildDag(ast) {
                     deps.push(`root-${other}`);
                 }
             }
-            const fpObj = { command: cmd.command, args: cmd.args, deps: deps.slice().sort() };
+            const depFps = deps.map(d => fingerprints[d] || d).sort();
+            const fpObj = { command: cmd.command, args: cmd.args, deps: depFps };
             const fingerprint = simpleHash(stableStringify(fpObj));
             nodes.push({
                 id: nodeId,
@@ -53,6 +55,7 @@ export function buildDag(ast) {
                 dependencies: deps,
                 fingerprint
             });
+            fingerprints[nodeId] = fingerprint;
             lastForVar[varName] = nodeId;
         }
     }
