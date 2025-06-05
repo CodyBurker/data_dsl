@@ -140,3 +140,8 @@ currently have no effect in the interpreter.
     zero. This can help future implementations decide which datasets to evict
     when memory becomes constrained.
 
+- A visual Pipeline Builder is available in the demo. Use the **From Script**
+  button to convert the current text into editable nodes or **To Script** to
+  export the nodes back into DSL code. Both paths use the same AST and DAG so
+  cached results are shared.
+

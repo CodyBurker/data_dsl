@@ -3,7 +3,11 @@
 // Simple node-based pipeline builder that reuses the existing Interpreter.
 // Each pipeline node has a type and params. Users can select a node to
 // configure it and preview the dataset at that point using the Interpreter's
-// DAG cache.
+// DAG cache. Pipelines can also sync with the text-based editor using
+// the AST as an intermediate representation.
+
+import { Parser } from '../parser.js';
+import { tokenizeForParser } from '../tokenizer.js';
 
 export const NodeTypes = {
     UPLOAD: 'UPLOAD',
@@ -165,6 +169,68 @@ export function buildAstFromNodes(nodesInput) {
     return [{ variableName: 'main', line: 1, pipeline }];
 }
 
+export function buildNodesFromAst(ast) {
+    const result = [];
+    if (!Array.isArray(ast) || ast.length === 0) return result;
+    const block = ast[0];
+    (block.pipeline || []).forEach(cmd => {
+        switch (cmd.command) {
+            case 'LOAD_CSV':
+                result.push({ type: NodeTypes.UPLOAD, params: { file: cmd.args.file } });
+                break;
+            case 'FILTER':
+                result.push({ type: NodeTypes.FILTER, params: cmd.args });
+                break;
+            case 'RENAME_COLUMN':
+                result.push({ type: NodeTypes.RENAME_COLUMN, params: cmd.args });
+                break;
+            case 'SELECT':
+                result.push({ type: NodeTypes.SELECT_COLUMNS, params: cmd.args });
+                break;
+        }
+    });
+    return result;
+}
+
+function quoteValue(val) {
+    if (val == null) return '';
+    if (typeof val === 'number') return String(val);
+    const s = String(val);
+    if (/\s/.test(s) || s.includes('"')) {
+        return '"' + s.replace(/"/g, '\\"') + '"';
+    }
+    return s;
+}
+
+export function serializeAstToScript(ast) {
+    if (!Array.isArray(ast)) return '';
+    const lines = [];
+    for (const block of ast) {
+        lines.push(`VAR \"${block.variableName}\"`);
+        for (const cmd of block.pipeline) {
+            let line = '';
+            switch (cmd.command) {
+                case 'LOAD_CSV':
+                    line = `LOAD_CSV FILE \"${cmd.args.file}\"`;
+                    break;
+                case 'FILTER':
+                    line = `FILTER ${cmd.args.column} ${cmd.args.operator} ${quoteValue(cmd.args.value)}`;
+                    break;
+                case 'RENAME_COLUMN':
+                    line = `RENAME_COLUMN ${cmd.args.oldName} TO ${cmd.args.newName}`;
+                    break;
+                case 'SELECT':
+                    line = `SELECT ${cmd.args.columns.join(', ')}`;
+                    break;
+                default:
+                    line = cmd.command;
+            }
+            lines.push(`THEN ${line}`);
+        }
+    }
+    return lines.join('\n');
+}
+
 export function initPipelineUI(interpreter) {
     interpreterInstance = interpreter;
     const listEl = document.getElementById('nodePipelineList');
@@ -174,6 +240,8 @@ export function initPipelineUI(interpreter) {
     const addRename = document.getElementById('addRenameStep');
     const addSelect = document.getElementById('addSelectStep');
     const configEl = document.getElementById('nodeConfigContainer');
+    const loadFromScriptBtn = document.getElementById('loadPipelineFromScript');
+    const exportToScriptBtn = document.getElementById('exportPipelineToScript');
 
     if (!listEl || !runBtn) return;
 
@@ -213,6 +281,31 @@ export function initPipelineUI(interpreter) {
     runBtn.addEventListener('click', () => {
         selectedIndex = nodes.length; // final output
         runAndShow(selectedIndex);
+    });
+
+    loadFromScriptBtn?.addEventListener('click', () => {
+        const input = document.getElementById('pipeDataInput');
+        if (!input) return;
+        const parser = new Parser(tokenizeForParser(input.value));
+        const { ast, errors } = parser.parseAll();
+        if (errors.length === 0) {
+            nodes.length = 0;
+            buildNodesFromAst(ast).forEach(n => nodes.push(n));
+            selectedIndex = null;
+            renderList(listEl, configEl);
+            renderConfig(configEl, null);
+        } else {
+            alert('Script has errors. Unable to load pipeline.');
+        }
+    });
+
+    exportToScriptBtn?.addEventListener('click', () => {
+        const script = serializeAstToScript(buildAstFromNodes(nodes));
+        const input = document.getElementById('pipeDataInput');
+        if (input) {
+            input.value = script;
+            input.dispatchEvent(new Event('input'));
+        }
     });
 
     renderList(listEl, configEl);

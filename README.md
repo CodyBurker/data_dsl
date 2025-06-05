@@ -211,7 +211,9 @@ The UI logic now lives in dedicated modules under `js/ui/`:
 - `fileOps.js` – script file loading/saving utilities.
 - `index.js` – orchestrates initialization and event binding.
 - `pipeline.js` – experimental node-based builder with a spreadsheet view and
-  editable node configuration panel.
+  editable node configuration panel. The builder can import steps from the
+  script editor and export its nodes back into DSL text so you can switch
+  between visual editing and scripting.
 
 Interpreter operations have also been split out:
 
