@@ -4,8 +4,9 @@ This project contains a browser-based DSL for manipulating CSV data. The JavaScr
 
 ## Environment Setup
 - Use Node **18+** (Node 20 is available in the Codex container).
-- Run `npm install` once to ensure dependencies are installed
-- The demo can be viewed by opening `index.html` directly or by serving the repo with a simple HTTP server, e.g. `npx http-server` or `python -m http.server`.
+- Run `npm install` once to ensure dependencies are installed.
+- The React front end is bundled with **Vite**. Use `npm run dev` to start the dev server and `npm run build` to generate static files in `docs/` for GitHub Pages.
+- You can still open `index.html` directly or serve the repo with a simple HTTP server, e.g. `npx http-server` or `python -m http.server`.
 
 ## Testing
 - All unit tests reside in the `tests/` directory and use Node's built-in test runner.
@@ -20,8 +21,9 @@ This project contains a browser-based DSL for manipulating CSV data. The JavaScr
 - The `js/` directory contains the tokenizer, parser, interpreter, and UI logic.
 - `js/csv.js` contains helper functions for CSV import/export used by the interpreter.
 - `js/datasetOps.js` contains dataset transformation helpers (joins, filtering, column math).
-- `index.html` loads PapaParse from a CDN for CSV processing in the browser.
+- `index.html` loads the React bundle built with Vite and PapaParse from a CDN for CSV processing in the browser.
 - Style rules live in `style.css`; maintain existing formatting when making UI tweaks.
+- React components reside under `src/` and are bundled with Vite into the `docs/` folder for deployment.
 
 ## UI Module Structure
 UI-related code lives under `js/ui/` and is split into several modules:

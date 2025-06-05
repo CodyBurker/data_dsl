@@ -17,6 +17,12 @@ anything. Additionally the interpreter preloads `cities` and `people`
 variables with the same data so you can experiment without any `LOAD_CSV`
 commands.
 
+### Development Setup
+
+1. Run `npm install` to install all dependencies, including React and Vite.
+2. Use `npm run dev` to start the Vite dev server.
+3. Run `npm run build` to generate the static site in `docs/` for GitHub Pages.
+
 Every command execution now records its result in a **Step Outputs** list shown
 next to the preview outputs. Only the active output tab is visible at any time and
 each tab label shows just the variable name. Selecting a step highlights the
