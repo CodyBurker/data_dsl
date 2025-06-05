@@ -433,11 +433,11 @@ body {
 
 .dag-node {
     cursor: pointer;
-    transition: transform 0.2s ease;
 }
 
-.dag-node:hover {
-    transform: scale(1.05);
+.dag-node:hover rect {
+    stroke: #fbbf24;
+    stroke-width: 3;
 }
 
 .active-dag-node rect {
