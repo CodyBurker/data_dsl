@@ -150,6 +150,7 @@ body {
     width: 1ch;
     height: 100%;
     pointer-events: none;
+    z-index: 2;
 }
 
 #errorMarkers .error-dot {
