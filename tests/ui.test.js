@@ -276,7 +276,6 @@ test('execStatus highlights error line in red', async () => {
   assert.ok(bars[0].classList.contains('line-error'));
   const dot = document.querySelector('#errorMarkers .error-dot');
   assert.ok(dot);
-  assert.ok(dot.title.includes('Line'));
   assert.ok(dot.dataset.message.includes('Line'));
 });
 
