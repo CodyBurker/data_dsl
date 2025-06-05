@@ -10,6 +10,8 @@ Mission: To provide a simple and intuitive way to manipulate tabular data in the
 
 **Language Guide:** [View the full DSL guide](guide.md)
 
+**Graph Builder:** Open `builder.html` for a simple node-based editor.
+
 Example CSV files `exampleCities.csv` and `examplePeople.csv` live in the
 `examples/` folder. If you reference these filenames in a `LOAD_CSV` command,
 the interpreter loads them automatically so you can try joins without uploading

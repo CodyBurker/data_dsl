@@ -2,6 +2,23 @@ body {
     font-family: 'Inter', sans-serif;
 }
 
+/* Simple styles for pipeline builder */
+#builderArea {
+    position: relative;
+    min-height: 400px;
+    border: 1px solid #d1d5db;
+    background: #f9fafb;
+}
+
+.builder-node {
+    position: absolute;
+    padding: 4px 8px;
+    background: #e5e7eb;
+    border-radius: 0.25rem;
+    cursor: move;
+    user-select: none;
+}
+
 .output-box {
     background-color: #1f2937;
     /* Tailwind gray-800 */
