@@ -4,8 +4,7 @@ import { tokenizeForParser, tokenizeForHighlighting, TokenType } from '../js/tok
 
 const sampleScript = `VAR "data" THEN LOAD_CSV FILE "cities.csv"
 # comment line
-THEN KEEP_COLUMNS name, population
-THEN PEEK`;
+THEN KEEP_COLUMNS name, population`;
 
 const selectScript = `VAR "d" THEN LOAD_CSV FILE "f.csv" THEN SELECT a, b`;
 
@@ -25,8 +24,6 @@ test('tokenizeForParser produces expected token sequence', () => {
     TokenType.IDENTIFIER,
     TokenType.PUNCTUATION,
     TokenType.IDENTIFIER,
-    TokenType.KEYWORD,
-    TokenType.KEYWORD,
     TokenType.EOF
   ]);
   assert.strictEqual(noNewlines[0].value, 'VAR');

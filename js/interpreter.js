@@ -105,16 +105,6 @@ export class Interpreter {
                     this.variables[this.activeVariableName] = cacheEntry.dataset;
                     cacheEntry.usedThisRun = true;
                     cacheEntry.unusedCount = 0;
-                    if (commandNode.command === 'PEEK') {
-                        const peekLine = commandNode.line;
-                        const peekId = `peek-${this.activeVariableName || 'context'}-l${peekLine}-idx${this.peekOutputs.length}`;
-                        this.peekOutputs.push({
-                            id: peekId,
-                            varName: this.activeVariableName || 'Current Context',
-                            line: peekLine,
-                            dataset: cacheEntry.dataset
-                        });
-                    }
                     this.log(`Using cached result for ${nodeId}`);
                 } else {
                     try {
@@ -189,19 +179,6 @@ export class Interpreter {
                     throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply WITH_COLUMN.`);
                 }
                 this.variables[this.activeVariableName] = withColumn(this, args, currentDataset);
-                break;
-            case 'PEEK':
-                // currentDataset is already what we want (array or null)
-                const peekLine = commandNode.line;
-                const peekId = `peek-${this.activeVariableName || 'context'}-l${peekLine}-idx${this.peekOutputs.length}`;
-
-                this.peekOutputs.push({
-                    id: peekId,
-                    varName: this.activeVariableName || 'Current Context',
-                    line: peekLine,
-                    dataset: currentDataset // Store raw dataset (array or other)
-                });
-                this.log(`PEEK data for VAR "${this.activeVariableName}" (Line ${peekLine}) captured.`);
                 break;
             case 'EXPORT_CSV':
                 if (!currentDataset) {

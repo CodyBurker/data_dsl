@@ -16,7 +16,6 @@ This guide covers the core syntax and currently supported commands.
 VAR "cities"
 THEN LOAD_CSV FILE "cities.csv"
 THEN SELECT name, population
-THEN PEEK
 ```
 
 ### Example Data
@@ -58,26 +57,18 @@ Merge the current dataset with another variable. Specify the column from the cur
 JOIN otherVar ON name = "full name" TYPE "LEFT"
 ```
 
-### PEEK
-Display the current dataset in the Peek output area.
-
-```
-PEEK
-```
-
 Each command also records its result in a **Step Outputs** list. Only the
 currently active output tab is shown, and each tab label displays the variable
 name only. Selecting a step tab highlights the first word of that command line
-so you can follow the pipeline. Placing the cursor on a line that produced a
-peek or step output will also activate the corresponding tab automatically.
-Clicking on the `VAR` line for a pipeline shows the dataset after all of that
-variable's commands have executed.
-The editor shows line numbers so you can easily reference pipeline steps.
-Next to these numbers a thin gutter displays execution status. Lines that have
-run successfully show green bars, pending steps are yellow, and syntax errors
-highlight in red. Blank lines are left without color. The interpreter
-automatically reruns the script after brief pauses in typing so the preview
-stays current.
+so you can follow the pipeline. Placing the cursor on a line that produced an
+output will also activate the corresponding tab automatically. Clicking on the
+`VAR` line for a pipeline shows the dataset after all of that variable's
+commands have executed. The editor shows line numbers so you can easily
+reference pipeline steps. Next to these numbers a thin gutter displays
+execution status. Lines that have run successfully show green bars, pending
+steps are yellow, and syntax errors highlight in red. Blank lines are left
+without color. The interpreter automatically reruns the script after brief
+pauses in typing so the preview stays current.
 
 ### EXPORT_CSV
 Download the current dataset as a CSV file.
@@ -133,7 +124,7 @@ parsed but currently have no effect in the interpreter.
     caching and updates to earlier steps propagate automatically.
   - The interpreter uses these fingerprints to cache datasets. When a command and
     its dependencies are unchanged, the cached result is reused instead of
-    executing the step again. Step outputs and PEEK displays rely on these cached
+    executing the step again. Step outputs rely on these cached
     datasets when possible. The cache persists across runs until you clear it with
     the **Clear Outputs** button or by calling `clearInternalState(true)`.
     Each cache entry tracks an `unusedCount` value that increments if a run

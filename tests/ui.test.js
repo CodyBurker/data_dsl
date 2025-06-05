@@ -95,9 +95,7 @@ test('running script updates AST output and peek UI', async () => {
 
   const script = `VAR "d"
 THEN LOAD_CSV FILE "fake.csv"
-THEN PEEK
-THEN SELECT A
-THEN PEEK`;
+THEN SELECT A`;
 
   document.getElementById('pipeDataInput').value = script;
   document.getElementById('highlightingOverlay').innerHTML = '';
@@ -108,11 +106,9 @@ THEN PEEK`;
   await interp.run(ast);
   renderPeekOutputsUI();
 
-  assert.strictEqual(ast[0].pipeline.length, 4);
-  assert.strictEqual(interp.peekOutputs.length, 2);
-  assert.strictEqual(interp.stepOutputs.length, 5);
-  assert.deepEqual(interp.peekOutputs[0].dataset, [{A:1,B:2},{A:3,B:4}]);
-  assert.deepEqual(interp.peekOutputs[1].dataset, [{A:1},{A:3}]);
+  assert.strictEqual(ast[0].pipeline.length, 2);
+  assert.strictEqual(interp.peekOutputs.length, 0);
+  assert.strictEqual(interp.stepOutputs.length, 3);
 
   const tabs = document.querySelectorAll('.peek-tab');
   assert.strictEqual(tabs.length, interp.peekOutputs.length + interp.stepOutputs.length);
@@ -143,12 +139,10 @@ test('full chain handles multi-block script and empty dataset', async () => {
 
   const script = `VAR "main"
 THEN LOAD_CSV FILE "fake.csv" #load file
-THEN PEEK
 THEN SELECT A
-THEN PEEK
 
 VAR "other"
-THEN PEEK`;
+THEN LOAD_CSV FILE "fake.csv"`;
 
   document.getElementById('pipeDataInput').value = script;
   document.getElementById('highlightingOverlay').innerHTML = '';
@@ -162,18 +156,11 @@ THEN PEEK`;
   renderPeekOutputsUI();
 
   assert.strictEqual(ast.length, 2);
-  assert.strictEqual(interp.peekOutputs.length, 3);
-  assert.strictEqual(interp.stepOutputs.length, 7);
-  assert.strictEqual(interp.peekOutputs[0].dataset.length, 12);
-  assert.deepEqual(interp.peekOutputs[1].dataset[0], {A:1});
-  assert.strictEqual(interp.peekOutputs[2].dataset, null);
+  assert.strictEqual(interp.peekOutputs.length, 0);
+  assert.strictEqual(interp.stepOutputs.length, 5);
 
   const tabs = document.querySelectorAll('.peek-tab');
-  assert.strictEqual(tabs.length, interp.peekOutputs.length + interp.stepOutputs.length);
-  const emptyHtml = document.getElementById(interp.peekOutputs[2].id).innerHTML;
-  assert.ok(emptyHtml.includes('No dataset loaded to PEEK.'));
-  const peekHtml = document.getElementById(interp.peekOutputs[0].id).innerHTML;
-  assert.ok(peekHtml.includes('Showing first 10 of 12'));
+  assert.strictEqual(tabs.length, interp.stepOutputs.length);
   assert.ok(document.getElementById('highlightingOverlay').innerHTML.length > 0);
 });
 
@@ -187,8 +174,9 @@ test('ui shows error message for invalid script', async () => {
   };
   const interp = new Interpreter(uiEls);
   await initUI(interp);
+  global.fetch = async () => ({ ok: true, text: async () => 'A,B\n1,2' });
 
-  const script = 'VAR "x" PEEK';
+  const script = 'VAR "x" SELECT A';
   document.getElementById('pipeDataInput').value = script;
   document.getElementById('highlightingOverlay').innerHTML = '';
 
@@ -263,9 +251,11 @@ test('debounced input updates execStatus', async () => {
   await initUI(interp);
 
   const input = document.getElementById('pipeDataInput');
-  input.value = 'VAR "x"\nTHEN PEEK';
+  input.value = 'VAR "x"\nTHEN LOAD_CSV FILE "exampleCities.csv"';
   input.dispatchEvent(new window.Event('input'));
   await new Promise(r => setTimeout(r, 400));
+
+  global.fetch = undefined;
 
   const bars = document.querySelectorAll('#execStatus div');
   assert.strictEqual(bars.length, 2);
@@ -277,7 +267,7 @@ test('execStatus highlights error line in red', async () => {
   const interp = new Interpreter({});
   await initUI(interp);
   const input = document.getElementById('pipeDataInput');
-  input.value = 'VAR "x" PEEK';
+  input.value = 'VAR "x" SELECT A';
   input.dispatchEvent(new window.Event('input'));
   await new Promise(r => setTimeout(r, 400));
   const bars = document.querySelectorAll('#execStatus div');
@@ -298,7 +288,7 @@ test('blank lines remain uncolored', async () => {
   await initUI(interp);
 
   const input = document.getElementById('pipeDataInput');
-  input.value = 'VAR "a"\nTHEN PEEK\n\nVAR "b"\nTHEN PEEK\n';
+  input.value = 'VAR "a"\nTHEN SELECT A\n\nVAR "b"\nTHEN SELECT A\n';
   input.dispatchEvent(new window.Event('input'));
   await new Promise(r => setTimeout(r, 400));
 

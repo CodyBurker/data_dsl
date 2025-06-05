@@ -110,10 +110,6 @@ export class Parser {
             // case 'STORE_AS': return this.parseStoreAs();
             case 'EXPORT_CSV': return { ...this.parseExportCsv(), line: startLine };
             case 'EXPORT_EXCEL': return { ...this.parseExportExcel(), line: startLine };
-            case 'PEEK': {
-                const pk = this.parsePeek();
-                return { ...pk, line: pk.line ?? startLine };
-            }
             default:
                 this.error(`Unexpected keyword '${t.value}' found where a command was expected.`);
                 return null;
@@ -248,11 +244,6 @@ export class Parser {
     parseExportCsv() { this.consume(TokenType.KEYWORD, 'EXPORT_CSV'); this.consume(TokenType.KEYWORD, 'TO'); const f = this.consume(TokenType.STRING_LITERAL).value; return { command: 'EXPORT_CSV', args: { file: f } }; }
     parseExportExcel() { this.consume(TokenType.KEYWORD, 'EXPORT_EXCEL'); this.consume(TokenType.KEYWORD, 'TO'); const f = this.consume(TokenType.STRING_LITERAL).value; let s = 'Sheet1'; if (this.match(TokenType.KEYWORD, 'SHEET')) s = this.consume(TokenType.STRING_LITERAL).value; return { command: 'EXPORT_EXCEL', args: { file: f, sheet: s } }; }
 
-    parsePeek() {
-        const peekToken = this.peek();
-        this.consume(TokenType.KEYWORD, 'PEEK');
-        return { command: 'PEEK', args: {}, line: peekToken.line };
-    }
 
     match(type, value) { if (this.isAtEnd()) return false; const t = this.peek(); if (t.type !== type) return false; if (value !== undefined && t.value !== value) return false; this.advance(); return true; }
     consume(type, value, errorMessage) {
