@@ -135,7 +135,7 @@ function App() {
                   case '>=': return !isNaN(numVal) && !isNaN(numCompareVal) ? numVal >= numCompareVal : String(val) >= String(compareVal);
                   case '<=': return !isNaN(numVal) && !isNaN(numCompareVal) ? numVal <= numCompareVal : String(val) <= String(compareVal);
                   case 'contains': return String(val).toLowerCase().includes(String(compareVal).toLowerCase());
-                  case I'm'startsWith': return String(val).toLowerCase().startsWith(String(compareVal).toLowerCase());
+                  case 'startsWith': return String(val).toLowerCase().startsWith(String(compareVal).toLowerCase());
                   case 'endsWith': return String(val).toLowerCase().endsWith(String(compareVal).toLowerCase());
                   default: return true;
                 }
