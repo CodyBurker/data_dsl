@@ -10,6 +10,8 @@ import {
     clearEditorPeekHighlight as clearEditorPeekHighlightHelper,
     handleExportPeek as handleExportPeekHelper
 } from './peek.js';
+import { buildDag } from '../dag.js';
+import { renderDag, highlightDagNodeForLine } from './dagView.js';
 import { saveScriptToFile, loadScriptFromFile, loadDefaultScript } from './fileOps.js';
 
 let uiInterpreterInstance = null;
@@ -149,11 +151,13 @@ async function runRealtime() {
     const lines = script.split(/\r?\n/);
     const lineCount = lines.length || 1;
     elements.astOutputArea.classList.remove('error-box');
+    let parsedAst = null;
     try {
         const tokens = tokenizeForParser(script);
         const parser = new Parser(tokens);
         const { ast, errors } = parser.parseAll();
         if (errors.length === 0) {
+            parsedAst = ast;
             elements.astOutputArea.textContent = JSON.stringify(ast, null, 2);
             await uiInterpreterInstance.run(ast);
             updateExecStatus(uiInterpreterInstance.getExecutedLines(), lineCount, [], lines);
@@ -171,6 +175,9 @@ async function runRealtime() {
         updateExecStatus([], lineCount, errLine ? [{ line: errLine, message: msg }] : [], lines);
     } finally {
         renderPeekOutputsUI();
+        if (parsedAst) {
+            renderDag(buildDag(parsedAst), { onNodeClick: showOutputForLine });
+        }
     }
 }
 
@@ -264,6 +271,7 @@ function clearOutputs() {
     if (elements.exportPeekButton) elements.exportPeekButton.classList.add('hidden');
     clearEditorPeekHighlight();
     if (elements.varBlockIndicator) elements.varBlockIndicator.style.display = 'none';
+    if (elements.dagContainer) elements.dagContainer.innerHTML = '';
 }
 
 export async function initUI(interpreter) {
@@ -343,10 +351,13 @@ export async function initUI(interpreter) {
         clearEditorPeekHighlight();
         uiInterpreterInstance.clearInternalState();
 
+        let ast = null;
         try {
             const tokensForParser = tokenizeForParser(script);
             const parser = new Parser(tokensForParser);
-            const { ast, errors } = parser.parseAll();
+            const parsed = parser.parseAll();
+            ast = parsed.ast;
+            const errors = parsed.errors;
             if (errors.length === 0) {
                 elements.astOutputArea.textContent = JSON.stringify(ast, null, 2);
                 await uiInterpreterInstance.run(ast);
@@ -366,6 +377,9 @@ export async function initUI(interpreter) {
             console.error('Full error object:', e);
         } finally {
             renderPeekOutputsUI();
+            if (ast) {
+                renderDag(buildDag(ast), { onNodeClick: showOutputForLine });
+            }
         }
     });
 
@@ -377,11 +391,12 @@ export async function initUI(interpreter) {
     elements.openFileButton?.addEventListener('click', () => loadScriptFromFile(uiInterpreterInstance, updateLineNumbers, highlightState));
     elements.exportPeekButton?.addEventListener('click', handleExportPeek);
 
-    elements.inputArea?.addEventListener('keyup', () => {
+   elements.inputArea?.addEventListener('keyup', () => {
         const line = getCursorLineNumber();
         if (line) {
             showOutputForLine(line);
             updateVarBlockIndicator(line);
+            highlightDagNodeForLine(line);
         }
     });
     elements.inputArea?.addEventListener('click', () => {
@@ -389,7 +404,17 @@ export async function initUI(interpreter) {
         if (line) {
             showOutputForLine(line);
             updateVarBlockIndicator(line);
+            highlightDagNodeForLine(line);
         }
+    });
+
+    elements.inputArea?.addEventListener('mousemove', (e) => {
+        const rect = elements.inputArea.getBoundingClientRect();
+        const style = getComputedStyle(elements.inputArea);
+        const lineHeight = parseFloat(style.lineHeight);
+        const y = e.clientY - rect.top + elements.inputArea.scrollTop;
+        const line = Math.floor(y / lineHeight) + 1;
+        highlightDagNodeForLine(line);
     });
 }
 
