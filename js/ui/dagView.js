@@ -70,6 +70,10 @@ function renderDag(dagNodes, { onNodeClick } = {}) {
         rect.setAttribute('rx', '6');
         g.appendChild(rect);
 
+        const title = document.createElementNS(svgNS, 'title');
+        title.textContent = node.description || '';
+        g.appendChild(title);
+
         const txt1 = document.createElementNS(svgNS, 'text');
         txt1.setAttribute('x', rectWidth / 2);
         txt1.setAttribute('y', 15);

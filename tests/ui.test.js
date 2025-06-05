@@ -49,7 +49,7 @@ test('dag container is present after initUI', async () => {
   assert.ok(document.getElementById('dagContainer'));
 });
 
-test('renderDag creates node elements', async () => {
+test('renderDag creates node elements with descriptions', async () => {
   setupDom();
   const interp = new Interpreter({});
   await initUI(interp);
@@ -59,6 +59,9 @@ test('renderDag creates node elements', async () => {
   renderDag(dag);
   const nodes = document.querySelectorAll('.dag-node');
   assert.strictEqual(nodes.length, 1);
+  const title = nodes[0].querySelector('title');
+  assert.ok(title);
+  assert.ok(title.textContent.includes('Keep columns')); 
 });
 
 test('renderPeekOutputsUI creates a tab for each PEEK output', async () => {
