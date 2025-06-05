@@ -15,6 +15,7 @@ function queryElements() {
     elements.logOutputEl = document.getElementById('logOutput');
     elements.peekTabsContainerEl = document.getElementById('peekTabsContainer');
     elements.peekOutputsDisplayAreaEl = document.getElementById('peekOutputsDisplayArea');
+    elements.dagContainer = document.getElementById('dagContainer');
     elements.runButton = document.getElementById('runButton');
     elements.clearButton = document.getElementById('clearButton');
     elements.openFileButton = document.getElementById('openScriptFileButton');

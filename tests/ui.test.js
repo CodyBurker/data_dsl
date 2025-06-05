@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
 import { Interpreter } from '../js/interpreter.js';
 import { initUI, renderPeekOutputsUI } from '../js/ui/index.js';
+import { renderDag } from '../js/ui/dagView.js';
+import { buildDag } from '../js/dag.js';
 
 import { TokenType, tokenizeForParser, tokenizeForHighlighting } from "../js/tokenizer.js";
 import { Parser } from "../js/parser.js";
@@ -18,6 +20,7 @@ function setupDom() {
     <div id="logOutput"></div>
     <div id="peekTabsContainer"></div>
     <div id="peekOutputsDisplayArea"></div>
+    <div id="dagContainer"></div>
     <button id="openScriptFileButton"></button>
     <button id="saveScriptFileButton"></button>
     <button id="runButton"></button>
@@ -38,6 +41,25 @@ function setupDom() {
     borderTopWidth: '0'
   });
 }
+
+test('dag container is present after initUI', async () => {
+  setupDom();
+  const interp = new Interpreter({});
+  await initUI(interp);
+  assert.ok(document.getElementById('dagContainer'));
+});
+
+test('renderDag creates node elements', async () => {
+  setupDom();
+  const interp = new Interpreter({});
+  await initUI(interp);
+  const tokens = tokenizeForParser('VAR "v" THEN SELECT A');
+  const ast = new Parser(tokens).parse();
+  const dag = buildDag(ast);
+  renderDag(dag);
+  const nodes = document.querySelectorAll('.dag-node');
+  assert.strictEqual(nodes.length, 1);
+});
 
 test('renderPeekOutputsUI creates a tab for each PEEK output', async () => {
   setupDom();
