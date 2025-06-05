@@ -191,13 +191,13 @@ This roadmap will evolve. The key is consistent, focused effort on manageable ch
 
 Random ideas:
 * Realtime updates
-* Run script jumps the cursor around - make it stay.
-* After editing a line, the output of that is dirty and needs to be marked as such.
+~~* Run script jumps the cursor around - make it stay.~~
+~~* After editing a line, the output of that is dirty and needs to be marked as such.~~
 ~~* Refactor into smaller files (maybe add doco about what is where too)~~  
 * Add tabs for variables in output in addition to selected line.
 * Some commands have underscores and some don't - lose all of them?
 * Tab key doesn't work. Ctrl + S doesn't work.
-* Realtime editing errors are hard to find. Also seems like they should be isolated to the line they are on (before next THEN?)
+~~* Realtime editing errors are hard to find. Also seems like they should be isolated to the line they are on (before next THEN?)~~
 * Dark mode?
 * Variable blocks formatted to identify what is and isn't in a variable?
 
