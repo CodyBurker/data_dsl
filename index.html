@@ -35,6 +35,10 @@
             <input type="file" id="csvFileInput" accept=".csv,.txt" class="block w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 cursor-pointer focus:outline-none p-2">
             <p id="filePromptMessage" class="text-xs text-gray-500 mt-1"></p>
         </div>
+        <div class="mb-6">
+            <label class="block text-lg font-medium text-gray-700 mb-1">Datapipe View:</label>
+            <div id="dagContainer" class="border border-gray-300 rounded-lg"></div>
+        </div>
 
         <div class="mb-6">
             <label for="pipeDataInput" class="block text-lg font-medium text-gray-700 mb-1">PipeData Script Editor:</label>
@@ -98,11 +102,6 @@
                 </summary>
                 <div id="logOutput" class="output-box output-box-collapsible-content">Logs will appear here...</div>
             </details>
-        </div>
-
-        <div class="mb-6">
-            <label class="block text-lg font-medium text-gray-700 mb-1">DAG View:</label>
-            <div id="dagContainer" class="border border-gray-300 rounded-lg"></div>
         </div>
 
         <div class="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
