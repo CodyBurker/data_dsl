@@ -210,7 +210,8 @@ The UI logic now lives in dedicated modules under `js/ui/`:
 - `peek.js` – renders PEEK output and handles export.
 - `fileOps.js` – script file loading/saving utilities.
 - `index.js` – orchestrates initialization and event binding.
-- `pipeline.js` – experimental node-based builder with a spreadsheet view.
+- `pipeline.js` – experimental node-based builder with a spreadsheet view and
+  editable node configuration panel.
 
 Interpreter operations have also been split out:
 
