@@ -34,7 +34,16 @@ function updateLineNumbers() {
     elements.lineNumbers.scrollTop = elements.inputArea.scrollTop;
 }
 
-function updateExecStatus(executed, total, errorLine = null, lines = []) {
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function updateExecStatus(executed, total, errorInfo = null, lines = []) {
     if (!elements.execStatus) return;
     const set = new Set(executed);
 
@@ -73,7 +82,7 @@ function updateExecStatus(executed, total, errorLine = null, lines = []) {
         let cls = '';
         if (set.has(lineNum)) {
             cls = 'line-success';
-        } else if (lineNum === errorLine) {
+        } else if (errorInfo && lineNum === errorInfo.line) {
             cls = 'line-error';
         } else if (!isBlank) {
             cls = 'line-pending';
@@ -92,6 +101,20 @@ function updateExecStatus(executed, total, errorLine = null, lines = []) {
 
     elements.execStatus.innerHTML = html;
     elements.execStatus.scrollTop = elements.inputArea.scrollTop;
+
+    if (elements.errorMarkers) {
+        if (errorInfo && errorInfo.line) {
+            const style = getComputedStyle(elements.inputArea);
+            const lineHeight = parseFloat(style.lineHeight);
+            const paddingTop = parseFloat(style.paddingTop);
+            const borderTop = parseFloat(style.borderTopWidth);
+            const top = paddingTop + borderTop + (errorInfo.line - 1) * lineHeight - elements.inputArea.scrollTop + (lineHeight / 2) - 3;
+            const msg = escapeHtml(errorInfo.message || '');
+            elements.errorMarkers.innerHTML = `<div class="error-dot" title="${msg}" style="top:${top}px"></div>`;
+        } else {
+            elements.errorMarkers.innerHTML = '';
+        }
+    }
 }
 
 function renderPeekOutputsUI() {
@@ -128,7 +151,7 @@ async function runRealtime() {
         elements.astOutputArea.textContent = `Error: ${msg}`;
         const match = /Line (\d+)/.exec(msg);
         const errLine = match ? parseInt(match[1], 10) : null;
-        updateExecStatus([], lineCount, errLine, lines);
+        updateExecStatus([], lineCount, errLine ? { line: errLine, message: msg } : null, lines);
     } finally {
         renderPeekOutputsUI();
     }
@@ -274,6 +297,9 @@ export async function initUI(interpreter) {
             }
             if (elements.execStatus) {
                 elements.execStatus.style.height = elements.inputArea.clientHeight + 'px';
+            }
+            if (elements.errorMarkers) {
+                elements.errorMarkers.style.height = elements.inputArea.clientHeight + 'px';
             }
         }).observe(elements.inputArea);
     }

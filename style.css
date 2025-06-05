@@ -143,6 +143,25 @@ body {
     height: 1.5em;
 }
 
+#errorMarkers {
+    position: absolute;
+    top: 0;
+    left: calc(4ch + 4px);
+    width: 1ch;
+    height: 100%;
+    pointer-events: none;
+}
+
+#errorMarkers .error-dot {
+    position: absolute;
+    left: 2px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #f87171;
+    pointer-events: auto;
+}
+
 #varBlockIndicator {
     position: absolute;
     width: 2px;
