@@ -414,6 +414,55 @@ body {
     box-shadow: 0 0 5px rgba(255, 165, 0, 0.7);
 }
 
+/* DAG visualization styles */
+#dagContainer {
+    position: relative;
+    overflow-x: auto;
+    padding: 0.5rem;
+}
+
+.dag-node rect {
+    fill: #1f2937;
+    stroke: #d1d5db;
+}
+
+.dag-node text {
+    fill: #f9fafb;
+    font-size: 12px;
+    pointer-events: none;
+}
+
+.dag-node {
+    cursor: pointer;
+}
+
+.dag-node:hover rect {
+    stroke: #fbbf24;
+    stroke-width: 3;
+}
+
+.active-dag-node rect {
+    stroke: #fbbf24;
+    stroke-width: 3;
+}
+
+.dag-tooltip {
+    position: absolute;
+    background-color: #111827;
+    color: #f9fafb;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.875rem;
+    pointer-events: none;
+    white-space: pre-wrap;
+    z-index: 5;
+}
+
+.dag-tooltip.hidden {
+    display: none;
+}
+
 /* Target the path within your animated SVG */
 .github-icon-animated path {
     /* === IMPORTANT: Replace 157.9 with the actual path length you found === */

@@ -1,6 +1,7 @@
 // dag.js
 // Build a directed acyclic graph (DAG) representation of an AST
 // Each command node becomes a DAG node with stable fingerprint ignoring line numbers
+import { describeCommand } from './commandDescriptions.js';
 
 export function stableStringify(value) {
     if (value === null || typeof value !== 'object') {
@@ -53,7 +54,8 @@ export function buildDag(ast) {
                 args: cmd.args,
                 line: cmd.line,
                 dependencies: deps,
-                fingerprint
+                fingerprint,
+                description: describeCommand(cmd)
             });
             fingerprints[nodeId] = fingerprint;
             lastForVar[varName] = nodeId;

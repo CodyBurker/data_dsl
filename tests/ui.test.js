@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
 import { Interpreter } from '../js/interpreter.js';
 import { initUI, renderPeekOutputsUI } from '../js/ui/index.js';
+import { renderDag } from '../js/ui/dagView.js';
+import { buildDag } from '../js/dag.js';
 
 import { TokenType, tokenizeForParser, tokenizeForHighlighting } from "../js/tokenizer.js";
 import { Parser } from "../js/parser.js";
@@ -18,6 +20,7 @@ function setupDom() {
     <div id="logOutput"></div>
     <div id="peekTabsContainer"></div>
     <div id="peekOutputsDisplayArea"></div>
+    <div id="dagContainer"></div>
     <button id="openScriptFileButton"></button>
     <button id="saveScriptFileButton"></button>
     <button id="runButton"></button>
@@ -39,11 +42,33 @@ function setupDom() {
   });
 }
 
+test('dag container is present after initUI', async () => {
+  setupDom();
+  const interp = new Interpreter({});
+  await initUI(interp, { autoRun: false });
+  assert.ok(document.getElementById('dagContainer'));
+});
+
+test('renderDag creates node elements with descriptions', async () => {
+  setupDom();
+  const interp = new Interpreter({});
+  await initUI(interp, { autoRun: false });
+  const tokens = tokenizeForParser('VAR "v" THEN SELECT A');
+  const ast = new Parser(tokens).parse();
+  const dag = buildDag(ast);
+  renderDag(dag);
+  const nodes = document.querySelectorAll('.dag-node');
+  assert.strictEqual(nodes.length, 1);
+  assert.ok(nodes[0].dataset.description.includes('Keep columns'));
+  const tooltip = document.querySelector('#dagContainer .dag-tooltip');
+  assert.ok(tooltip);
+});
+
 test('renderPeekOutputsUI creates a tab for each PEEK output', async () => {
   setupDom();
 
   const interp = new Interpreter({});
-  await initUI(interp);
+  await initUI(interp, { autoRun: false });
   interp.peekOutputs = [
     { id: 'p1', varName: 'x', line: 1, dataset: [{A:1}] },
     { id: 'p2', varName: 'x', line: 2, dataset: [{A:2}] }
@@ -58,7 +83,7 @@ test('moving cursor selects matching peek tab', async () => {
   setupDom();
 
   const interp = new Interpreter({});
-  await initUI(interp);
+  await initUI(interp, { autoRun: false });
   interp.peekOutputs = [
     { id: 'p1', varName: 'x', line: 1, dataset: [{A:1}] },
     { id: 'p2', varName: 'x', line: 2, dataset: [{A:2}] }
@@ -91,7 +116,7 @@ test('running script updates AST output and peek UI', async () => {
   };
 
   const interp = new Interpreter(uiEls);
-  await initUI(interp);
+  await initUI(interp, { autoRun: false });
   interp.requestCsvFile = async () => ({ name: 'fake.csv' });
 
   const script = `VAR "d"
@@ -135,7 +160,7 @@ test('full chain handles multi-block script and empty dataset', async () => {
   };
 
   const interp = new Interpreter(uiEls);
-  await initUI(interp);
+  await initUI(interp, { autoRun: false });
   interp.requestCsvFile = async () => ({ name: 'fake.csv' });
 
   const script = `VAR "main"
@@ -174,7 +199,7 @@ test('ui shows error message for invalid script', async () => {
     filePromptMessageEl: document.getElementById('filePromptMessage')
   };
   const interp = new Interpreter(uiEls);
-  await initUI(interp);
+  await initUI(interp, { autoRun: false });
   global.fetch = async () => ({ ok: true, text: async () => 'A,B\n1,2' });
 
   const script = 'VAR "x" SELECT A';
@@ -204,7 +229,7 @@ test('ui shows error message for invalid script', async () => {
 test('saving script to file uses File System Access API', async () => {
   setupDom();
   const interp = new Interpreter({});
-  await initUI(interp);
+  await initUI(interp, { autoRun: false });
 
   let data = null;
   let closed = false;
@@ -226,7 +251,7 @@ test('saving script to file uses File System Access API', async () => {
 test('loading script from file populates editor', async () => {
   setupDom();
   const interp = new Interpreter({});
-  await initUI(interp);
+  await initUI(interp, { autoRun: false });
 
   window.showOpenFilePicker = async () => [{
     getFile: async () => new File(['VAR "z"'], 'script.pd')
@@ -249,7 +274,7 @@ test('debounced input updates execStatus', async () => {
     filePromptMessageEl: document.getElementById('filePromptMessage')
   };
   const interp = new Interpreter(uiEls);
-  await initUI(interp);
+  await initUI(interp, { autoRun: false });
 
   const input = document.getElementById('pipeDataInput');
   input.value = 'VAR "x"\nTHEN LOAD_CSV FILE "exampleCities.csv"';
@@ -266,7 +291,7 @@ test('debounced input updates execStatus', async () => {
 test('execStatus highlights error lines in red', async () => {
   setupDom();
   const interp = new Interpreter({});
-  await initUI(interp);
+  await initUI(interp, { autoRun: false });
   const input = document.getElementById('pipeDataInput');
   input.value = 'VAR "x" SELECT A\nVAR "y" JOIN';
   input.dispatchEvent(new window.Event('input'));
@@ -282,7 +307,7 @@ test('execStatus highlights error lines in red', async () => {
 test('valid lines after an error are not marked', async () => {
   setupDom();
   const interp = new Interpreter({});
-  await initUI(interp);
+  await initUI(interp, { autoRun: false });
   const input = document.getElementById('pipeDataInput');
   input.value = [
     'VAR "cities"',
@@ -311,7 +336,7 @@ test('blank lines remain uncolored', async () => {
     filePromptMessageEl: document.getElementById('filePromptMessage')
   };
   const interp = new Interpreter(uiEls);
-  await initUI(interp);
+  await initUI(interp, { autoRun: false });
 
   const input = document.getElementById('pipeDataInput');
   input.value = 'VAR "a"\nTHEN SELECT A\n\nVAR "b"\nTHEN SELECT A\n';
@@ -336,7 +361,7 @@ test('blank line within VAR block inherits status', async () => {
     filePromptMessageEl: document.getElementById('filePromptMessage')
   };
   const interp = new Interpreter(uiEls);
-  await initUI(interp);
+  await initUI(interp, { autoRun: false });
 
   const input = document.getElementById('pipeDataInput');
   input.value = 'VAR "x"\nTHEN SELECT A\n\nTHEN SELECT A';

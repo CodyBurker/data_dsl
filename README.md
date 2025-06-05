@@ -22,7 +22,9 @@ next to the preview outputs. Only the active output tab is visible at any time a
 each tab label shows just the variable name. Selecting a step highlights the
 first word of that line in the editor so you can trace pipeline execution.
 Moving the cursor onto a line with a recorded output automatically switches to
-that tab so you can quickly inspect results as you edit.
+that tab so you can quickly inspect results as you edit. When editing introduces
+a parse error, the peek view now reverts to the last line that produced valid
+output.
 Clicking on a line containing `VAR "name"` now shows the final value assigned to
 that variable after all of its commands run.
 
@@ -35,8 +37,9 @@ highlight syntax errors. When parse errors occur red dots appear next to each ba
 preceding command, while gaps between blocks stay uncolored. The interpreter runs
 automatically a moment after you stop typing.
 
-The editor automatically loads `examples/default.pd` on startup. The script shows
-how to compute `population_millions` with `WITH COLUMN`.
+The editor automatically loads `examples/default.pd` on startup and now runs it
+once on first launch. The script shows how to compute `population_millions` with
+`WITH COLUMN`.
 
 With a supported browser you can **Open File** or **Save File** to work directly with `.pd` script files.
 
@@ -57,6 +60,8 @@ across runs until you clear it using the **Clear Outputs** button (or calling
 Each cached entry also tracks `unusedCount`, incremented whenever a run doesn't
 need that node. The counter resets to `0` when a cached result is used, letting
 future logic evict the stalest datasets if memory becomes an issue.
+
+The UI visualizes this DAG below the editor. Nodes are arranged so that every dependency appears to the left of the step that relies on it. Each node displays the variable and command names. Hovering a node reveals a custom tooltip describing the step, such as which columns were selected or the join keys used.
 
 ---
 
@@ -148,7 +153,7 @@ future logic evict the stalest datasets if memory becomes an issue.
 4.  **UI Features (Richer Interaction):**
     * [ ] **Visualize Pipeline (DAG):** Display the DAG to the user.
     * [ ] **Manage Multiple Inputs:** Create a UI to list and manage loaded files/datasets.
-    * [ ] **Preview Data After Each Step:** With caching, implement a reliable preview of the data after each transformation step.
+    * [X] **Preview Data After Each Step:** With caching, implement a reliable preview of the data after each transformation step.
 
 ---
 
@@ -200,6 +205,7 @@ Random ideas:
 ~~* Realtime editing errors are hard to find. Also seems like they should be isolated to the line they are on (before next THEN?)~~
 * Dark mode?
 * Variable blocks formatted to identify what is and isn't in a variable?
+* Autofill column names, commands, etc.
 
 Recommended Refactorings (completed)
 

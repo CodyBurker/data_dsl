@@ -61,7 +61,9 @@ Each command also records its result in a **Step Outputs** list. Only the
 currently active output tab is shown, and each tab label displays the variable
 name only. Selecting a step tab highlights the first word of that command line
 so you can follow the pipeline. Placing the cursor on a line that produced an
-output will also activate the corresponding tab automatically. Clicking on the
+output will also activate the corresponding tab automatically. If a change
+causes a parse error, the view falls back to the last line with valid output.
+Clicking on the
 `VAR` line for a pipeline shows the dataset after all of that variable's
 commands have executed. The editor shows line numbers so you can easily
 reference pipeline steps. Next to these numbers a thin gutter displays
@@ -117,8 +119,8 @@ parsed but currently have no effect in the interpreter.
 - When loading a file, the UI will prompt you to select it.
 - With a supported browser you can **Open File** or **Save File** to work
   with `.pd` files.
-- The editor loads `examples/default.pd` automatically so you can see a working
-  script right away.
+- The editor loads `examples/default.pd` automatically and runs it once on first
+  launch so you can see a working script right away.
   - Internally the parser output can be converted to a directed acyclic graph.
     Each command node has a fingerprint that ignores line numbers and includes
     the fingerprints of its dependencies, so formatting changes do not disrupt
