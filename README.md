@@ -58,7 +58,7 @@ Each cached entry also tracks `unusedCount`, incremented whenever a run doesn't
 need that node. The counter resets to `0` when a cached result is used, letting
 future logic evict the stalest datasets if memory becomes an issue.
 
-The UI visualizes this DAG below the editor. Each node displays the variable and command names. Hovering a node reveals a custom tooltip that immediately describes the step, such as which columns were selected or the join keys used.
+The UI visualizes this DAG below the editor. Nodes are arranged so that every dependency appears to the left of the step that relies on it. Each node displays the variable and command names. Hovering a node reveals a custom tooltip describing the step, such as which columns were selected or the join keys used.
 
 ---
 

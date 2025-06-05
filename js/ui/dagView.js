@@ -33,23 +33,33 @@ function renderDag(dagNodes, { onNodeClick } = {}) {
     const rectHeight = 40;
 
     const varNames = Array.from(new Set(dagNodes.map(n => n.varName)));
-    const stepCounts = {};
-    for (const n of dagNodes) {
-        const idx = parseInt(n.id.split('-')[1], 10) || 0;
-        stepCounts[n.varName] = Math.max(stepCounts[n.varName] || 0, idx + 1);
+
+    const idMap = Object.fromEntries(dagNodes.map(n => [n.id, n]));
+    const depthMap = {};
+    function getDepth(id) {
+        if (depthMap[id] !== undefined) return depthMap[id];
+        const node = idMap[id];
+        if (!node) { depthMap[id] = 0; return 0; }
+        let d = 0;
+        for (const dep of node.dependencies || []) {
+            d = Math.max(d, getDepth(dep) + 1);
+        }
+        depthMap[id] = d;
+        return d;
     }
-    const maxSteps = Math.max(...Object.values(stepCounts));
+    for (const node of dagNodes) getDepth(node.id);
+    const maxDepth = Math.max(...Object.values(depthMap));
 
     const svg = document.createElementNS(svgNS, 'svg');
-    svg.setAttribute('width', (maxSteps + 1) * colWidth);
+    svg.setAttribute('width', (maxDepth + 1) * colWidth + 40);
     svg.setAttribute('height', varNames.length * rowHeight + 20);
     elements.dagContainer.appendChild(svg);
 
     const positions = {};
     for (const node of dagNodes) {
         const row = varNames.indexOf(node.varName);
-        const stepIdx = parseInt(node.id.split('-')[1], 10) || 0;
-        const x = stepIdx * colWidth + 20;
+        const depth = depthMap[node.id] || 0;
+        const x = depth * colWidth + 20;
         const y = row * rowHeight + 20;
         positions[node.id] = { x, y };
     }
