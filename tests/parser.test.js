@@ -136,3 +136,12 @@ test('Parser parses WITH COLUMN command', () => {
   assert.strictEqual(cmd.args.columnName, 'total');
   assert.ok(Array.isArray(cmd.args.expression));
 });
+
+test('parseAll collects multiple errors', () => {
+  const script = 'VAR "x" THEN SELECT\nVAR "y" THEN JOIN';
+  const parser = new Parser(tokenizeForParser(script));
+  const result = parser.parseAll();
+  assert.strictEqual(result.errors.length, 2);
+  assert.ok(result.errors[0].line);
+  assert.ok(result.errors[1].line);
+});

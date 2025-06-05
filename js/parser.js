@@ -6,6 +6,7 @@ export class Parser {
         this.tokens = tokens;
         this.position = 0;
         this.ast = [];
+        this.errors = [];
     }
 
     parse() {
@@ -24,6 +25,30 @@ export class Parser {
             }
         }
         return this.ast;
+    }
+
+    parseAll() {
+        this.ast = [];
+        this.errors = [];
+        while (!this.isAtEnd()) {
+            this.skipNewlines();
+            if (this.isAtEnd()) break;
+            try {
+                if (this.peek().type === TokenType.KEYWORD && this.peek().value === 'VAR') {
+                    const varBlock = this.parseVarBlock();
+                    if (varBlock) {
+                        this.ast.push(varBlock);
+                    }
+                } else {
+                    this.error("Expected 'VAR' to start a new pipeline block.");
+                }
+            } catch (e) {
+                const line = typeof e.line === 'number' ? e.line : (/(\d+)/.exec(String(e.line)) || /Line (\d+)/.exec(e.message || '') || [])[1];
+                this.errors.push({ line: line ? parseInt(line, 10) : null, message: e.message });
+                this.synchronize();
+            }
+        }
+        return { ast: this.ast, errors: this.errors };
     }
 
     parseVarBlock() {
@@ -83,6 +108,15 @@ export class Parser {
     skipNewlines() {
         while(!this.isAtEnd() && this.peek().type === TokenType.NEWLINE) {
             this.advance();
+        }
+    }
+
+    synchronize() {
+        while (!this.isAtEnd() && this.peek().type !== TokenType.NEWLINE) {
+            this.advance();
+        }
+        while (this.match(TokenType.NEWLINE)) {
+            // consume remaining newlines
         }
     }
 
@@ -259,5 +293,10 @@ export class Parser {
     advance() { if (!this.isAtEnd()) this.position++; return this.previous(); }
     previous() { return this.tokens[this.position - 1]; }
     isAtEnd() { return this.position >= this.tokens.length || this.peek().type === TokenType.EOF; }
-    error(message) { const t = this.peek() || this.previous() || {line: 'Unknown', value: 'N/A'}; throw new Error(`Parse Error (Line ${t.line}, near '${t.value}'): ${message}`); }
+    error(message) {
+        const t = this.peek() || this.previous() || { line: 'Unknown', value: 'N/A' };
+        const err = new Error(`Parse Error (Line ${t.line}, near '${t.value}'): ${message}`);
+        err.line = t.line;
+        throw err;
+    }
 }
