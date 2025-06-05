@@ -153,7 +153,7 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
 4.  **UI Features (Richer Interaction):**
     * [ ] **Visualize Pipeline (DAG):** Display the DAG to the user.
     * [ ] **Manage Multiple Inputs:** Create a UI to list and manage loaded files/datasets.
-    * [ ] **Preview Data After Each Step:** With caching, implement a reliable preview of the data after each transformation step.
+    * [X] **Preview Data After Each Step:** With caching, implement a reliable preview of the data after each transformation step.
 
 ---
 
