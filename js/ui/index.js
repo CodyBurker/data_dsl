@@ -110,7 +110,7 @@ function updateExecStatus(executed, total, errorInfo = null, lines = []) {
             const borderTop = parseFloat(style.borderTopWidth);
             const top = paddingTop + borderTop + (errorInfo.line - 1) * lineHeight - elements.inputArea.scrollTop + (lineHeight / 2) - 3;
             const msg = escapeHtml(errorInfo.message || '');
-            elements.errorMarkers.innerHTML = `<div class="error-dot" title="${msg}" style="top:${top}px"></div>`;
+            elements.errorMarkers.innerHTML = `<div class="error-dot" title="${msg}" data-message="${msg}" style="top:${top}px"></div>`;
             elements.errorMarkers.style.pointerEvents = 'auto';
         } else {
             elements.errorMarkers.innerHTML = '';

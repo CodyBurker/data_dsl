@@ -277,6 +277,7 @@ test('execStatus highlights error line in red', async () => {
   const dot = document.querySelector('#errorMarkers .error-dot');
   assert.ok(dot);
   assert.ok(dot.title.includes('Line'));
+  assert.ok(dot.dataset.message.includes('Line'));
 });
 
 test('blank lines remain uncolored', async () => {

@@ -162,6 +162,24 @@ body {
     pointer-events: auto;
 }
 
+#errorMarkers .error-dot:hover::after {
+    content: attr(data-message);
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #fff;
+    color: #111827;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    padding: 2px 4px;
+    white-space: pre-wrap;
+    font-size: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    pointer-events: none;
+    z-index: 3;
+}
+
 #varBlockIndicator {
     position: absolute;
     width: 2px;
