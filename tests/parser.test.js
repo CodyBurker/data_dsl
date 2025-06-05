@@ -4,9 +4,9 @@ import { tokenizeForParser } from '../js/tokenizer.js';
 import { Parser } from '../js/parser.js';
 
 test('Parser handles multiple VAR blocks', () => {
-  const script = `VAR "v1" THEN LOAD_CSV FILE "f.csv" THEN PEEK THEN EXPORT_CSV TO "out.csv"
+  const script = `VAR "v1" THEN LOAD_CSV FILE "f.csv" THEN EXPORT_CSV TO "out.csv"
 
-VAR "v2" THEN LOAD_EXCEL FILE "book.xlsx" SHEET "Sheet1" THEN PEEK`;
+VAR "v2" THEN LOAD_EXCEL FILE "book.xlsx" SHEET "Sheet1"`;
   const tokens = tokenizeForParser(script);
   const ast = new Parser(tokens).parse();
   assert.strictEqual(ast.length, 2);
@@ -17,7 +17,7 @@ VAR "v2" THEN LOAD_EXCEL FILE "book.xlsx" SHEET "Sheet1" THEN PEEK`;
 });
 
 test('Parser throws on missing THEN', () => {
-  const tokens = tokenizeForParser('VAR "x" PEEK');
+  const tokens = tokenizeForParser('VAR "x" SELECT A');
   const parser = new Parser(tokens);
   assert.throws(() => parser.parse(), /must be followed by 'THEN'/);
 });

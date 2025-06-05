@@ -18,7 +18,7 @@ variables with the same data so you can experiment without any `LOAD_CSV`
 commands.
 
 Every command execution now records its result in a **Step Outputs** list shown
-next to the PEEK outputs. Only the active output tab is visible at any time and
+next to the preview outputs. Only the active output tab is visible at any time and
 each tab label shows just the variable name. Selecting a step highlights the
 first word of that line in the editor so you can trace pipeline execution.
 Moving the cursor onto a line with a recorded output automatically switches to
@@ -88,7 +88,7 @@ future logic evict the stalest datasets if memory becomes an issue.
 4.  **UI Features (Minimal Viable Preview):**
     * [X] **Basic Script Input Area:** Simple textarea for script input.
     * [X]  **"Run" Button:** Manual trigger for script execution.
-    * [X] **Simple Tabular Preview:** Display the *final* output in a basic HTML table (replaces 'PEEK').
+    * [X] **Simple Tabular Preview:** Display the *final* output in a basic HTML table.
 
 ---
 
@@ -193,7 +193,6 @@ Random ideas:
 * Run script jumps the cursor around - make it stay.
 * After editing a line, the output of that is dirty and needs to be marked as such.
 ~~* Refactor into smaller files (maybe add doco about what is where too)~~  
-* Remove PEEK entirely
 * Add tabs for variables in output in addition to selected line.
 * Some commands have underscores and some don't - lose all of them?
 * Tab key doesn't work. Ctrl + S doesn't work.

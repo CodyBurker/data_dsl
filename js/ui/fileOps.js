@@ -42,14 +42,11 @@ const fallbackScript = `VAR "cities"
 THEN LOAD_CSV FILE "exampleCities.csv"
 THEN SELECT population, id
 THEN WITH COLUMN population_millions = population / 1000000
-THEN PEEK
 VAR "people"
 THEN LOAD_CSV FILE "examplePeople.csv"
-THEN PEEK
 THEN JOIN cities ON city_id=id TYPE "LEFT"
 THEN SELECT name, age, population, population_millions
-THEN FILTER name STARTSWITH "A"
-THEN PEEK`;
+THEN FILTER name STARTSWITH "A"`;
 
 async function loadDefaultScript() {
     try {

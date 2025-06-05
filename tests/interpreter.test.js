@@ -25,14 +25,6 @@ test('keepColumns selects columns case-insensitively', () => {
   assert.deepEqual(result, [{A:1,C:3},{A:4,C:6}]);
 });
 
-test('executeCommand PEEK stores peek output', async () => {
-  const interp = new Interpreter({});
-  interp.activeVariableName = 'data';
-  interp.variables.data = [{A:1}];
-  await interp.executeCommand({ command: 'PEEK', args:{}, line:5 });
-  assert.strictEqual(interp.peekOutputs.length, 1);
-  assert.strictEqual(interp.peekOutputs[0].line, 5);
-});
 
 test('exportCsv for array of objects uses Papa.unparse', async () => {
   const interp = new Interpreter({});
@@ -318,12 +310,12 @@ test('default script file runs without error', async () => {
   await interp.run(ast);
   global.fetch = originalFetch;
   global.Papa = originalPapa;
-  assert.strictEqual(interp.peekOutputs.length, 3);
-  assert.deepEqual(interp.peekOutputs[1].dataset[0], { person_id: 1, name: 'Alice', age: 30, city_id: 1 });
+  assert.strictEqual(interp.peekOutputs.length, 0);
+  assert.strictEqual(interp.stepOutputs.length, 10);
 });
 
 test('run records step outputs for each command', async () => {
-  const script = `VAR "d"\nTHEN LOAD_CSV FILE "fake.csv"\nTHEN SELECT A\nTHEN PEEK`;
+  const script = `VAR "d"\nTHEN LOAD_CSV FILE "fake.csv"\nTHEN SELECT A`;
   const tokens = tokenizeForParser(script);
   const ast = new Parser(tokens).parse();
   const interp = new Interpreter({ csvFileInputEl: {} });
@@ -337,7 +329,7 @@ test('run records step outputs for each command', async () => {
 });
 
 test('cached datasets persist between runs', async () => {
-  const script = `VAR "d" THEN LOAD_CSV FILE "f.csv" THEN PEEK`;
+  const script = `VAR "d" THEN LOAD_CSV FILE "f.csv"`;
   const tokens = tokenizeForParser(script);
   const ast = new Parser(tokens).parse();
   const interp = new Interpreter({ csvFileInputEl: {} });
@@ -367,8 +359,8 @@ test('cached datasets persist between runs', async () => {
 });
 
 test('join result updates when upstream step changes', async () => {
-  const script1 = `VAR "cities" THEN LOAD_CSV FILE "c.csv" THEN WITH COLUMN city_of = "City of " + name THEN SELECT id, city_of THEN PEEK\nVAR "people" THEN LOAD_CSV FILE "p.csv" THEN JOIN cities ON city_id=id TYPE "LEFT" THEN PEEK`;
-  const script2 = `VAR "cities" THEN LOAD_CSV FILE "c.csv" THEN WITH COLUMN city_of = "City of a " + name THEN SELECT id, city_of THEN PEEK\nVAR "people" THEN LOAD_CSV FILE "p.csv" THEN JOIN cities ON city_id=id TYPE "LEFT" THEN PEEK`;
+  const script1 = `VAR "cities" THEN LOAD_CSV FILE "c.csv" THEN WITH COLUMN city_of = "City of " + name THEN SELECT id, city_of\nVAR "people" THEN LOAD_CSV FILE "p.csv" THEN JOIN cities ON city_id=id TYPE "LEFT"`;
+  const script2 = `VAR "cities" THEN LOAD_CSV FILE "c.csv" THEN WITH COLUMN city_of = "City of a " + name THEN SELECT id, city_of\nVAR "people" THEN LOAD_CSV FILE "p.csv" THEN JOIN cities ON city_id=id TYPE "LEFT"`;
   const ast1 = new Parser(tokenizeForParser(script1)).parse();
   const ast2 = new Parser(tokenizeForParser(script2)).parse();
   const interp = new Interpreter({ csvFileInputEl: {} });
@@ -405,8 +397,8 @@ test('join result updates when upstream step changes', async () => {
 });
 
 test('cache entries track unusedCount across runs', async () => {
-  const scriptD = `VAR "d" THEN LOAD_CSV FILE "f.csv" THEN PEEK`;
-  const scriptX = `VAR "x" THEN LOAD_CSV FILE "f.csv" THEN PEEK`;
+  const scriptD = `VAR "d" THEN LOAD_CSV FILE "f.csv"`;
+  const scriptX = `VAR "x" THEN LOAD_CSV FILE "f.csv"`;
   const astD = new Parser(tokenizeForParser(scriptD)).parse();
   const astX = new Parser(tokenizeForParser(scriptX)).parse();
   const interp = new Interpreter({ csvFileInputEl: {} });
@@ -423,15 +415,12 @@ test('cache entries track unusedCount across runs', async () => {
 
   await interp.run(astD);
   assert.strictEqual(interp.cache['d-0'].unusedCount, 0);
-  assert.strictEqual(interp.cache['d-1'].unusedCount, 0);
 
   await interp.run(astX);
   assert.strictEqual(interp.cache['d-0'].unusedCount, 1);
-  assert.strictEqual(interp.cache['d-1'].unusedCount, 1);
 
   await interp.run(astD);
   assert.strictEqual(interp.cache['d-0'].unusedCount, 0);
-  assert.strictEqual(interp.cache['d-1'].unusedCount, 0);
 
   interp.executeCommand = orig;
 });

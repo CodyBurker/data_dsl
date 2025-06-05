@@ -136,7 +136,6 @@ function updateVarBlockIndicator(lineNumber) {
     let end = lines.length;
     for (let i = lineNumber; i < lines.length; i++) {
         if (/^\s*VAR\b/i.test(lines[i])) { end = i; break; }
-        if (/^\s*THEN\s+PEEK\b/i.test(lines[i])) { end = i + 1; break; }
     }
 
     while (end > start && /^\s*$/.test(lines[end - 1])) {
