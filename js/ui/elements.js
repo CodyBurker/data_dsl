@@ -9,6 +9,7 @@ function queryElements() {
     elements.highlightingOverlay = document.getElementById('highlightingOverlay');
     elements.lineNumbers = document.getElementById('lineNumbers');
     elements.execStatus = document.getElementById('execStatus');
+    elements.errorMarkers = document.getElementById('errorMarkers');
     elements.varBlockIndicator = document.getElementById('varBlockIndicator');
     elements.astOutputArea = document.getElementById('astOutput');
     elements.logOutputEl = document.getElementById('logOutput');

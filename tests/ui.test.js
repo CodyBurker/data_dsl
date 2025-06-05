@@ -12,6 +12,7 @@ function setupDom() {
     <div id="highlightingOverlay"></div>
     <pre id="lineNumbers"></pre>
     <div id="execStatus"></div>
+    <div id="errorMarkers"></div>
     <div id="varBlockIndicator"></div>
     <pre id="astOutput"></pre>
     <div id="logOutput"></div>
@@ -273,6 +274,9 @@ test('execStatus highlights error line in red', async () => {
   const bars = document.querySelectorAll('#execStatus div');
   assert.strictEqual(bars.length, 1);
   assert.ok(bars[0].classList.contains('line-error'));
+  const dot = document.querySelector('#errorMarkers .error-dot');
+  assert.ok(dot);
+  assert.ok(dot.dataset.message.includes('Line'));
 });
 
 test('blank lines remain uncolored', async () => {
