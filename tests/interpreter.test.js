@@ -4,7 +4,7 @@ import { Interpreter } from '../js/interpreter.js';
 import { tokenizeForParser } from '../js/tokenizer.js';
 import { Parser } from '../js/parser.js';
 import * as csv from '../js/csv.js';
-import { keepColumns, joinDatasets, filterRows, withColumn } from '../js/datasetOps.js';
+import { keepColumns, joinDatasets, filterRows, withColumn, renameColumn } from '../js/datasetOps.js';
 
 // Minimal stubs for browser APIs used in exports
 global.document = {
@@ -23,6 +23,14 @@ test('keepColumns selects columns case-insensitively', () => {
   const data = [{A:1,B:2,C:3},{A:4,B:5,C:6}];
   const result = keepColumns(interp, { columns: ['a','C'] }, data);
   assert.deepEqual(result, [{A:1,C:3},{A:4,C:6}]);
+});
+
+test('renameColumn renames a column', () => {
+  const interp = new Interpreter({});
+  interp.activeVariableName = 'r';
+  const data = [{old:1},{old:2}];
+  const result = renameColumn(interp, { oldName:'old', newName:'new' }, data);
+  assert.deepEqual(result, [{new:1},{new:2}]);
 });
 
 

@@ -1,7 +1,7 @@
 // interpreter.js
 import { cities as sampleCities, people as samplePeople } from './samples.js';
 import { loadCsv, exportCsv } from './csv.js';
-import { keepColumns, withColumn, filterRows, joinDatasets } from './datasetOps.js';
+import { keepColumns, withColumn, filterRows, joinDatasets, renameColumn } from './datasetOps.js';
 import { buildDag } from './dag.js';
 
 export class Interpreter {
@@ -161,6 +161,12 @@ export class Interpreter {
                     throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply ${command}.`);
                 }
                 this.variables[this.activeVariableName] = keepColumns(this, args, currentDataset);
+                break;
+            case 'RENAME_COLUMN':
+                if (!Array.isArray(currentDataset)) {
+                    throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply RENAME_COLUMN.`);
+                }
+                this.variables[this.activeVariableName] = renameColumn(this, args, currentDataset);
                 break;
             case 'JOIN':
                 if (!Array.isArray(currentDataset)) {

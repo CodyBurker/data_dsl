@@ -105,10 +105,17 @@ WITH COLUMN name_lower = LOWER(name)
 WITH COLUMN greeting = name + "!"
 ```
 
+### RENAME_COLUMN
+Rename a column to a new name.
+
+```pipe
+RENAME_COLUMN old_name TO new_name
+```
+
 ### Parsed but Not Yet Executed
 The tokenizer and parser recognize additional commands such as `LOAD_EXCEL`,
-`DROP_COLUMNS`, `NEW_COLUMN`, `RENAME_COLUMN`, and `SORT_BY`. These commands are
-parsed but currently have no effect in the interpreter.
+`DROP_COLUMNS`, `NEW_COLUMN`, and `SORT_BY`. These commands are parsed but
+currently have no effect in the interpreter.
 
 ## Tips
 

@@ -90,6 +90,27 @@ export function withColumn(interp, args, currentDataset) {
     return result;
 }
 
+export function renameColumn(interp, args, currentDataset) {
+    const { oldName, newName } = args;
+    if (!oldName || !newName) {
+        throw new Error('RENAME_COLUMN requires oldName and newName.');
+    }
+    if (!Array.isArray(currentDataset) || currentDataset.length === 0) {
+        return [];
+    }
+    if (!Object.prototype.hasOwnProperty.call(currentDataset[0], oldName)) {
+        throw new Error(`Column '${oldName}' not found for RENAME_COLUMN in VAR "${interp.activeVariableName}".`);
+    }
+    const renamed = currentDataset.map(row => {
+        const obj = { ...row };
+        obj[newName] = obj[oldName];
+        delete obj[oldName];
+        return obj;
+    });
+    interp.log(`RENAME_COLUMN '${oldName}' to '${newName}' for VAR "${interp.activeVariableName}".`);
+    return renamed;
+}
+
 export function filterRows(interp, condition, currentDataset) {
     const evalCondition = (node, row) => {
         if (!node) return false;

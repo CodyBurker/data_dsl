@@ -1,6 +1,7 @@
 // main.js
 import { Interpreter } from './interpreter.js';
 import { initUI } from './ui/index.js';
+import { initPipelineUI } from './ui/pipeline.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Query elements needed by the interpreter here, or ensure ui.js does it and provides them.
@@ -21,4 +22,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     // initUI now takes the interpreter instance.
     // Parser and tokenizers are used directly within ui.js for the run button logic.
     await initUI(interpreter);
+    initPipelineUI(interpreter);
 });

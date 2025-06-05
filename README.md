@@ -159,7 +159,7 @@ future logic evict the stalest datasets if memory becomes an issue.
 **ADHD Strategy:** Tackle larger features one at a time. Switch tasks if motivation wanes, but ensure completion.
 
 1.  **Transformations (Sophisticated Manipulations):**
-    * [ ] **RENAME:** Implement column renaming.
+    * [X] **RENAME:** Implement column renaming.
     * [ ] **DISTINCT:** Implement removal of duplicate rows.
     * [ ] **FILL:** Implement functions to fill missing values.
     * [ ] **More Aggregation Functions:** Add `COUNT_DISTINCT`, `MEDIAN`, `MODE`, `STDDEV`, `VARIANCE`, `FIRST`, `LAST`, `CONCAT` (group concat).

@@ -100,11 +100,23 @@
             </details>
         </div>
 
+        <div class="mb-6" id="nodePipelineSection">
+            <h2 class="text-lg font-medium text-gray-700 mb-2">Node Pipeline Builder</h2>
+            <ul id="nodePipelineList" class="mb-2 list-disc list-inside text-sm text-gray-700"></ul>
+            <div class="flex flex-wrap gap-2 mb-2">
+                <button id="addUploadStep" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-1 px-3 rounded text-sm">Add Upload</button>
+                <button id="addFilterStep" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-1 px-3 rounded text-sm">Add Filter</button>
+                <button id="addRenameStep" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-1 px-3 rounded text-sm">Add Rename</button>
+                <button id="addSelectStep" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-1 px-3 rounded text-sm">Add Select</button>
+            </div>
+            <button id="runPipelineButton" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-1 px-4 rounded text-sm">Run Node Pipeline</button>
+        </div>
+
         <div class="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
             <h3 class="text-lg font-semibold text-gray-700 mb-2">Syntax Guide:</h3>
             <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
                 <li>Start pipelines with `VAR "variableName"`.</li>
-                <li>Supported: `LOAD_CSV FILE "name"`, `KEEP_COLUMNS cols` or `SELECT cols`, `JOIN var ON left = right TYPE "LEFT"`, `EXPORT_CSV TO "name"`.</li>
+                <li>Supported: `LOAD_CSV FILE "name"`, `KEEP_COLUMNS cols` or `SELECT cols`, `RENAME_COLUMN old TO new`, `JOIN var ON left = right TYPE "LEFT"`, `EXPORT_CSV TO "name"`.</li>
                 <li>Other commands are parsed but not yet interpreted for all operations.</li>
                 <li>Piping: Use `THEN`. Comments: Start with `#`.</li>
                 <li>CSV Loading uses a basic native parser.</li>

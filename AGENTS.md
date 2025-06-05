@@ -31,6 +31,7 @@ UI-related code lives under `js/ui/` and is split into several modules:
 - `peek.js` – handles PEEK output rendering and export with `generatePeekHtmlForDisplay`, `renderPeekOutputsUI`, `clearEditorPeekHighlight`, and `handleExportPeek`.
 - `fileOps.js` – browser file helpers `saveScriptToFile`, `loadScriptFromFile`, and `loadDefaultScript`.
 - `index.js` – orchestrates UI initialization, event bindings, and exports helpers used in tests.
+- `pipeline.js` – simple node-based pipeline builder converting UI steps into an AST.
 
 When modifying UI behavior keep these files in sync and update this guide if the structure changes.
 
