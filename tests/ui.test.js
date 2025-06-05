@@ -59,9 +59,9 @@ test('renderDag creates node elements with descriptions', async () => {
   renderDag(dag);
   const nodes = document.querySelectorAll('.dag-node');
   assert.strictEqual(nodes.length, 1);
-  const title = nodes[0].querySelector('title');
-  assert.ok(title);
-  assert.ok(title.textContent.includes('Keep columns')); 
+  assert.ok(nodes[0].dataset.description.includes('Keep columns'));
+  const tooltip = document.querySelector('#dagContainer .dag-tooltip');
+  assert.ok(tooltip);
 });
 
 test('renderPeekOutputsUI creates a tab for each PEEK output', async () => {

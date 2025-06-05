@@ -3,10 +3,26 @@
 import { elements } from './elements.js';
 
 const lineMap = new Map();
+let tooltipEl = null;
+
+function showTooltip(text, x, y) {
+    if (!tooltipEl) return;
+    tooltipEl.textContent = text;
+    tooltipEl.style.left = `${x + 12}px`;
+    tooltipEl.style.top = `${y + 12}px`;
+    tooltipEl.classList.remove('hidden');
+}
+
+function hideTooltip() {
+    if (tooltipEl) tooltipEl.classList.add('hidden');
+}
 
 function renderDag(dagNodes, { onNodeClick } = {}) {
     if (!elements.dagContainer) return;
     elements.dagContainer.innerHTML = '';
+    tooltipEl = document.createElement('div');
+    tooltipEl.className = 'dag-tooltip hidden';
+    elements.dagContainer.appendChild(tooltipEl);
     lineMap.clear();
     if (!Array.isArray(dagNodes) || dagNodes.length === 0) return;
 
@@ -70,9 +86,7 @@ function renderDag(dagNodes, { onNodeClick } = {}) {
         rect.setAttribute('rx', '6');
         g.appendChild(rect);
 
-        const title = document.createElementNS(svgNS, 'title');
-        title.textContent = node.description || '';
-        g.appendChild(title);
+        g.dataset.description = node.description || '';
 
         const txt1 = document.createElementNS(svgNS, 'text');
         txt1.setAttribute('x', rectWidth / 2);
@@ -95,6 +109,13 @@ function renderDag(dagNodes, { onNodeClick } = {}) {
             highlightDagNodeForLine(node.line);
             if (typeof onNodeClick === 'function') onNodeClick(node.line);
         });
+        g.addEventListener('mouseenter', (e) => {
+            showTooltip(node.description || '', e.clientX - elements.dagContainer.getBoundingClientRect().left, e.clientY - elements.dagContainer.getBoundingClientRect().top);
+        });
+        g.addEventListener('mousemove', (e) => {
+            showTooltip(node.description || '', e.clientX - elements.dagContainer.getBoundingClientRect().left, e.clientY - elements.dagContainer.getBoundingClientRect().top);
+        });
+        g.addEventListener('mouseleave', hideTooltip);
 
         svg.appendChild(g);
     }

@@ -445,6 +445,23 @@ body {
     stroke-width: 3;
 }
 
+.dag-tooltip {
+    position: absolute;
+    background-color: #111827;
+    color: #f9fafb;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.875rem;
+    pointer-events: none;
+    white-space: pre-wrap;
+    z-index: 5;
+}
+
+.dag-tooltip.hidden {
+    display: none;
+}
+
 /* Target the path within your animated SVG */
 .github-icon-animated path {
     /* === IMPORTANT: Replace 157.9 with the actual path length you found === */
