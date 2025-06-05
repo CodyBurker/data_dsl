@@ -31,7 +31,7 @@ reference line positions while tracing your pipelines.
 
 An adjacent status gutter now shows which lines executed. Green bars mark
 completed lines, yellow bars mark steps that haven't run yet, and red bars
-highlight syntax errors. When a parse error occurs a red dot appears next to that line and hovering it shows the message. Blank lines within a VAR block inherit the color of the
+highlight syntax errors. When parse errors occur red dots appear next to each bad line and hovering them shows the messages. Parsing now continues within a block so only the lines with issues are highlighted. Blank lines within a VAR block inherit the color of the
 preceding command, while gaps between blocks stay uncolored. The interpreter runs
 automatically a moment after you stop typing.
 

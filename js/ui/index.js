@@ -43,9 +43,13 @@ function escapeHtml(str) {
         .replace(/'/g, '&#039;');
 }
 
-function updateExecStatus(executed, total, errorInfo = null, lines = []) {
+function updateExecStatus(executed, total, errorInfos = [], lines = []) {
     if (!elements.execStatus) return;
     const set = new Set(executed);
+    const errorMap = new Map();
+    for (const err of errorInfos) {
+        if (err && err.line != null) errorMap.set(err.line, err.message);
+    }
 
     const varStarts = [];
     for (let i = 0; i < lines.length; i++) {
@@ -82,7 +86,7 @@ function updateExecStatus(executed, total, errorInfo = null, lines = []) {
         let cls = '';
         if (set.has(lineNum)) {
             cls = 'line-success';
-        } else if (errorInfo && lineNum === errorInfo.line) {
+        } else if (errorMap.has(lineNum)) {
             cls = 'line-error';
         } else if (!isBlank) {
             cls = 'line-pending';
@@ -103,14 +107,18 @@ function updateExecStatus(executed, total, errorInfo = null, lines = []) {
     elements.execStatus.scrollTop = elements.inputArea.scrollTop;
 
     if (elements.errorMarkers) {
-        if (errorInfo && errorInfo.line) {
+        if (errorMap.size > 0) {
             const style = getComputedStyle(elements.inputArea);
             const lineHeight = parseFloat(style.lineHeight);
             const paddingTop = parseFloat(style.paddingTop);
             const borderTop = parseFloat(style.borderTopWidth);
-            const top = paddingTop + borderTop + (errorInfo.line - 1) * lineHeight - elements.inputArea.scrollTop + (lineHeight / 2) - 3;
-            const msg = escapeHtml(errorInfo.message || '');
-            elements.errorMarkers.innerHTML = `<div class="error-dot" data-message="${msg}" style="top:${top}px"></div>`;
+            let dots = '';
+            for (const [line, msgRaw] of errorMap.entries()) {
+                const top = paddingTop + borderTop + (line - 1) * lineHeight - elements.inputArea.scrollTop + (lineHeight / 2) - 3;
+                const msg = escapeHtml(msgRaw || '');
+                dots += `<div class="error-dot" data-message="${msg}" style="top:${top}px"></div>`;
+            }
+            elements.errorMarkers.innerHTML = dots;
             elements.errorMarkers.style.pointerEvents = 'auto';
         } else {
             elements.errorMarkers.innerHTML = '';
@@ -143,17 +151,24 @@ async function runRealtime() {
     elements.astOutputArea.classList.remove('error-box');
     try {
         const tokens = tokenizeForParser(script);
-        const ast = new Parser(tokens).parse();
-        elements.astOutputArea.textContent = JSON.stringify(ast, null, 2);
-        await uiInterpreterInstance.run(ast);
-        updateExecStatus(uiInterpreterInstance.getExecutedLines(), lineCount, null, lines);
+        const parser = new Parser(tokens);
+        const { ast, errors } = parser.parseAll();
+        if (errors.length === 0) {
+            elements.astOutputArea.textContent = JSON.stringify(ast, null, 2);
+            await uiInterpreterInstance.run(ast);
+            updateExecStatus(uiInterpreterInstance.getExecutedLines(), lineCount, [], lines);
+        } else {
+            elements.astOutputArea.classList.add('error-box');
+            elements.astOutputArea.textContent = `Error: ${errors[0].message}`;
+            updateExecStatus([], lineCount, errors, lines);
+        }
     } catch (e) {
         elements.astOutputArea.classList.add('error-box');
         const msg = e instanceof Error ? e.message : String(e);
         elements.astOutputArea.textContent = `Error: ${msg}`;
         const match = /Line (\d+)/.exec(msg);
         const errLine = match ? parseInt(match[1], 10) : null;
-        updateExecStatus([], lineCount, errLine ? { line: errLine, message: msg } : null, lines);
+        updateExecStatus([], lineCount, errLine ? [{ line: errLine, message: msg }] : [], lines);
     } finally {
         renderPeekOutputsUI();
     }
@@ -277,7 +292,7 @@ export async function initUI(interpreter) {
         const line = getCursorLineNumber();
         if (line) updateVarBlockIndicator(line);
         const lines = text.split(/\r?\n/);
-        updateExecStatus([], lines.length || 1, null, lines);
+        updateExecStatus([], lines.length || 1, [], lines);
         scheduleRealtimeRun();
     });
 
@@ -331,10 +346,16 @@ export async function initUI(interpreter) {
         try {
             const tokensForParser = tokenizeForParser(script);
             const parser = new Parser(tokensForParser);
-            const ast = parser.parse();
-            elements.astOutputArea.textContent = JSON.stringify(ast, null, 2);
-
-            await uiInterpreterInstance.run(ast);
+            const { ast, errors } = parser.parseAll();
+            if (errors.length === 0) {
+                elements.astOutputArea.textContent = JSON.stringify(ast, null, 2);
+                await uiInterpreterInstance.run(ast);
+            } else {
+                elements.astOutputArea.classList.add('error-box');
+                elements.astOutputArea.textContent = `Error: ${errors[0].message}`;
+                updateExecStatus([], script.split(/\r?\n/).length || 1, errors, script.split(/\r?\n/));
+                return;
+            }
 
         } catch (e) {
             elements.astOutputArea.classList.add('error-box');

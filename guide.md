@@ -66,7 +66,7 @@ output will also activate the corresponding tab automatically. Clicking on the
 commands have executed. The editor shows line numbers so you can easily
 reference pipeline steps. Next to these numbers a thin gutter displays
 execution status. Lines that have run successfully show green bars, pending
-steps are yellow, and syntax errors highlight in red. If parsing fails a red dot appears next to the offending line and hovering it reveals the error. Blank lines inside a VAR
+steps are yellow, and syntax errors highlight in red. If parsing fails red dots appear next to each offending line and hovering reveals the messages. Parsing continues inside a block so only the faulty lines are marked. Blank lines inside a VAR
 block inherit the previous line's color, while blank lines between blocks stay
 uncolored. The interpreter automatically reruns the script after brief
 pauses in typing so the preview stays current.

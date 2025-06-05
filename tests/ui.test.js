@@ -263,20 +263,42 @@ test('debounced input updates execStatus', async () => {
   assert.ok(Array.from(bars).every(b => b.classList.contains('line-success')));
 });
 
-test('execStatus highlights error line in red', async () => {
+test('execStatus highlights error lines in red', async () => {
   setupDom();
   const interp = new Interpreter({});
   await initUI(interp);
   const input = document.getElementById('pipeDataInput');
-  input.value = 'VAR "x" SELECT A';
+  input.value = 'VAR "x" SELECT A\nVAR "y" JOIN';
   input.dispatchEvent(new window.Event('input'));
   await new Promise(r => setTimeout(r, 400));
   const bars = document.querySelectorAll('#execStatus div');
-  assert.strictEqual(bars.length, 1);
+  assert.strictEqual(bars.length, 2);
   assert.ok(bars[0].classList.contains('line-error'));
-  const dot = document.querySelector('#errorMarkers .error-dot');
-  assert.ok(dot);
-  assert.ok(dot.dataset.message.includes('Line'));
+  assert.ok(bars[1].classList.contains('line-error'));
+  const dots = document.querySelectorAll('#errorMarkers .error-dot');
+  assert.strictEqual(dots.length, 2);
+});
+
+test('valid lines after an error are not marked', async () => {
+  setupDom();
+  const interp = new Interpreter({});
+  await initUI(interp);
+  const input = document.getElementById('pipeDataInput');
+  input.value = [
+    'VAR "cities"',
+    'THEN LOAD_CSV FILE "exampleCities.csv"',
+    'THEN WITH COLUMN population_millions = population / 1000000',
+    'THEN WITH COLUMN COL city_of = "City of " + name',
+    'THEN SELECT population, id, city_of'
+  ].join('\n');
+  input.dispatchEvent(new window.Event('input'));
+  await new Promise(r => setTimeout(r, 400));
+  const bars = document.querySelectorAll('#execStatus div');
+  assert.strictEqual(bars.length, 5);
+  assert.ok(bars[3].classList.contains('line-error'));
+  assert.ok(!bars[4].classList.contains('line-error'));
+  const dots = document.querySelectorAll('#errorMarkers .error-dot');
+  assert.strictEqual(dots.length, 1);
 });
 
 test('blank lines remain uncolored', async () => {

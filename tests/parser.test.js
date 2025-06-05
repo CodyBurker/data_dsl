@@ -136,3 +136,27 @@ test('Parser parses WITH COLUMN command', () => {
   assert.strictEqual(cmd.args.columnName, 'total');
   assert.ok(Array.isArray(cmd.args.expression));
 });
+
+test('parseAll collects multiple errors', () => {
+  const script = 'VAR "x" THEN SELECT\nVAR "y" THEN JOIN';
+  const parser = new Parser(tokenizeForParser(script));
+  const result = parser.parseAll();
+  assert.strictEqual(result.errors.length, 2);
+  assert.ok(result.errors[0].line);
+  assert.ok(result.errors[1].line);
+});
+
+test('parseAll continues parsing within a block after an error', () => {
+  const script = [
+    'VAR "cities"',
+    'THEN LOAD_CSV FILE "exampleCities.csv"',
+    'THEN WITH COLUMN population_millions = population / 1000000',
+    'THEN WITH COLUMN COL city_of = "City of " + name',
+    'THEN SELECT population, id, city_of'
+  ].join('\n');
+  const parser = new Parser(tokenizeForParser(script));
+  const result = parser.parseAll();
+  assert.strictEqual(result.errors.length, 1);
+  assert.strictEqual(result.errors[0].line, 4);
+  assert.strictEqual(result.ast[0].pipeline.at(-1).command, 'SELECT');
+});

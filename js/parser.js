@@ -6,6 +6,7 @@ export class Parser {
         this.tokens = tokens;
         this.position = 0;
         this.ast = [];
+        this.errors = [];
     }
 
     parse() {
@@ -15,7 +16,7 @@ export class Parser {
             if (this.isAtEnd()) break;
 
             if (this.peek().type === TokenType.KEYWORD && this.peek().value === 'VAR') {
-                const varBlock = this.parseVarBlock();
+                const varBlock = this.parseVarBlockStrict();
                 if (varBlock) {
                     this.ast.push(varBlock);
                 }
@@ -26,9 +27,105 @@ export class Parser {
         return this.ast;
     }
 
+    parseAll() {
+        this.ast = [];
+        this.errors = [];
+        while (!this.isAtEnd()) {
+            this.skipNewlines();
+            if (this.isAtEnd()) break;
+            try {
+                if (this.peek().type === TokenType.KEYWORD && this.peek().value === 'VAR') {
+                    const varBlock = this.parseVarBlock();
+                    if (varBlock) {
+                        this.ast.push(varBlock);
+                    }
+                } else {
+                    this.error("Expected 'VAR' to start a new pipeline block.");
+                }
+            } catch (e) {
+                this.recordError(e);
+                this.synchronize();
+            }
+        }
+        return { ast: this.ast, errors: this.errors };
+    }
+
     parseVarBlock() {
         const varToken = this.consume(TokenType.KEYWORD, 'VAR');
         const variableNameToken = this.consume(TokenType.STRING_LITERAL, undefined, "Expected variable name as string literal after VAR (e.g., \"myVar\")");
+        const variableName = variableNameToken.value;
+        const varLine = varToken.line;
+
+        const commands = [];
+        this.skipNewlines();
+
+        try {
+            this.consume(TokenType.KEYWORD, 'THEN', `VAR "${variableName}" must be followed by 'THEN'.`);
+        } catch (e) {
+            this.recordError(e);
+            this.synchronize();
+            return { variableName, line: varLine, pipeline: commands };
+        }
+        this.skipNewlines();
+
+        if (this.isAtEnd() || (this.peek().type === TokenType.KEYWORD && this.peek().value === 'VAR')) {
+            const err = new Error(`Parse Error (Line ${this.peek().line}, near '${this.peek().value}'): VAR "${variableName}" THEN must be followed by at least one command.`);
+            err.line = this.peek().line;
+            this.recordError(err);
+            return { variableName, line: varLine, pipeline: commands };
+        }
+
+        const parseAndPush = () => {
+            try {
+                const c = this.parseCommand();
+                if (c) commands.push(c);
+            } catch (e) {
+                this.recordError(e);
+                this.synchronize();
+            }
+        };
+
+        parseAndPush();
+
+        while (!this.isAtEnd()) {
+            this.skipNewlines();
+
+            if (this.peek().type === TokenType.KEYWORD && this.peek().value === 'THEN') {
+                const thenTok = this.consume(TokenType.KEYWORD, 'THEN');
+                this.skipNewlines();
+
+                if (this.isAtEnd() || (this.peek().type === TokenType.KEYWORD && this.peek().value === 'VAR')) {
+                    const err = new Error(`Parse Error (Line ${thenTok.line}, near 'THEN'): 'THEN' must be followed by another command within VAR "${variableName}".`);
+                    err.line = thenTok.line;
+                    this.recordError(err);
+                    this.synchronize();
+                    continue;
+                }
+
+                parseAndPush();
+            } else {
+                if ((this.peek().type === TokenType.KEYWORD && this.peek().value === 'VAR') || this.isAtEnd()) {
+                    break;
+                }
+                try {
+                    this.error(`Unexpected token '${this.peek().value}' in VAR "${variableName}" block. Expected 'THEN' or start of new VAR block.`);
+                } catch (e) {
+                    this.recordError(e);
+                    this.synchronize();
+                }
+            }
+        }
+
+        return { variableName: variableName, line: varLine, pipeline: commands };
+    }
+
+    parseVarBlockStrict() {
+        const varToken = this.consume(TokenType.KEYWORD, 'VAR');
+        const variableNameToken = this.consume(
+            TokenType.STRING_LITERAL,
+            undefined,
+            "Expected variable name as string literal after VAR (e.g., \"myVar\")"
+        );
         const variableName = variableNameToken.value;
         const varLine = varToken.line;
 
@@ -68,7 +165,7 @@ export class Parser {
                 }
             } else {
                 if ((this.peek().type === TokenType.KEYWORD && this.peek().value === 'VAR') || this.isAtEnd()) {
-                   break;
+                    break;
                 }
                 this.error(`Unexpected token '${this.peek().value}' in VAR "${variableName}" block. Expected 'THEN' or start of new VAR block.`);
             }
@@ -83,6 +180,15 @@ export class Parser {
     skipNewlines() {
         while(!this.isAtEnd() && this.peek().type === TokenType.NEWLINE) {
             this.advance();
+        }
+    }
+
+    synchronize() {
+        while (!this.isAtEnd() && this.peek().type !== TokenType.NEWLINE) {
+            this.advance();
+        }
+        while (this.match(TokenType.NEWLINE)) {
+            // consume remaining newlines
         }
     }
 
@@ -259,5 +365,18 @@ export class Parser {
     advance() { if (!this.isAtEnd()) this.position++; return this.previous(); }
     previous() { return this.tokens[this.position - 1]; }
     isAtEnd() { return this.position >= this.tokens.length || this.peek().type === TokenType.EOF; }
-    error(message) { const t = this.peek() || this.previous() || {line: 'Unknown', value: 'N/A'}; throw new Error(`Parse Error (Line ${t.line}, near '${t.value}'): ${message}`); }
+    error(message) {
+        const t = this.peek() || this.previous() || { line: 'Unknown', value: 'N/A' };
+        const err = new Error(`Parse Error (Line ${t.line}, near '${t.value}'): ${message}`);
+        err.line = t.line;
+        throw err;
+    }
+
+    recordError(err) {
+        const line = typeof err.line === 'number'
+            ? err.line
+            : (/(\d+)/.exec(String(err.line)) || /Line (\d+)/.exec(err.message || '') || [])[1];
+        this.errors.push({ line: line ? parseInt(line, 10) : null, message: err.message });
+    }
 }
+
