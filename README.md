@@ -120,7 +120,7 @@ future logic evict the stalest datasets if memory becomes an issue.
              * [X] TRIM: `TRIM(a)`
 4.  **UI Features (Better Feedback):**
     * [ ] **Clearer Error Messages:** Improve feedback for script errors.
-    * [ ] **Data Preview Enhancement:** Consider options for previewing data after each step (if performance allows without caching) or ensure final preview is robust.
+    * [X] **Data Preview Enhancement:** Consider options for previewing data after each step (if performance allows without caching) or ensure final preview is robust.
 
 ---
 
