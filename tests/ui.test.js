@@ -300,3 +300,25 @@ test('blank lines remain uncolored', async () => {
   assert.ok(!bars[5].classList.contains('line-success'));
 });
 
+test('blank line within VAR block inherits status', async () => {
+  setupDom();
+  global.Papa = { parse: (f, o) => o.complete({ data: [], meta: { fields: [] } }) };
+  const uiEls = {
+    logOutputEl: document.getElementById('logOutput'),
+    csvFileInputEl: document.getElementById('csvFileInput'),
+    fileInputContainerEl: document.getElementById('fileInputContainer'),
+    filePromptMessageEl: document.getElementById('filePromptMessage')
+  };
+  const interp = new Interpreter(uiEls);
+  await initUI(interp);
+
+  const input = document.getElementById('pipeDataInput');
+  input.value = 'VAR "x"\nTHEN SELECT A\n\nTHEN SELECT A';
+  input.dispatchEvent(new window.Event('input'));
+  await new Promise(r => setTimeout(r, 400));
+
+  const bars = document.querySelectorAll('#execStatus div');
+  assert.strictEqual(bars.length, 4);
+  assert.ok(bars[2].classList.contains('line-pending'));
+});
+

@@ -66,8 +66,9 @@ output will also activate the corresponding tab automatically. Clicking on the
 commands have executed. The editor shows line numbers so you can easily
 reference pipeline steps. Next to these numbers a thin gutter displays
 execution status. Lines that have run successfully show green bars, pending
-steps are yellow, and syntax errors highlight in red. Blank lines are left
-without color. The interpreter automatically reruns the script after brief
+steps are yellow, and syntax errors highlight in red. Blank lines inside a VAR
+block inherit the previous line's color, while blank lines between blocks stay
+uncolored. The interpreter automatically reruns the script after brief
 pauses in typing so the preview stays current.
 
 ### EXPORT_CSV

@@ -124,6 +124,10 @@ body {
     box-sizing: border-box;
 }
 
+#execStatus div {
+    height: 1.5em;
+}
+
 .line-success {
     background-color: #34d399;
     height: 1.5em;
