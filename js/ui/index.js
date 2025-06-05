@@ -37,20 +37,59 @@ function updateLineNumbers() {
 function updateExecStatus(executed, total, errorLine = null, lines = []) {
     if (!elements.execStatus) return;
     const set = new Set(executed);
+
+    const varStarts = [];
+    for (let i = 0; i < lines.length; i++) {
+        if (/^\s*VAR\b/i.test(lines[i])) varStarts.push(i);
+    }
+    const varEnds = {};
+    for (let s = 0; s < varStarts.length; s++) {
+        const start = varStarts[s];
+        let end = (s + 1 < varStarts.length) ? varStarts[s + 1] - 1 : lines.length - 1;
+        while (end > start && /^\s*$/.test(lines[end])) end--;
+        varEnds[start] = end;
+    }
+
+    let currentVarStart = null;
+    let currentVarEnd = null;
+    let prevClass = '';
     let html = '';
-    for (let i = 1; i <= total; i++) {
-        const content = lines[i - 1] ?? '';
+
+    for (let lineNum = 1; lineNum <= total; lineNum++) {
+        const idx = lineNum - 1;
+        const content = lines[idx] ?? '';
         const isBlank = /^\s*$/.test(content);
+
+        if (varStarts.includes(idx)) {
+            currentVarStart = idx;
+            currentVarEnd = varEnds[idx];
+            prevClass = '';
+        } else if (currentVarEnd !== null && idx > currentVarEnd) {
+            currentVarStart = null;
+            currentVarEnd = null;
+            prevClass = '';
+        }
+
         let cls = '';
-        if (set.has(i)) {
+        if (set.has(lineNum)) {
             cls = 'line-success';
-        } else if (i === errorLine) {
+        } else if (lineNum === errorLine) {
             cls = 'line-error';
         } else if (!isBlank) {
             cls = 'line-pending';
         }
+
+        if (isBlank && currentVarStart !== null && idx <= currentVarEnd) {
+            cls = prevClass;
+        } else if (!isBlank) {
+            prevClass = cls;
+        } else {
+            prevClass = '';
+        }
+
         html += `<div class="${cls}"></div>`;
     }
+
     elements.execStatus.innerHTML = html;
     elements.execStatus.scrollTop = elements.inputArea.scrollTop;
 }
