@@ -10,6 +10,8 @@ Mission: To provide a simple and intuitive way to manipulate tabular data in the
 
 **Language Guide:** [View the full DSL guide](guide.md)
 
+Run `npm run build` to generate the compiled React app in the `docs/` folder. GitHub Pages serves files from that directory.
+
 Example CSV files `exampleCities.csv` and `examplePeople.csv` live in the
 `examples/` folder. If you reference these filenames in a `LOAD_CSV` command,
 the interpreter loads them automatically so you can try joins without uploading
