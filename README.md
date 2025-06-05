@@ -199,6 +199,7 @@ Random ideas:
 * Tab key doesn't work. Ctrl + S doesn't work.
 * Realtime editing errors are hard to find. Also seems like they should be isolated to the line they are on (before next THEN?)
 * Dark mode?
+* Variable blocks formatted to identify what is and isn't in a variable?
 
 Recommended Refactorings (completed)
 
