@@ -17,9 +17,51 @@ function renderList(listEl) {
     listEl.innerHTML = '';
     nodes.forEach((n, i) => {
         const li = document.createElement('li');
-        li.textContent = `${i + 1}. ${n.type}`;
+        li.className = 'flex items-center justify-between bg-gray-200 rounded px-2 py-1';
+        const span = document.createElement('span');
+        span.textContent = `${i + 1}. ${n.type}`;
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = '✕';
+        removeBtn.className = 'text-xs text-red-600 ml-2';
+        removeBtn.addEventListener('click', () => {
+            nodes.splice(i, 1);
+            renderList(listEl);
+        });
+        li.appendChild(span);
+        li.appendChild(removeBtn);
         listEl.appendChild(li);
     });
+}
+
+function renderTable(tableEl, data) {
+    tableEl.innerHTML = '';
+    if (!Array.isArray(data) || data.length === 0) {
+        tableEl.textContent = 'No data';
+        return;
+    }
+    const headers = Object.keys(data[0]);
+    const thead = document.createElement('thead');
+    const headRow = document.createElement('tr');
+    headers.forEach(h => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        th.className = 'border px-1';
+        headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+    const tbody = document.createElement('tbody');
+    data.forEach(row => {
+        const tr = document.createElement('tr');
+        headers.forEach(h => {
+            const td = document.createElement('td');
+            td.textContent = row[h];
+            td.className = 'border px-1';
+            tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    });
+    tableEl.appendChild(thead);
+    tableEl.appendChild(tbody);
 }
 
 export function buildAstFromNodes(nodesInput) {
@@ -51,6 +93,7 @@ export function initPipelineUI(interpreter) {
     const addFilter = document.getElementById('addFilterStep');
     const addRename = document.getElementById('addRenameStep');
     const addSelect = document.getElementById('addSelectStep');
+    const tableEl = document.getElementById('pipelineDataTable');
 
     if (!listEl || !runBtn) return;
 
@@ -90,6 +133,10 @@ export function initPipelineUI(interpreter) {
     runBtn.addEventListener('click', async () => {
         const ast = buildAstFromNodes(nodes);
         await interpreter.run(ast);
+        if (tableEl) {
+            const data = interpreter.variables.main;
+            renderTable(tableEl, data);
+        }
     });
 
     renderList(listEl);
