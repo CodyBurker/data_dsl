@@ -91,3 +91,9 @@ test('tokenizeForParser recognizes SORT keyword', () => {
   const sortKw = tokens.find(t => t.value === 'SORT');
   assert.ok(sortKw && sortKw.type === TokenType.KEYWORD);
 });
+
+test('tokenizeForParser recognizes DROP keyword', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN DROP COLUMN a');
+  const drop = tokens.find(t => t.value === 'DROP');
+  assert.ok(drop && drop.type === TokenType.KEYWORD);
+});

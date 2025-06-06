@@ -206,7 +206,9 @@ export class Parser {
             case 'LOAD_EXCEL': return { ...this.parseLoadExcel(), line: startLine };
             case 'KEEP_COLUMNS': return { ...this.parseKeepColumns(), line: startLine };
             case 'SELECT': return { ...this.parseSelect(), line: startLine };
-            case 'DROP_COLUMNS': return { ...this.parseDropColumns(), line: startLine };
+            case 'DROP_COLUMNS':
+            case 'DROP':
+                return { ...this.parseDropColumns(), line: startLine };
             case 'FILTER': return { ...this.parseFilter(), line: startLine };
             case 'WITH': return { ...this.parseWithColumn(), line: startLine };
             case 'NEW_COLUMN': return { ...this.parseNewColumn(), line: startLine };
@@ -228,7 +230,20 @@ export class Parser {
     parseColumnList() { const c = []; do { if (this.peek().type === TokenType.STRING_LITERAL) c.push(this.consume(TokenType.STRING_LITERAL).value); else if (this.peek().type === TokenType.IDENTIFIER) c.push(this.consume(TokenType.IDENTIFIER).value); else this.error("Expected column name (identifier or string literal)."); } while (this.match(TokenType.PUNCTUATION, ',')); return c; }
     parseKeepColumns() { this.consume(TokenType.KEYWORD, 'KEEP_COLUMNS'); const c = this.parseColumnList(); return { command: 'KEEP_COLUMNS', args: { columns: c } }; }
     parseSelect() { this.consume(TokenType.KEYWORD, 'SELECT'); const c = this.parseColumnList(); return { command: 'SELECT', args: { columns: c } }; }
-    parseDropColumns() { this.consume(TokenType.KEYWORD, 'DROP_COLUMNS'); const c = this.parseColumnList(); return { command: 'DROP_COLUMNS', args: { columns: c } }; }
+    parseDropColumns() {
+        if (this.match(TokenType.KEYWORD, 'DROP_COLUMNS')) {
+            // already consumed
+        } else {
+            this.consume(TokenType.KEYWORD, 'DROP');
+            if (this.peek().type === TokenType.KEYWORD && (this.peek().value === 'COLUMN' || this.peek().value === 'COLUMNS')) {
+                this.advance();
+            } else {
+                this.error("Expected 'COLUMN' after DROP");
+            }
+        }
+        const c = this.parseColumnList();
+        return { command: 'DROP_COLUMNS', args: { columns: c } };
+    }
     parseWithColumn() {
         this.consume(TokenType.KEYWORD, 'WITH');
         this.consume(TokenType.KEYWORD, 'COLUMN');
