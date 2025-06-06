@@ -211,7 +211,7 @@ export class Parser {
             case 'WITH': return { ...this.parseWithColumn(), line: startLine };
             case 'NEW_COLUMN': return { ...this.parseNewColumn(), line: startLine };
             case 'RENAME_COLUMN': return { ...this.parseRenameColumn(), line: startLine };
-            case 'SORT_BY': return { ...this.parseSortBy(), line: startLine };
+            case 'SORT': return { ...this.parseSort(), line: startLine };
             case 'JOIN': return { ...this.parseJoin(), line: startLine };
             case 'GROUP_BY': return { ...this.parseGroupBy(), line: startLine };
             case 'AGGREGATE': return { ...this.parseAggregate(), line: startLine };
@@ -325,7 +325,21 @@ export class Parser {
     }
     parseNewColumn() { this.consume(TokenType.KEYWORD, 'NEW_COLUMN'); let n; if (this.peek().type === TokenType.STRING_LITERAL) n = this.consume(TokenType.STRING_LITERAL).value; else n = this.consume(TokenType.IDENTIFIER).value; this.consume(TokenType.KEYWORD, 'AS'); const e = this.parseExpression(); return { command: 'NEW_COLUMN', args: { newColumnName: n, expression: e } }; }
     parseRenameColumn() { this.consume(TokenType.KEYWORD, 'RENAME_COLUMN'); let o; if(this.peek().type === TokenType.STRING_LITERAL) o = this.consume(TokenType.STRING_LITERAL).value; else o = this.consume(TokenType.IDENTIFIER).value; this.consume(TokenType.KEYWORD, 'TO'); let n; if(this.peek().type === TokenType.STRING_LITERAL) n = this.consume(TokenType.STRING_LITERAL).value; else n = this.consume(TokenType.IDENTIFIER).value; return { command: 'RENAME_COLUMN', args: { oldName: o, newName: n } }; }
-    parseSortBy() { this.consume(TokenType.KEYWORD, 'SORT_BY'); let c; if(this.peek().type === TokenType.STRING_LITERAL) c = this.consume(TokenType.STRING_LITERAL).value; else c = this.consume(TokenType.IDENTIFIER).value; let o = 'ASC'; if (this.match(TokenType.KEYWORD, 'ORDER')) { const ot = this.consume(TokenType.STRING_LITERAL); if (['ASC', 'DESC'].includes(ot.value.toUpperCase())) o = ot.value.toUpperCase(); else this.error("Sort order must be 'ASC' or 'DESC'."); } return { command: 'SORT_BY', args: { column: c, order: o } }; }
+    parseSort() {
+        this.consume(TokenType.KEYWORD, 'SORT');
+        const specs = [];
+        do {
+            let order = 'DESC';
+            if (this.match(TokenType.OPERATOR, '-')) {
+                order = 'ASC';
+            }
+            let col;
+            if (this.peek().type === TokenType.STRING_LITERAL) col = this.consume(TokenType.STRING_LITERAL).value;
+            else col = this.consume(TokenType.IDENTIFIER).value;
+            specs.push({ column: col, order });
+        } while (this.match(TokenType.PUNCTUATION, ','));
+        return { command: 'SORT', args: { columns: specs } };
+    }
     parseJoin() {
         this.consume(TokenType.KEYWORD, 'JOIN');
         let v;

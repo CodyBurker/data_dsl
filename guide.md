@@ -122,9 +122,17 @@ GROUP_BY category
 THEN AGGREGATE SUM amount AS total, COUNT AS count
 ```
 
+### SORT
+Order rows by one or more columns. Columns sort descending by default. Prefix a
+column with `-` to sort ascending.
+
+```
+SORT total_revenue, -greeting
+```
+
 ### Parsed but Not Yet Executed
 The tokenizer and parser recognize additional commands such as `LOAD_EXCEL`,
-`DROP_COLUMNS`, `NEW_COLUMN`, `RENAME_COLUMN`, and `SORT_BY`. These commands are
+`DROP_COLUMNS`, `NEW_COLUMN`, and `RENAME_COLUMN`. These commands are
 parsed but currently have no effect in the interpreter.
 
 ## Tips

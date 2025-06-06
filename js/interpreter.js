@@ -1,7 +1,7 @@
 // interpreter.js
 import { cities as sampleCities, people as samplePeople } from './samples.js';
 import { loadCsv, exportCsv } from './csv.js';
-import { keepColumns, withColumn, filterRows, joinDatasets, groupBy, aggregate } from './datasetOps.js';
+import { keepColumns, withColumn, filterRows, joinDatasets, groupBy, aggregate, sortDataset } from './datasetOps.js';
 import { buildDag } from './dag.js';
 import { from } from 'arquero';
 
@@ -192,6 +192,12 @@ export class Interpreter {
                     throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply AGGREGATE.`);
                 }
                 this.variables[this.activeVariableName] = aggregate(this, args, currentDataset);
+                break;
+            case 'SORT':
+                if (!currentDataset || typeof currentDataset.orderby !== 'function') {
+                    throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply SORT.`);
+                }
+                this.variables[this.activeVariableName] = sortDataset(this, args, currentDataset);
                 break;
             case 'EXPORT_CSV':
                 if (!currentDataset) {

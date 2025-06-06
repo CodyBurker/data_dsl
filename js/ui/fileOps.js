@@ -58,6 +58,7 @@ THEN AGGREGATE SUM revenue AS total_revenue, COUNT AS order_count
 THEN JOIN people ON person_id=person_id TYPE "LEFT"
 THEN FILTER total_revenue > 100
 THEN SELECT greeting, total_revenue, order_count
+THEN SORT total_revenue, -greeting
 THEN EXPORT_CSV TO "top_customers.csv"`;
 
 async function loadDefaultScript() {

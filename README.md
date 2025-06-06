@@ -110,7 +110,7 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
 
 * **[X] High-Priority Transformations:**
     * [X] **`GROUP_BY` & `AGGREGATE`**: Implement grouping and aggregation functions like `SUM`, `COUNT`, `AVG`, `MIN`, and `MAX`.
-    * [ ] **`SORT`**: Implement data sorting based on one or more columns.
+    * [X] **`SORT`**: Implement data sorting based on one or more columns.
     * [ ] **`DROP`**: Implement the `DROP_COLUMNS` command.
     * [ ] **`RENAME`**: Implement the `RENAME_COLUMN` command.
     * [ ] **Unit tests**: Add more example data, and full example scripts that are run in tests for more langauge coverage.

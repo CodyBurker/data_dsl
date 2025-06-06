@@ -3,7 +3,7 @@
 // Helper functions for dataset transformations. Like csv.js, each
 // function expects the interpreter instance as the first argument so
 // logging remains centralized.
-import { op, from } from 'arquero';
+import { op, from, desc } from 'arquero';
 
 export function keepColumns(interp, args, currentDataset) {
     const { columns } = args;
@@ -211,5 +211,28 @@ export function aggregate(interp, args, currentDataset) {
     }
     const result = currentDataset.rollup(spec);
     interp.log(`Aggregated for VAR "${interp.activeVariableName}".`);
+    return result;
+}
+
+export function sortDataset(interp, args, currentDataset) {
+    const { columns } = args;
+    if (!Array.isArray(columns) || columns.length === 0) {
+        throw new Error('SORT requires at least one column.');
+    }
+    if (!currentDataset || typeof currentDataset.orderby !== 'function') {
+        return currentDataset;
+    }
+    const allCols = currentDataset.columnNames();
+    const specs = columns.map(s => {
+        const c = allCols.find(ac => ac.toLowerCase() === s.column.toLowerCase());
+        if (!c) return null;
+        return { column: c, order: s.order };
+    }).filter(Boolean);
+    if (specs.length === 0) {
+        throw new Error(`None of the specified columns for SORT were found in VAR "${interp.activeVariableName}".`);
+    }
+    const orderArgs = specs.map(s => s.order === 'DESC' ? desc(s.column) : s.column);
+    const result = currentDataset.orderby(...orderArgs);
+    interp.log(`Sorted by ${specs.map(s => (s.order === 'ASC' ? '-' : '') + s.column).join(', ')} for VAR "${interp.activeVariableName}".`);
     return result;
 }

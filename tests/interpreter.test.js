@@ -4,7 +4,7 @@ import { Interpreter } from '../js/interpreter.js';
 import { tokenizeForParser } from '../js/tokenizer.js';
 import { Parser } from '../js/parser.js';
 import * as csv from '../js/csv.js';
-import { keepColumns, joinDatasets, filterRows, withColumn, groupBy, aggregate } from '../js/datasetOps.js';
+import { keepColumns, joinDatasets, filterRows, withColumn, groupBy, aggregate, sortDataset } from '../js/datasetOps.js';
 import { from } from 'arquero';
 
 // Minimal stubs for browser APIs used in exports
@@ -316,7 +316,7 @@ test('default script file runs without error', async () => {
   global.fetch = originalFetch;
   global.Papa = originalPapa;
   assert.strictEqual(interp.peekOutputs.length, 0);
-  assert.strictEqual(interp.stepOutputs.length, 18);
+  assert.strictEqual(interp.stepOutputs.length, 20);
 });
 
 test('run records step outputs for each command', async () => {
@@ -444,5 +444,21 @@ test('groupBy and aggregate summarize data', () => {
   assert.deepEqual(objs, [
     {cat:'A', total:3, count:2},
     {cat:'B', total:3, count:1}
+  ]);
+});
+
+test('sortDataset orders rows by multiple columns', () => {
+  const interp = new Interpreter({});
+  interp.activeVariableName = 'd';
+  const data = from([
+    {a:2,b:2},
+    {a:1,b:3},
+    {a:2,b:1}
+  ]);
+  const result = sortDataset(interp, { columns:[{column:'a', order:'DESC'}, {column:'b', order:'ASC'}] }, data);
+  assert.deepEqual(result.objects(), [
+    {a:2,b:1},
+    {a:2,b:2},
+    {a:1,b:3}
   ]);
 });

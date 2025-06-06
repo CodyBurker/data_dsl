@@ -64,6 +64,12 @@ export function describeCommand(cmd) {
                 return `Aggregate ${parts.join(', ')}`;
             }
             break;
+        case 'SORT':
+            if (args && Array.isArray(args.columns)) {
+                const parts = args.columns.map(c => (c.order === 'ASC' ? '-' : '') + c.column);
+                return `Sort by ${parts.join(', ')}`;
+            }
+            break;
         case 'EXPORT_CSV':
             return args && args.file ? `Export CSV to \"${args.file}\"` : 'Export CSV';
         case 'EXPORT_EXCEL':

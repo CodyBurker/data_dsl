@@ -137,6 +137,17 @@ test('Parser parses WITH COLUMN command', () => {
   assert.ok(Array.isArray(cmd.args.expression));
 });
 
+test('Parser parses SORT command with multiple columns', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN SORT colA, -colB');
+  const ast = new Parser(tokens).parse();
+  const cmd = ast[0].pipeline[0];
+  assert.strictEqual(cmd.command, 'SORT');
+  assert.deepEqual(cmd.args.columns, [
+    { column: 'colA', order: 'DESC' },
+    { column: 'colB', order: 'ASC' }
+  ]);
+});
+
 test('parseAll collects multiple errors', () => {
   const script = 'VAR "x" THEN SELECT\nVAR "y" THEN JOIN';
   const parser = new Parser(tokenizeForParser(script));
