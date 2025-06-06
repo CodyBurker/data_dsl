@@ -85,10 +85,10 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
 
 **Goal:** Get basic vlookup-like functionality working ASAP.
 
-* **[X] Data Engine:** Use [Arquero](https://github.com/uwdata/arquero) tables for data manipulation.
-* **[X] I/O:** Implement `LOAD_CSV` (with PapaParse) and the ability to save the final output to a new CSV file.
-* **[X] Core Transformations:** Implement `SELECT` and `JOIN` (inner/left) to cover the basic "vlookup" use case.
-* **[X] UI:** Create a minimal viable product with a script input area, a "Run" button, and a basic HTML table to preview the final result.
+- [x] **Data Engine:** Use [Arquero](https://github.com/uwdata/arquero) tables for data manipulation.
+- [x] **I/O:** Implement `LOAD_CSV` (with PapaParse) and the ability to save the final output to a new CSV file.
+- [x] **Core Transformations:** Implement `SELECT` and `JOIN` (inner/left) to cover the basic "vlookup" use case.
+- [x] **UI:** Create a minimal viable product with a script input area, a "Run" button, and a basic HTML table to preview the final result.
 
 ---
 
@@ -96,12 +96,12 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
 
 **Goal:** Make the tool more usable, add more common spreadsheet operations, and improve responsiveness.
 
-* **[X] Data Engine:** Cache loaded CSV files so that scripts can be re-run without needing to re-upload files.
-* **[X] I/O:** Allow users to save and load their PipeData scripts.
-* **[X] Transformations:**
+- [x] **Data Engine:** Cache loaded CSV files so that scripts can be re-run without needing to re-upload files.
+- [x] **I/O:** Allow users to save and load their PipeData scripts.
+- [x] **Transformations:**
     * Implement a comprehensive `FILTER` command with support for various operators (`=`, `!=`, `>`, `<`, etc.), string matching, and grouped conditions with `AND`/`OR`.
     * Implement a basic `WITH COLUMN` command for arithmetic and simple string operations (`LOWER`, `UPPER`, `TRIM`, concatenation).
-* **[X] UI Features:** Improve the data preview to be more robust and provide better feedback on the state of the pipeline.
+- [x] **UI Features:** Improve the data preview to be more robust and provide better feedback on the state of the pipeline.
 
 ---
 
@@ -109,17 +109,17 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
 
 **Goal:** Make the tool significantly more powerful by implementing the most common and essential spreadsheet operations that are currently missing.
 
-* **[X] High-Priority Transformations:**
+- [x] **High-Priority Transformations:**
     * [X] **`GROUP_BY` & `AGGREGATE`**: Implement grouping and aggregation functions like `SUM`, `COUNT`, `AVG`, `MIN`, and `MAX`.
     * [X] **`SORT`**: Implement data sorting based on one or more columns.
     * [X] **`DROP`**: Implement the `DROP_COLUMNS` command.
     * [X] **`RENAME`**: Implement the `RENAME_COLUMN` command.
     * [ ] **Unit tests**: Add more example data, and full example scripts that are run in tests for more langauge coverage.
-* **[X] I/O (Wider Compatibility):**
+- [x] **I/O (Wider Compatibility):**
     * **`LOAD_JSON`**: Load data from JSON files.
     * **`LOAD_EXCEL`**: Implement loading data from Excel files (e.g., using SheetJS for .xlsx).
     * **`SAVE_EXCEL`**: Implement saving data to Excel format.
-* **[ ] UI & UX Enhancements:**
+- [ ] **UI & UX Enhancements:**
     * **Re-arrange UI elements:** Move existing elements around to make better use of the screen space.
     * **Manage Multiple Inputs:** Create a UI to list and manage loaded files/datasets.
     * **Clearer Error Messages:** Improve feedback for script errors, providing more context and suggestions.
@@ -131,15 +131,15 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
 
 **Goal:** Add sophisticated data operations and user-friendly features for complex scenarios, making PipeData a comprehensive tool.
 
-* **[ ] Advanced Transformations:**
+- [ ] **Advanced Transformations:**
     * **`DISTINCT`**: Implement removal of duplicate rows.
     * **`FILL`**: Implement functions to fill missing values (e.g., with a specific value, mean, or median).
     * **`PIVOT` / `UNPIVOT`**: Implement data pivoting and unpivoting.
     * **More Aggregation Functions:** Add `COUNT_DISTINCT`, `MEDIAN`, `STDDEV`, `VARIANCE`, etc.
     * **`WITH COLUMN` (Enhanced):** Add date operations and conditional logic.
-* **[ ] Professional-Grade I/O:**
+- [ ] **Professional-Grade I/O:**
     * Add support for `Parquet` or `Avro` formats based on user demand.
-* **[ ] UI & Language Polish:**
+- [ ] **UI & Language Polish:**
     * **Data Visualization:** Integrate a simple charting library (e.g., Chart.js) to create basic charts from data at any pipeline stage.
     * **Dark Mode:** Implement a dark theme for the UI.
     * **Editor Enhancements:**
