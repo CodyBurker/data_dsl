@@ -10,7 +10,7 @@ export const TokenType = {
 export const KEYWORDS = [
     'VAR',
     'LOAD_CSV', 'LOAD_EXCEL', 'THEN', 'KEEP_COLUMNS', 'SELECT', 'DROP_COLUMNS', 'FILTER', 'WHERE', 'DROP',
-    'NEW_COLUMN', 'AS', 'RENAME_COLUMN', 'TO', 'SORT', 'STORE_AS',
+    'NEW_COLUMN', 'AS', 'RENAME_COLUMN', 'RENAME_COLUMNS', 'TO', 'SORT', 'STORE_AS',
     'EXPORT_CSV', 'EXPORT_EXCEL', 'SHEET', 'FILE', 'AND', 'OR',
     'WITH', 'COLUMN',
     'JOIN', 'ON', 'TYPE',

@@ -60,6 +60,14 @@ DROP COLUMN col1
 DROP COLUMNS col1, col2
 ```
 
+### RENAME COLUMN / RENAME COLUMNS
+Change one or more column names. Use `AS` to specify the new name for each column. Both `RENAME COLUMN` and `RENAME COLUMNS` accept multiple mappings.
+
+```
+RENAME COLUMNS weight AS weight_kg, height AS height_in
+RENAME COLUMN "old name" AS "New Name"
+```
+
 ### JOIN
 Merge the current dataset with another variable. Specify the column from the current dataset and optionally a different column from the other variable. Use `TYPE "LEFT"` to keep unmatched rows.
 
@@ -141,9 +149,8 @@ SORT total_revenue, -greeting
 ```
 
 ### Parsed but Not Yet Executed
-The tokenizer and parser also recognize `LOAD_EXCEL`, `NEW_COLUMN`, and
-`RENAME_COLUMN`. These commands are parsed but currently have no effect in
-the interpreter.
+The tokenizer and parser also recognize `LOAD_EXCEL` and `NEW_COLUMN`. These
+commands are parsed but currently have no effect in the interpreter.
 
 ## Tips
 

@@ -37,6 +37,17 @@ test('Parser parses DROP COLUMN command', () => {
   assert.deepEqual(cmd.args.columns, ['a','b']);
 });
 
+test('Parser parses RENAME_COLUMNS command', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN RENAME_COLUMNS a AS b, c AS d');
+  const ast = new Parser(tokens).parse();
+  const cmd = ast[0].pipeline[0];
+  assert.strictEqual(cmd.command, 'RENAME_COLUMNS');
+  assert.deepEqual(cmd.args.mappings, [
+    { from: 'a', to: 'b' },
+    { from: 'c', to: 'd' }
+  ]);
+});
+
 test('Parser parses JOIN command', () => {
   const tokens = tokenizeForParser('VAR "a" THEN LOAD_CSV FILE "f.csv" THEN JOIN b ON id');
   const ast = new Parser(tokens).parse();

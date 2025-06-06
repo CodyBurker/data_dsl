@@ -42,6 +42,33 @@ export function dropColumns(interp, args, currentDataset) {
     return result;
 }
 
+export function renameColumns(interp, args, currentDataset) {
+    const { mappings } = args;
+    if (!Array.isArray(mappings) || mappings.length === 0) {
+        throw new Error(`RENAME_COLUMNS requires at least one column mapping in VAR "${interp.activeVariableName}".`);
+    }
+    if (!currentDataset || typeof currentDataset.rename !== 'function') {
+        return currentDataset;
+    }
+    const allCols = currentDataset.columnNames();
+    const renameMap = {};
+    const missing = [];
+    for (const m of mappings) {
+        const src = allCols.find(c => c.toLowerCase() === m.from.toLowerCase());
+        if (src) {
+            renameMap[src] = m.to;
+        } else {
+            missing.push(m.from);
+        }
+    }
+    if (Object.keys(renameMap).length === 0) {
+        throw new Error(`None of the specified columns for RENAME_COLUMNS were found in VAR "${interp.activeVariableName}".`);
+    }
+    const result = currentDataset.rename(renameMap);
+    interp.log(`Renamed columns: ${Object.entries(renameMap).map(([o,n]) => `${o}->${n}`).join(', ')} for VAR "${interp.activeVariableName}".`);
+    return result;
+}
+
 export function withColumn(interp, args, currentDataset) {
     const { columnName, expression } = args;
     if (!Array.isArray(expression) || expression.length === 0) {

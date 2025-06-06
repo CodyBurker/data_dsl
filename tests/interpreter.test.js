@@ -4,7 +4,7 @@ import { Interpreter } from '../js/interpreter.js';
 import { tokenizeForParser } from '../js/tokenizer.js';
 import { Parser } from '../js/parser.js';
 import * as csv from '../js/csv.js';
-import { keepColumns, dropColumns, joinDatasets, filterRows, withColumn, groupBy, aggregate, sortDataset } from '../js/datasetOps.js';
+import { keepColumns, dropColumns, renameColumns, joinDatasets, filterRows, withColumn, groupBy, aggregate, sortDataset } from '../js/datasetOps.js';
 import { from } from 'arquero';
 
 // Minimal stubs for browser APIs used in exports
@@ -32,6 +32,14 @@ test('dropColumns removes columns case-insensitively', () => {
   const data = from([{A:1,B:2,C:3},{A:4,B:5,C:6}]);
   const result = dropColumns(interp, { columns: ['b'] }, data);
   assert.deepEqual(result.columnNames(), ['A','C']);
+});
+
+test('renameColumns renames columns case-insensitively', () => {
+  const interp = new Interpreter({});
+  interp.activeVariableName = 'd';
+  const data = from([{A:1,B:2}]);
+  const result = renameColumns(interp, { mappings:[{from:'a', to:'alpha'}] }, data);
+  assert.deepEqual(result.columnNames(), ['alpha','B']);
 });
 
 
@@ -66,6 +74,14 @@ test('executeCommand DROP_COLUMNS uses dropColumns', async () => {
   interp.variables.d = from([{A:1,B:2,C:3}]);
   await interp.executeCommand({ command: 'DROP_COLUMNS', args: { columns: ['B'] } });
   assert.deepEqual(interp.variables.d.columnNames(), ['A','C']);
+});
+
+test('executeCommand RENAME_COLUMNS uses renameColumns', async () => {
+  const interp = new Interpreter({});
+  interp.activeVariableName = 'd';
+  interp.variables.d = from([{A:1,B:2}]);
+  await interp.executeCommand({ command: 'RENAME_COLUMNS', args: { mappings:[{from:'A', to:'AA'}] } });
+  assert.deepEqual(interp.variables.d.columnNames(), ['AA','B']);
 });
 
 test('joinDatasets performs default inner join', () => {

@@ -1,7 +1,7 @@
 // interpreter.js
 import { cities as sampleCities, people as samplePeople } from './samples.js';
 import { loadCsv, exportCsv } from './csv.js';
-import { keepColumns, dropColumns, withColumn, filterRows, joinDatasets, groupBy, aggregate, sortDataset } from './datasetOps.js';
+import { keepColumns, dropColumns, renameColumns, withColumn, filterRows, joinDatasets, groupBy, aggregate, sortDataset } from './datasetOps.js';
 import { buildDag } from './dag.js';
 import { from } from 'arquero';
 
@@ -168,6 +168,12 @@ export class Interpreter {
                     throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply DROP_COLUMNS.`);
                 }
                 this.variables[this.activeVariableName] = dropColumns(this, args, currentDataset);
+                break;
+            case 'RENAME_COLUMNS':
+                if (!currentDataset || typeof currentDataset.rename !== 'function') {
+                    throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply RENAME_COLUMNS.`);
+                }
+                this.variables[this.activeVariableName] = renameColumns(this, args, currentDataset);
                 break;
             case 'JOIN':
                 if (!currentDataset || typeof currentDataset.join !== 'function') {
