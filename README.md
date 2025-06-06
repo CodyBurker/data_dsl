@@ -12,6 +12,8 @@ PipeData is a domain-specific language (DSL) designed for simple, scriptable dat
 
 Run `npm run dev` to start the Vite development server.
 Run `npm run build` to generate the compiled React app in the `docs/` folder. This command also copies the `examples/` folder so the demo can load the sample CSV files. GitHub Pages serves files from that directory. The CI workflow also runs this build and commits the results so `docs/` always reflects the latest source code.
+Run `npm run desktop` to build the React app and launch it in the Electron shell.
+Use `npm run package` to create desktop installers with `electron-builder` for Windows, macOS, and Linux.
 
 Example CSV files `exampleCities.csv`, `examplePeople.csv`, and JSON
 `exampleSales.json` live in the `examples/` folder. If a `LOAD_CSV` or
