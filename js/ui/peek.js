@@ -5,6 +5,9 @@ import { applySyntaxHighlighting, escapeHtml } from './highlight.js';
 
 // Build HTML to display a peeked dataset.
 function generatePeekHtmlForDisplay(datasetToPeek, varName, line) {
+    if (datasetToPeek && typeof datasetToPeek.objects === 'function') {
+        datasetToPeek = datasetToPeek.objects();
+    }
     let outputHTML = `<h3 class="text-md font-semibold mb-2 text-gray-100">Data for: VAR "${varName || 'Current Context'}" (PEEK at Line ${line})</h3>`;
 
     if (!datasetToPeek) {
@@ -198,7 +201,10 @@ function handleExportPeek(interpreter) {
         return;
     }
 
-    const dataset = peekDataEntry.dataset;
+    let dataset = peekDataEntry.dataset;
+    if (dataset && typeof dataset.objects === 'function') {
+        dataset = dataset.objects();
+    }
 
     if (Array.isArray(dataset) && dataset.length > 0 && typeof dataset[0] === 'object') {
         try {

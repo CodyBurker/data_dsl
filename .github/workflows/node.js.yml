@@ -31,7 +31,6 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-        ref: ${{ github.event.pull_request.head.ref }}
     - run: npm install
     - run: npm test
     - run: npm run build
