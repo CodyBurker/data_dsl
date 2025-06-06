@@ -76,8 +76,8 @@ test('renderPeekOutputsUI creates a tab for each PEEK output', async () => {
   ];
   renderPeekOutputsUI();
   const tabs = document.querySelectorAll('.peek-tab');
-  assert.strictEqual(tabs.length, 2);
-  assert.strictEqual(tabs[1].dataset.line, '2');
+  assert.strictEqual(tabs.length, 3); // Active tab plus two peek tabs
+  assert.strictEqual(tabs[2].dataset.line, '2');
 });
 
 test('moving cursor selects matching peek tab', async () => {
@@ -98,7 +98,37 @@ test('moving cursor selects matching peek tab', async () => {
 
   const active = document.querySelector('.peek-tab.active-peek-tab');
   assert.ok(active);
+  assert.strictEqual(active.textContent, 'Active');
   assert.strictEqual(active.dataset.line, '2');
+});
+
+test('Active tab restores previous line after viewing final output', async () => {
+  setupDom();
+
+  const interp = new Interpreter({});
+  await initUI(interp, { autoRun: false });
+  interp.stepOutputs = [
+    { id: 's1', varName: 'a', line: 1, dataset: from([{A:1}]) },
+    { id: 'a-final', varName: 'a', line: 1, dataset: from([{A:1}]) },
+    { id: 's2', varName: 'b', line: 2, dataset: from([{B:2}]) },
+    { id: 'b-final', varName: 'b', line: 2, dataset: from([{B:2}]) }
+  ];
+  renderPeekOutputsUI();
+
+  const input = document.getElementById('pipeDataInput');
+  input.value = 'LINE1\nLINE2';
+  input.setSelectionRange(0,0);
+  input.dispatchEvent(new window.Event('keyup'));
+
+  const bTab = document.querySelector('.peek-tab[data-target="final-b"]');
+  bTab.click();
+
+  const activeTab = document.querySelector('.peek-tab[data-special="active"]');
+  activeTab.click();
+
+  const active = document.querySelector('.peek-tab.active-peek-tab');
+  assert.strictEqual(active.dataset.target, 'active-peek-content');
+  assert.strictEqual(active.dataset.line, '1');
 });
 
 test('running script updates AST output and peek UI', async () => {
@@ -138,9 +168,10 @@ THEN SELECT A`;
   assert.strictEqual(interp.stepOutputs.length, 3);
 
   const tabs = document.querySelectorAll('.peek-tab');
-  assert.strictEqual(tabs.length, interp.peekOutputs.length + interp.stepOutputs.length);
+  // active tab + one final output
+  assert.strictEqual(tabs.length, 2);
   const contents = document.querySelectorAll('.peek-content');
-  assert.strictEqual(contents.length, interp.peekOutputs.length + interp.stepOutputs.length);
+  assert.strictEqual(contents.length, 2);
   assert.ok(document.getElementById('astOutput').textContent.includes('LOAD_CSV'));
 });
 
@@ -187,7 +218,8 @@ THEN LOAD_CSV FILE "fake.csv"`;
   assert.strictEqual(interp.stepOutputs.length, 5);
 
   const tabs = document.querySelectorAll('.peek-tab');
-  assert.strictEqual(tabs.length, interp.stepOutputs.length);
+  // active tab plus two final outputs
+  assert.strictEqual(tabs.length, 3);
   assert.ok(document.getElementById('highlightingOverlay').innerHTML.length > 0);
 });
 
