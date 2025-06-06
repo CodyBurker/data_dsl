@@ -3,10 +3,14 @@ name: Desktop Build
 on:
   push:
     branches: ["main"]
+  pull_request:
+    branches: ["main"]
 
 jobs:
   build-desktop:
     runs-on: ${{ matrix.os }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
