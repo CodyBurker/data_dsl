@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node --test",
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build && npm run copy-examples",
+    "copy-examples": "mkdir -p docs/examples && cp examples/* docs/examples/"
   },
   "dependencies": {
     "jsdom": "^26.1.0",

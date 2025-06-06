@@ -1,0 +1,10 @@
+VAR "cities"
+THEN LOAD_CSV FILE "exampleCities.csv"
+THEN WITH COLUMN population_millions = population / 1000000
+THEN WITH COLUMN city_of = "City of " + name
+THEN SELECT population, id, city_of
+VAR "people"
+THEN LOAD_CSV FILE "examplePeople.csv"
+THEN JOIN cities ON city_id=id TYPE "LEFT"
+THEN SELECT name, age, population, population_millions
+THEN FILTER name STARTSWITH "A" OR (age < 30 and name contains "na")
