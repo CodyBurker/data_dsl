@@ -28,3 +28,11 @@ jobs:
         cache: 'npm'
     - run: npm install
     - run: npm test
+    - run: npm run build
+    - name: Ensure docs are up to date
+      run: |
+        if ! git diff --quiet docs; then
+          echo "docs folder is out of date. Run 'npm run build' and commit the results." >&2
+          git status --short docs
+          exit 1
+        fi
