@@ -117,7 +117,11 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
     * [ ] **Unit tests**: Add more example data, and full example scripts that are run in tests for more langauge coverage.
 - [x] **I/O (Wider Compatibility):**
     * **`LOAD_JSON`**: Load data from JSON files.
-    * **`LOAD_EXCEL`**: Implement loading data from Excel files (e.g., using SheetJS for .xlsx).
+    * **`LOAD_EXCEL`**: Load data from Excel files using SheetJS.
+      ```
+      VAR "data"
+      THEN LOAD_EXCEL FILE "book.xlsx" SHEET "Sheet1" RANGE "A1:C10"
+      ```
     * **`SAVE_EXCEL`**: Implement saving data to Excel format.
 - [ ] **UI & UX Enhancements:**
     * **Re-arrange UI elements:** Move existing elements around to make better use of the screen space.

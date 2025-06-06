@@ -230,7 +230,26 @@ export class Parser {
     }
     parseLoadCsv() { this.consume(TokenType.KEYWORD, 'LOAD_CSV'); this.consume(TokenType.KEYWORD, 'FILE'); const f = this.consume(TokenType.STRING_LITERAL).value; return { command: 'LOAD_CSV', args: { file: f } }; }
     parseLoadJson() { this.consume(TokenType.KEYWORD, 'LOAD_JSON'); this.consume(TokenType.KEYWORD, 'FILE'); const f = this.consume(TokenType.STRING_LITERAL).value; let r = null; if (this.match(TokenType.KEYWORD, 'ROOT')) r = this.consume(TokenType.STRING_LITERAL).value; return { command: 'LOAD_JSON', args: { file: f, root: r } }; }
-    parseLoadExcel() { this.consume(TokenType.KEYWORD, 'LOAD_EXCEL'); this.consume(TokenType.KEYWORD, 'FILE'); const f = this.consume(TokenType.STRING_LITERAL).value; let s = null; if (this.match(TokenType.KEYWORD, 'SHEET')) s = this.consume(TokenType.STRING_LITERAL).value; return { command: 'LOAD_EXCEL', args: { file: f, sheet: s } }; }
+    parseLoadExcel() {
+        this.consume(TokenType.KEYWORD, 'LOAD_EXCEL');
+        this.consume(TokenType.KEYWORD, 'FILE');
+        const f = this.consume(TokenType.STRING_LITERAL).value;
+        let sheet = null;
+        let range = null;
+        if (this.match(TokenType.KEYWORD, 'SHEET')) {
+            if (this.peek().type === TokenType.NUMBER_LITERAL) {
+                sheet = this.consume(TokenType.NUMBER_LITERAL).value;
+            } else if (this.peek().type === TokenType.STRING_LITERAL) {
+                sheet = this.consume(TokenType.STRING_LITERAL).value;
+            } else {
+                this.error("Expected sheet index number or sheet name string");
+            }
+        }
+        if (this.match(TokenType.KEYWORD, 'RANGE')) {
+            range = this.consume(TokenType.STRING_LITERAL).value;
+        }
+        return { command: 'LOAD_EXCEL', args: { file: f, sheet, range } };
+    }
     parseColumnList() { const c = []; do { if (this.peek().type === TokenType.STRING_LITERAL) c.push(this.consume(TokenType.STRING_LITERAL).value); else if (this.peek().type === TokenType.IDENTIFIER) c.push(this.consume(TokenType.IDENTIFIER).value); else this.error("Expected column name (identifier or string literal)."); } while (this.match(TokenType.PUNCTUATION, ',')); return c; }
     parseKeepColumns() { this.consume(TokenType.KEYWORD, 'KEEP_COLUMNS'); const c = this.parseColumnList(); return { command: 'KEEP_COLUMNS', args: { columns: c } }; }
     parseSelect() { this.consume(TokenType.KEYWORD, 'SELECT'); const c = this.parseColumnList(); return { command: 'SELECT', args: { columns: c } }; }

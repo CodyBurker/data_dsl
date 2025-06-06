@@ -1,1 +1,3 @@
 node_modules/
+examples/~*.xlsx
+docs/examples/~*.xlsx
