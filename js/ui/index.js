@@ -8,7 +8,8 @@ import {
     generatePeekHtmlForDisplay,
     renderPeekOutputsUI as renderPeekOutputsUIHelper,
     clearEditorPeekHighlight as clearEditorPeekHighlightHelper,
-    handleExportPeek as handleExportPeekHelper
+    handleExportPeek as handleExportPeekHelper,
+    updateActiveTab
 } from './peek.js';
 import { buildDag } from '../dag.js';
 import { renderDag, highlightDagNodeForLine } from './dagView.js';
@@ -200,17 +201,17 @@ function scheduleRealtimeRun() {
 }
 
 function showOutputForLine(lineNumber) {
-    if (!elements.peekTabsContainerEl) return false;
-    const tabSelectors = [
-        `.peek-tab[data-peek-index][data-line='${lineNumber}']`,
-        `.peek-tab[data-step-index][data-line='${lineNumber}']`
-    ];
-    for (const sel of tabSelectors) {
-        const tab = elements.peekTabsContainerEl.querySelector(sel);
-        if (tab) {
-            scrollState.suppressTabScroll = true;
-            tab.click();
-            scrollState.suppressTabScroll = false;
+    if (!uiInterpreterInstance) return false;
+    const stepOutputs = uiInterpreterInstance.stepOutputs || [];
+    for (let i = stepOutputs.length - 1; i >= 0; i--) {
+        const s = stepOutputs[i];
+        if (s.line === lineNumber) {
+            if (elements.inputArea && elements.highlightingOverlay) {
+                elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(elements.inputArea.value, s.line);
+                highlightState.currentLine = s.line;
+            }
+            updateActiveTab(s.dataset, s.varName, s.line, true);
+            updateVarBlockIndicator(s.line);
             return true;
         }
     }

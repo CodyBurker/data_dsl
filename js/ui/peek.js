@@ -59,6 +59,21 @@ function generatePeekHtmlForDisplay(datasetToPeek, varName, line) {
     return outputHTML;
 }
 
+// Update the special "Active" tab with new data. Optionally activate the tab.
+function updateActiveTab(dataset, varName, line, activate = false) {
+    const tabButton = elements.peekTabsContainerEl?.querySelector('.peek-tab[data-special="active"]');
+    const contentDiv = elements.peekOutputsDisplayAreaEl?.querySelector('#active-peek-content');
+    if (!tabButton || !contentDiv) return;
+    tabButton.dataset.line = line;
+    contentDiv.innerHTML = generatePeekHtmlForDisplay(dataset, varName, line);
+    if (activate) {
+        elements.peekTabsContainerEl.querySelectorAll('.peek-tab').forEach(t => t.classList.remove('active-peek-tab'));
+        elements.peekOutputsDisplayAreaEl.querySelectorAll('.peek-content').forEach(c => c.classList.remove('active-peek-content'));
+        tabButton.classList.add('active-peek-tab');
+        contentDiv.classList.add('active-peek-content');
+    }
+}
+
 // Render tabs and outputs for interpreter.peekOutputs and interpreter.stepOutputs.
 function renderPeekOutputsUI(interpreter, { currentLineRef, updateVarBlockIndicator, suppressTabScrollRef }) {
     if (!elements.peekTabsContainerEl || !elements.peekOutputsDisplayAreaEl || !interpreter) {
@@ -81,50 +96,56 @@ function renderPeekOutputsUI(interpreter, { currentLineRef, updateVarBlockIndica
 
     if (elements.exportPeekButton) elements.exportPeekButton.classList.remove('hidden');
 
-    stepOutputs.forEach((stepData, index) => {
+    const activeTab = document.createElement('button');
+    activeTab.classList.add('peek-tab', 'active-peek-tab');
+    activeTab.textContent = 'Active';
+    activeTab.dataset.target = 'active-peek-content';
+    activeTab.dataset.special = 'active';
+    elements.peekTabsContainerEl.appendChild(activeTab);
+
+    const activeContent = document.createElement('div');
+    activeContent.id = 'active-peek-content';
+    activeContent.classList.add('peek-content', 'active-peek-content');
+    activeContent.innerHTML = '<div class="output-box-placeholder">Select a line to see output.</div>';
+    elements.peekOutputsDisplayAreaEl.appendChild(activeContent);
+
+    const finalOutputs = [];
+    const seen = new Set();
+    stepOutputs.forEach((s) => {
+        if (s.id && s.id.endsWith('-final') && !seen.has(s.varName)) {
+            finalOutputs.push(s);
+            seen.add(s.varName);
+        }
+    });
+
+    finalOutputs.forEach((finalData) => {
         const tabButton = document.createElement('button');
         tabButton.classList.add('peek-tab');
-        tabButton.textContent = stepData.varName;
-        tabButton.dataset.target = stepData.id;
-        tabButton.dataset.stepIndex = index;
-        tabButton.dataset.line = stepData.line;
+        tabButton.textContent = finalData.varName;
+        tabButton.dataset.target = `final-${finalData.varName}`;
+        tabButton.dataset.line = finalData.line;
+        tabButton.dataset.finalVar = finalData.varName;
 
         const contentDiv = document.createElement('div');
-        contentDiv.id = stepData.id;
+        contentDiv.id = `final-${finalData.varName}`;
         contentDiv.classList.add('peek-content');
-        contentDiv.innerHTML = generatePeekHtmlForDisplay(stepData.dataset, stepData.varName, stepData.line);
+        contentDiv.innerHTML = generatePeekHtmlForDisplay(finalData.dataset, finalData.varName, finalData.line);
 
         elements.peekTabsContainerEl.appendChild(tabButton);
         elements.peekOutputsDisplayAreaEl.appendChild(contentDiv);
 
         tabButton.addEventListener('click', () => {
-            elements.peekTabsContainerEl.querySelectorAll('.peek-tab').forEach(tab => tab.classList.remove('active-peek-tab'));
-            elements.peekOutputsDisplayAreaEl.querySelectorAll('.peek-content').forEach(content => content.classList.remove('active-peek-content'));
-
+            elements.peekTabsContainerEl.querySelectorAll('.peek-tab').forEach(t => t.classList.remove('active-peek-tab'));
+            elements.peekOutputsDisplayAreaEl.querySelectorAll('.peek-content').forEach(c => c.classList.remove('active-peek-content'));
             tabButton.classList.add('active-peek-tab');
             contentDiv.classList.add('active-peek-content');
-
             if (elements.inputArea && elements.highlightingOverlay) {
-                elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(elements.inputArea.value, stepData.line);
-                currentLineRef.currentLine = stepData.line;
-                const highlightedSpan = elements.highlightingOverlay.querySelector('#active-editor-peek-highlight');
-                if (highlightedSpan) {
-                    const scrollTargetOffset = highlightedSpan.offsetTop;
-                    const inputAreaVisibleHeight = elements.inputArea.clientHeight;
-                    const desiredScrollTop = scrollTargetOffset - (inputAreaVisibleHeight / 3);
-
-                    if (!suppressTabScrollRef.suppressTabScroll) {
-                        elements.inputArea.scrollTop = Math.max(0, desiredScrollTop);
-                        elements.highlightingOverlay.scrollTop = elements.inputArea.scrollTop;
-                    }
-                }
-                updateVarBlockIndicator(stepData.line);
+                elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(elements.inputArea.value, finalData.line);
+                currentLineRef.currentLine = finalData.line;
+                updateVarBlockIndicator(finalData.line);
             }
+            updateActiveTab(finalData.dataset, finalData.varName, finalData.line, false);
         });
-
-        if (index === 0 && peekOutputs.length === 0) {
-            tabButton.click();
-        }
     });
 
     peekOutputs.forEach((peekData, index) => {
@@ -167,6 +188,7 @@ function renderPeekOutputsUI(interpreter, { currentLineRef, updateVarBlockIndica
                 }
                 updateVarBlockIndicator(peekData.line);
             }
+            updateActiveTab(peekData.dataset, peekData.varName, peekData.line, false);
         });
 
         if (index === 0) {
@@ -233,6 +255,7 @@ function handleExportPeek(interpreter) {
 export {
     generatePeekHtmlForDisplay,
     renderPeekOutputsUI,
+    updateActiveTab,
     clearEditorPeekHighlight,
     handleExportPeek
 };
