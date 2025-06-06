@@ -3,21 +3,38 @@
   "version": "1.0.0",
   "description": "DSL for manipulating CSV data in the browser",
   "type": "module",
+  "main": "electron/main.js",
+  "author": "PipeData",
   "scripts": {
     "test": "node --test",
     "dev": "vite",
     "build": "vite build && npm run copy-examples",
-    "copy-examples": "mkdir -p docs/examples && cp examples/* docs/examples/"
+    "copy-examples": "mkdir -p docs/examples && cp examples/* docs/examples/",
+    "electron": "electron ./electron/main.js",
+    "electron-build": "electron-builder",
+    "desktop": "npm run build && npm run electron",
+    "package": "electron-builder"
   },
   "dependencies": {
+    "arquero": "^8.0.3",
     "jsdom": "^26.1.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "arquero": "^8.0.3",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.5.1",
+    "electron": "^36.4.0",
+    "electron-builder": "^26.0.12",
     "vite": "^6.3.5"
+  },
+  "build": {
+    "appId": "com.example.pipedata",
+    "files": [
+      "**/*"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    }
   }
 }

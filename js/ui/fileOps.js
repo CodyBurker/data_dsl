@@ -4,7 +4,19 @@ import { elements } from './elements.js';
 import { applySyntaxHighlighting } from './highlight.js';
 
 async function saveScriptToFile(interpreter) {
-    if (!elements.inputArea || typeof window.showSaveFilePicker !== 'function') return;
+    if (!elements.inputArea) return;
+
+    if (window.electronAPI && window.electronAPI.saveFile) {
+        try {
+            await window.electronAPI.saveFile(elements.inputArea.value);
+            if (interpreter) interpreter.log('Script saved to file.');
+        } catch (e) {
+            // ignore
+        }
+        return;
+    }
+
+    if (typeof window.showSaveFilePicker !== 'function') return;
     try {
         const handle = await window.showSaveFilePicker({
             types: [{ description: 'PipeData Script', accept: { 'text/plain': ['.pd'] } }]
@@ -19,7 +31,27 @@ async function saveScriptToFile(interpreter) {
 }
 
 async function loadScriptFromFile(interpreter, updateLineNumbers, highlightRef) {
-    if (!elements.inputArea || typeof window.showOpenFilePicker !== 'function') return;
+    if (!elements.inputArea) return;
+
+    if (window.electronAPI && window.electronAPI.openFile) {
+        try {
+            const text = await window.electronAPI.openFile();
+            if (text != null) {
+                elements.inputArea.value = text;
+                updateLineNumbers();
+                if (elements.highlightingOverlay) {
+                    elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(text, null);
+                    highlightRef.currentLine = null;
+                }
+                if (interpreter) interpreter.log('Loaded script from file.');
+            }
+        } catch (e) {
+            // ignore
+        }
+        return;
+    }
+
+    if (typeof window.showOpenFilePicker !== 'function') return;
     try {
         const [handle] = await window.showOpenFilePicker({
             types: [{ description: 'PipeData Script', accept: { 'text/plain': ['.pd', '.txt'] } }]
