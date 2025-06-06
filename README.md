@@ -118,6 +118,7 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
     * **`LOAD_EXCEL`**: Implement loading data from Excel files (e.g., using SheetJS for .xlsx).
     * **`SAVE_EXCEL`**: Implement saving data to Excel format.
 * **[ ] UI & UX Enhancements:**
+    * **Re-arrange UI elements:** Move existing elements around to make better use of the screen space.
     * **Manage Multiple Inputs:** Create a UI to list and manage loaded files/datasets.
     * **Clearer Error Messages:** Improve feedback for script errors, providing more context and suggestions.
     * **Add Variable-based Tabs:** Add persistent tabs for each `VAR` block's final output, in addition to the line-by-line step outputs.
