@@ -5,7 +5,15 @@ import '../style.css';
 
 export default function App() {
   useEffect(() => {
-    const interpreter = new Interpreter({});
+    const uiElementsForInterpreter = {
+      logOutputEl: document.getElementById('logOutput'),
+      peekTabsContainerEl: document.getElementById('peekTabsContainer'),
+      peekOutputsDisplayAreaEl: document.getElementById('peekOutputsDisplayArea'),
+      csvFileInputEl: document.getElementById('csvFileInput'),
+      fileInputContainerEl: document.getElementById('fileInputContainer'),
+      filePromptMessageEl: document.getElementById('filePromptMessage')
+    };
+    const interpreter = new Interpreter(uiElementsForInterpreter);
     initUI(interpreter);
   }, []);
 
