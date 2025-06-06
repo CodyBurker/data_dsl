@@ -19,4 +19,3 @@ THEN JOIN people ON person_id=person_id TYPE "LEFT"
 THEN FILTER total_revenue > 100
 THEN WITH COLUMN total_revenue = "$" + total_revenue
 THEN SELECT greeting, total_revenue, order_count
-THEN EXPORT_CSV TO "top_customers.csv"
