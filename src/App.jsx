@@ -10,8 +10,8 @@ export default function App() {
   }, []);
 
   return (
-    <div className="bg-gray-100 min-h-screen flex flex-col items-center p-4">
-      <div className="w-full max-w-6xl bg-white p-6 sm:p-8 rounded-xl shadow-2xl">
+    <div className="bg-gray-100 min-h-screen flex flex-col p-4">
+      <div className="w-full bg-white p-6 sm:p-8 rounded-xl shadow-2xl">
         <header className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-gray-800">PipeData DSL Runner</h1>
           <p className="text-gray-600 mt-2">Write PipeData script, select a CSV if needed, and run to see results.</p>
@@ -25,42 +25,44 @@ export default function App() {
           <input type="file" id="csvFileInput" accept=".csv,.txt,.json" className="block w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 cursor-pointer focus:outline-none p-2" />
           <p id="filePromptMessage" className="text-xs text-gray-500 mt-1"></p>
         </div>
-        <div className="mb-6">
-          <label className="block text-lg font-medium text-gray-700 mb-1">Datapipe View:</label>
-          <div id="dagContainer" className="border border-gray-300 rounded-lg"></div>
-        </div>
-        <div className="mb-6">
-          <label htmlFor="pipeDataInput" className="block text-lg font-medium text-gray-700 mb-1">PipeData Script Editor:</label>
-          <div className="code-editor-container editor-prominent">
-            <pre id="lineNumbers" aria-hidden="true"></pre>
-            <div id="execStatus" aria-hidden="true"></div>
-            <div id="errorMarkers" aria-hidden="true"></div>
-            <div id="varBlockIndicator" aria-hidden="true"></div>
-            <textarea
-              id="pipeDataInput"
+        <div className="flex flex-col lg:flex-row gap-6 mb-6">
+          <div className="lg:w-1/2 w-full">
+            <label htmlFor="pipeDataInput" className="block text-lg font-medium text-gray-700 mb-1">Editor:</label>
+            <div className="code-editor-container editor-prominent">
+              <pre id="lineNumbers" aria-hidden="true"></pre>
+              <div id="execStatus" aria-hidden="true"></div>
+              <div id="errorMarkers" aria-hidden="true"></div>
+              <div id="varBlockIndicator" aria-hidden="true"></div>
+              <textarea
+                id="pipeDataInput"
               spellCheck="false"
               autoComplete="off"
               autoCapitalize="off"
               placeholder={'# Example: VAR "myVar" THEN LOAD_CSV FILE "your_file.csv" OR LOAD_JSON FILE "data.json"...'}
             ></textarea>
-            <pre id="highlightingOverlay" aria-hidden="true"></pre>
+              <pre id="highlightingOverlay" aria-hidden="true"></pre>
+            </div>
+            <div className="mt-4 flex flex-col sm:flex-row justify-end items-center gap-4">
+              <button id="openScriptFileButton" className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out transform hover:scale-105 w-full sm:w-auto text-sm">Open File</button>
+              <button id="saveScriptFileButton" className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out transform hover:scale-105 w-full sm:w-auto text-sm">Save File</button>
+              <button id="clearButton" className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out transform hover:scale-105 w-full sm:w-auto text-sm">Clear Outputs</button>
+              <button id="runButton" className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out transform hover:scale-105 w-full sm:w-auto text-sm">Run Script</button>
+            </div>
           </div>
-          <div className="mt-4 flex flex-col sm:flex-row justify-end items-center gap-4">
-            <button id="openScriptFileButton" className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out transform hover:scale-105 w-full sm:w-auto text-sm">Open File</button>
-            <button id="saveScriptFileButton" className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out transform hover:scale-105 w-full sm:w-auto text-sm">Save File</button>
-            <button id="clearButton" className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out transform hover:scale-105 w-full sm:w-auto text-sm">Clear Outputs</button>
-            <button id="runButton" className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out transform hover:scale-105 w-full sm:w-auto text-sm">Run Script</button>
+          <div className="lg:w-1/2 w-full">
+            <div className="flex justify-between items-center mb-0">
+              <label className="block text-lg font-medium text-gray-700">Data:</label>
+              <button id="exportPeekButton" className="bg-green-500 hover:bg-green-600 text-white font-semibold py-1 px-3 rounded-lg shadow-md transition duration-150 ease-in-out transform hover:scale-105 text-xs hidden">Export Active PEEK (CSV)</button>
+            </div>
+            <div id="peekTabsContainer" className="flex flex-wrap border-b border-gray-300"></div>
+            <div id="peekOutputsDisplayArea" className="peek-output-area-container">
+              <div className="output-box-placeholder">Peek results will appear here when a script is run.</div>
+            </div>
           </div>
         </div>
         <div className="mb-6">
-          <div className="flex justify-between items-center mb-0">
-            <label className="block text-lg font-medium text-gray-700">PEEK Outputs:</label>
-            <button id="exportPeekButton" className="bg-green-500 hover:bg-green-600 text-white font-semibold py-1 px-3 rounded-lg shadow-md transition duration-150 ease-in-out transform hover:scale-105 text-xs hidden">Export Active PEEK (CSV)</button>
-          </div>
-          <div id="peekTabsContainer" className="flex flex-wrap border-b border-gray-300"></div>
-          <div id="peekOutputsDisplayArea" className="peek-output-area-container">
-            <div className="output-box-placeholder">Peek results will appear here when a script is run.</div>
-          </div>
+          <label className="block text-lg font-medium text-gray-700 mb-1">Datapipe View:</label>
+          <div id="dagContainer" className="border border-gray-300 rounded-lg"></div>
         </div>
         <div className="mb-6">
           <details className="output-collapsible rounded-lg border border-gray-300">
