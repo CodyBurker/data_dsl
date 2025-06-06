@@ -85,3 +85,9 @@ test('tokenizeForParser recognizes WITH and COLUMN keywords', () => {
   assert.ok(withKw && withKw.type === TokenType.KEYWORD);
   assert.ok(columnKw && columnKw.type === TokenType.KEYWORD);
 });
+
+test('tokenizeForParser recognizes SORT keyword', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN SORT a, -b');
+  const sortKw = tokens.find(t => t.value === 'SORT');
+  assert.ok(sortKw && sortKw.type === TokenType.KEYWORD);
+});
