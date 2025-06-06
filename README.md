@@ -114,8 +114,8 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
     * [X] **`DROP`**: Implement the `DROP_COLUMNS` command.
     * [X] **`RENAME`**: Implement the `RENAME_COLUMN` command.
     * [ ] **Unit tests**: Add more example data, and full example scripts that are run in tests for more langauge coverage.
-* **[ ] I/O (Wider Compatibility):**
-    * **`LOAD_JSON`**: Implement loading data from JSON files.
+* **[X] I/O (Wider Compatibility):**
+    * **`LOAD_JSON`**: Load data from JSON files.
     * **`LOAD_EXCEL`**: Implement loading data from Excel files (e.g., using SheetJS for .xlsx).
     * **`SAVE_EXCEL`**: Implement saving data to Excel format.
 * **[ ] UI & UX Enhancements:**

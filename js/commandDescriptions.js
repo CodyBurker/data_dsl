@@ -23,6 +23,8 @@ export function describeCommand(cmd) {
     switch (command) {
         case 'LOAD_CSV':
             return args && args.file ? `Load CSV \"${args.file}\"` : 'Load CSV';
+        case 'LOAD_JSON':
+            return args && args.file ? `Load JSON \"${args.file}\"` : 'Load JSON';
         case 'SELECT':
         case 'KEEP_COLUMNS':
             if (args && Array.isArray(args.columns)) {

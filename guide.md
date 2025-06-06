@@ -41,6 +41,15 @@ Load data from a CSV file chosen in the browser.
 LOAD_CSV FILE "file.csv"
 ```
 
+### LOAD_JSON
+Load data from a JSON file chosen in the browser. The file must contain an array of objects at the top level or under the optional `ROOT` key.
+
+```
+LOAD_JSON FILE "file.json"
+# or with a root key
+LOAD_JSON FILE "data.json" ROOT "items"
+```
+
 ### KEEP_COLUMNS / SELECT
 Keep only the specified columns. `SELECT` is an alias for `KEEP_COLUMNS`.
 
