@@ -109,11 +109,11 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
 **Goal:** Make the tool significantly more powerful by implementing the most common and essential spreadsheet operations that are currently missing.
 
 * **[X] High-Priority Transformations:**
-    * **`GROUP_BY` & `AGGREGATE`**: Implement grouping and aggregation functions like `SUM`, `COUNT`, `AVG`, `MIN`, and `MAX`.
-    * **`SORT`**: Implement data sorting based on one or more columns.
-    * **`DROP`**: Implement the `DROP_COLUMNS` command.
-    * **`RENAME`**: Implement the `RENAME_COLUMN` command.
-    * **Unit tests**: Add more example data, and full example scripts that are run in tests for more langauge coverage.
+    * [X] **`GROUP_BY` & `AGGREGATE`**: Implement grouping and aggregation functions like `SUM`, `COUNT`, `AVG`, `MIN`, and `MAX`.
+    * [ ] **`SORT`**: Implement data sorting based on one or more columns.
+    * [ ] **`DROP`**: Implement the `DROP_COLUMNS` command.
+    * [ ] **`RENAME`**: Implement the `RENAME_COLUMN` command.
+    * [ ] **Unit tests**: Add more example data, and full example scripts that are run in tests for more langauge coverage.
 * **[ ] I/O (Wider Compatibility):**
     * **`LOAD_JSON`**: Implement loading data from JSON files.
     * **`LOAD_EXCEL`**: Implement loading data from Excel files (e.g., using SheetJS for .xlsx).
