@@ -50,6 +50,15 @@ test('dag container is present after initUI', async () => {
   assert.ok(document.getElementById('dagContainer'));
 });
 
+test('interpreter.log appends messages to log output element', async () => {
+  setupDom();
+  const uiEls = { logOutputEl: document.getElementById('logOutput') };
+  const interp = new Interpreter(uiEls);
+  await initUI(interp, { autoRun: false });
+  interp.log('hello world');
+  assert.ok(document.getElementById('logOutput').innerHTML.includes('hello world'));
+});
+
 test('renderDag creates node elements with descriptions', async () => {
   setupDom();
   const interp = new Interpreter({});
