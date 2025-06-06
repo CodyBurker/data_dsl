@@ -113,6 +113,7 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
     * **`SORT`**: Implement data sorting based on one or more columns.
     * **`DROP`**: Implement the `DROP_COLUMNS` command.
     * **`RENAME`**: Implement the `RENAME_COLUMN` command.
+    * **Unit tests**: Add more example data, and full example scripts that are run in tests for more langauge coverage.
 * **[ ] I/O (Wider Compatibility):**
     * **`LOAD_JSON`**: Implement loading data from JSON files.
     * **`LOAD_EXCEL`**: Implement loading data from Excel files (e.g., using SheetJS for .xlsx).
