@@ -146,6 +146,7 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
         * Implement proper Tab key support for indentation.
         * Add keyboard shortcuts (e.g., Ctrl+S to save).
     * **Language Consistency:** Standardize command names to be consistent (e.g., remove all underscores).
+    * **DPLYR Consistency** Make syntax very similar to DYPLR with verbs, etc. Maybe make pipes more efficient (e.g. | instead of %>%, same as current 'THEN' statement.)
 
 ## Phase 5: Spreadsheet UI
 **Goal** Add spreadsheet UI, with GUI for data manipulation that builds AST, and the option to switch back and forth between GUI and text editor.
