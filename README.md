@@ -114,10 +114,10 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
     * [X] **`SORT`**: Implement data sorting based on one or more columns.
     * [X] **`DROP`**: Implement the `DROP_COLUMNS` command.
     * [X] **`RENAME`**: Implement the `RENAME_COLUMN` command.
-    * [ ] **Unit tests**: Add more example data, and full example scripts that are run in tests for more langauge coverage.
+    * [X] **Unit tests**: Add more example data, and full example scripts that are run in tests for more langauge coverage.
 - [x] **I/O (Wider Compatibility):**
-    * **`LOAD_JSON`**: Load data from JSON files.
-    * **`LOAD_EXCEL`**: Load data from Excel files using SheetJS.
+    * [X] **`LOAD_JSON`**: Load data from JSON files.
+    * [X] **`LOAD_EXCEL`**: Load data from Excel files using SheetJS.
       ```
       VAR "data"
       THEN LOAD_EXCEL FILE "book.xlsx" SHEET "Sheet1" RANGE "A1:C10"
