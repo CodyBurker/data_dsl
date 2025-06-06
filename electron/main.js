@@ -1,5 +1,8 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
-const path = require('path');
+import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -32,8 +35,8 @@ ipcMain.handle('openFile', async () => {
     filters: [{ name: 'PipeData Script', extensions: ['pd', 'txt'] }]
   });
   if (canceled || filePaths.length === 0) return null;
-  const fs = require('fs');
-  return fs.promises.readFile(filePaths[0], 'utf8');
+  const fs = await import('fs/promises');
+  return fs.readFile(filePaths[0], 'utf8');
 });
 
 ipcMain.handle('saveFile', async (event, content) => {
@@ -41,9 +44,9 @@ ipcMain.handle('saveFile', async (event, content) => {
     filters: [{ name: 'PipeData Script', extensions: ['pd'] }]
   });
   if (canceled || !filePath) return null;
-  const fs = require('fs');
-  await fs.promises.writeFile(filePath, content, 'utf8');
+  const fs = await import('fs/promises');
+  await fs.writeFile(filePath, content, 'utf8');
   return true;
 });
 
-module.exports = { createWindow };
+export { createWindow };
