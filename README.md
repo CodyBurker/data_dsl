@@ -160,3 +160,4 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
 Make it an electron app to make file management easier?
 Integrate AG Grid
 Export to excel
+Make panels resziable (or even movable?)
