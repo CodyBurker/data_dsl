@@ -4,7 +4,7 @@ THEN WITH COLUMN city = "City of " + name
 THEN DROP_COLUMNS name
 
 VAR "people"
-THEN LOAD_CSV FILE "examplePeople.csv"
+THEN LOAD_EXCEL FILE "examplePeople.xlsx"
 THEN JOIN cities ON city_id=id TYPE "LEFT"
 THEN WITH COLUMN clean_name = TRIM(name)
 THEN WITH COLUMN greeting = UPPER(clean_name) + " from " + city
