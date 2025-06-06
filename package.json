@@ -1,7 +1,7 @@
 {
   "name": "data_dsl",
   "version": "1.0.0",
-  "description": "DSL for manipulating CSV data in the browser",
+  "description": "DSL for manipulating CSV data in an Electron desktop app",
   "type": "module",
   "main": "electron/main.js",
   "author": "PipeData",

@@ -1,6 +1,6 @@
 # PipeData Language Guide
 
-PipeData is a small domain-specific language for manipulating CSV data directly in the browser.
+PipeData is a small domain-specific language for manipulating CSV data in a desktop environment powered by Electron.
 This guide covers the core syntax and currently supported commands.
 
 ## Basics
@@ -35,14 +35,14 @@ VAR "myVar"
 ```
 
 ### LOAD_CSV
-Load data from a CSV file chosen in the browser.
+Load data from a CSV file on your computer.
 
 ```
 LOAD_CSV FILE "file.csv"
 ```
 
 ### LOAD_JSON
-Load data from a JSON file chosen in the browser. The file must contain an array of objects at the top level or under the optional `ROOT` key.
+Load data from a JSON file on your computer. The file must contain an array of objects at the top level or under the optional `ROOT` key.
 
 ```
 LOAD_JSON FILE "file.json"
@@ -178,8 +178,7 @@ currently has no effect in the interpreter.
 - Chain multiple commands with `THEN` to build a pipeline.
 - Comments can appear on their own line or after a command.
 - When loading a file, the UI will prompt you to select it.
-- With a supported browser you can **Open File** or **Save File** to work
-  with `.pd` files.
+- Use the desktop app's File menu to **Open** or **Save** `.pd` files.
 - The editor loads `examples/default.pd` automatically and runs it once on first
   launch so you can see a working script right away. The bundled example joins
   city, people, and sales data and aggregates total revenue per customer.

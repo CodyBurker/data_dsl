@@ -1,17 +1,14 @@
 # PipeData DSL Overview
 
-PipeData is a domain-specific language (DSL) designed for simple, scriptable data pipeline operations on CSV files directly in the browser. It allows users to load, transform, and preview tabular data using a readable, step-by-step syntax.
+PipeData is a domain-specific language (DSL) designed for simple, scriptable data pipeline operations on CSV files. The project now ships as an Electron desktop application that lets you load, transform, and preview tabular data using a readable, step-by-step syntax.
 
-**Mission:** To provide a simple and intuitive way to manipulate tabular data in the browser, making data processing accessible to everyone.
+**Mission:** To provide a simple and intuitive way to manipulate tabular data on the desktop, making data processing accessible to everyone.
 
 ---
 
-**Live Demo:** [Try PipeData DSL in your browser](https://codyburker.github.io/data_dsl/)
-
 **Language Guide:** [View the full DSL guide](guide.md)
 
-Run `npm run dev` to start the Vite development server.
-Run `npm run build` to generate the compiled React app in the `docs/` folder. This command also copies the `examples/` folder so the demo can load the sample CSV files. GitHub Pages serves files from that directory. The CI workflow also runs this build and commits the results so `docs/` always reflects the latest source code.
+Run `npm run build` to generate the compiled React app in the `docs/` folder. This command also copies the `examples/` folder so the desktop app can load the sample CSV files. The CI workflow also runs this build and commits the results so `docs/` always reflects the latest source code.
 Run `npm run desktop` to build the React app and launch it in the Electron shell.
 Use `npm run package` to create desktop installers with `electron-builder` for Windows, macOS, and Linux.
 Pushing to the `main` branch triggers a workflow that builds these installers for all platforms and uploads them as artifacts on GitHub.
@@ -48,7 +45,7 @@ The editor automatically loads `examples/default.pd` on startup and runs it once
 on first launch. The new script demonstrates joining three datasets and using
 `GROUP_BY` and `AGGREGATE` to summarize sales by customer.
 
-With a supported browser you can **Open File** or **Save File** to work directly with `.pd` script files.
+Use the File menu in the desktop app to **Open** or **Save** `.pd` script files.
 
 ### DAG Representation
 
@@ -160,7 +157,6 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
 **Goal** Add spreadsheet UI, with GUI for data manipulation that builds AST, and the option to switch back and forth between GUI and text editor.
 
 ## Refactor
-Make it an electron app to make file management easier?
 Integrate AG Grid
-Export to excel
-Make panels resziable (or even movable?)
+Export to Excel
+Make panels resizable (or even movable?)
