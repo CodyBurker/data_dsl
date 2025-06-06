@@ -135,7 +135,8 @@ parsed but currently have no effect in the interpreter.
 - With a supported browser you can **Open File** or **Save File** to work
   with `.pd` files.
 - The editor loads `examples/default.pd` automatically and runs it once on first
-  launch so you can see a working script right away.
+  launch so you can see a working script right away. The bundled example joins
+  city, people, and sales data and aggregates total revenue per customer.
   - Internally the parser output can be converted to a directed acyclic graph.
     Each command node has a fingerprint that ignores line numbers and includes
     the fingerprints of its dependencies, so formatting changes do not disrupt

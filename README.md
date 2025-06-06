@@ -13,12 +13,12 @@ PipeData is a domain-specific language (DSL) designed for simple, scriptable dat
 Run `npm run dev` to start the Vite development server.
 Run `npm run build` to generate the compiled React app in the `docs/` folder. This command also copies the `examples/` folder so the demo can load the sample CSV files. GitHub Pages serves files from that directory. The CI workflow also runs this build and commits the results so `docs/` always reflects the latest source code.
 
-Example CSV files `exampleCities.csv` and `examplePeople.csv` live in the
-`examples/` folder. If you reference these filenames in a `LOAD_CSV` command,
-the interpreter loads them automatically so you can try joins without uploading
-anything. Additionally the interpreter preloads `cities` and `people`
-variables with the same data so you can experiment without any `LOAD_CSV`
-commands.
+Example CSV files `exampleCities.csv`, `examplePeople.csv`, and
+`exampleSales.csv` live in the `examples/` folder. If a `LOAD_CSV` command uses
+one of these names the interpreter fetches them automatically so you can try
+joins and aggregations without uploading anything. Additionally the interpreter
+preloads `cities` and `people` variables with the same data so you can
+experiment without any `LOAD_CSV` commands.
 
 Every command execution now records its result in a **Step Outputs** list shown
 next to the preview outputs. Only the active output tab is visible at any time and
@@ -40,9 +40,9 @@ highlight syntax errors. When parse errors occur red dots appear next to each ba
 preceding command, while gaps between blocks stay uncolored. The interpreter runs
 automatically a moment after you stop typing.
 
-The editor automatically loads `examples/default.pd` on startup and now runs it
-once on first launch. The script shows how to compute `population_millions` with
-`WITH COLUMN`.
+The editor automatically loads `examples/default.pd` on startup and runs it once
+on first launch. The new script demonstrates joining three datasets and using
+`GROUP_BY` and `AGGREGATE` to summarize sales by customer.
 
 With a supported browser you can **Open File** or **Save File** to work directly with `.pd` script files.
 

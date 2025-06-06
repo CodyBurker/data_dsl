@@ -307,13 +307,16 @@ test('default script file runs without error', async () => {
     if (url.endsWith('examplePeople.csv')) {
       return { ok: true, text: async () => fs.readFileSync(path.join('examples', 'examplePeople.csv'), 'utf8') };
     }
+    if (url.endsWith('exampleSales.csv')) {
+      return { ok: true, text: async () => fs.readFileSync(path.join('examples', 'exampleSales.csv'), 'utf8') };
+    }
     return { ok: false };
   };
   await interp.run(ast);
   global.fetch = originalFetch;
   global.Papa = originalPapa;
   assert.strictEqual(interp.peekOutputs.length, 0);
-  assert.strictEqual(interp.stepOutputs.length, 10);
+  assert.strictEqual(interp.stepOutputs.length, 19);
 });
 
 test('run records step outputs for each command', async () => {
