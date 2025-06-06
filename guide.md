@@ -107,6 +107,21 @@ WITH COLUMN name_lower = LOWER(name)
 WITH COLUMN greeting = name + "!"
 ```
 
+### GROUP_BY
+Group rows by one or more columns.
+
+```
+GROUP_BY category
+```
+
+### AGGREGATE
+Summarize rows using functions like `SUM`, `COUNT`, `AVG`, `MIN`, and `MAX`.
+
+```
+GROUP_BY category
+THEN AGGREGATE SUM amount AS total, COUNT AS count
+```
+
 ### Parsed but Not Yet Executed
 The tokenizer and parser recognize additional commands such as `LOAD_EXCEL`,
 `DROP_COLUMNS`, `NEW_COLUMN`, `RENAME_COLUMN`, and `SORT_BY`. These commands are

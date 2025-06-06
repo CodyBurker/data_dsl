@@ -163,3 +163,53 @@ export function joinDatasets(interp, args, currentDataset) {
     interp.log(`JOIN ${type} completed using '${leftKey}' = '${rightKey}' with VAR "${variable}". Rows: ${table.numRows()}`);
     return table;
 }
+
+export function groupBy(interp, args, currentDataset) {
+    const { columns } = args;
+    if (!Array.isArray(columns) || columns.length === 0) {
+        throw new Error('GROUP_BY requires at least one column name.');
+    }
+    const allCols = currentDataset.columnNames();
+    const cols = columns.map(c => allCols.find(ac => ac.toLowerCase() === c.toLowerCase())).filter(Boolean);
+    if (cols.length === 0) {
+        throw new Error(`None of the specified columns for GROUP_BY were found in VAR "${interp.activeVariableName}".`);
+    }
+    const grouped = currentDataset.groupby(...cols);
+    interp.log(`Grouped by: ${cols.join(', ')} for VAR "${interp.activeVariableName}".`);
+    return grouped;
+}
+
+export function aggregate(interp, args, currentDataset) {
+    const { aggregates } = args;
+    if (!Array.isArray(aggregates) || aggregates.length === 0) {
+        throw new Error('AGGREGATE requires at least one aggregation.');
+    }
+    const spec = {};
+    for (const agg of aggregates) {
+        const func = agg.func.toUpperCase();
+        const col = agg.column;
+        const as = agg.as || (col ? `${func.toLowerCase()}_${col}` : func.toLowerCase());
+        switch (func) {
+            case 'SUM':
+                spec[as] = op.sum(col);
+                break;
+            case 'COUNT':
+                spec[as] = col ? op.count(col) : op.count();
+                break;
+            case 'AVG':
+                spec[as] = op.average(col);
+                break;
+            case 'MIN':
+                spec[as] = op.min(col);
+                break;
+            case 'MAX':
+                spec[as] = op.max(col);
+                break;
+            default:
+                throw new Error(`Unsupported aggregate function ${func}`);
+        }
+    }
+    const result = currentDataset.rollup(spec);
+    interp.log(`Aggregated for VAR "${interp.activeVariableName}".`);
+    return result;
+}

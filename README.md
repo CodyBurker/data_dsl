@@ -108,8 +108,8 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
 
 **Goal:** Make the tool significantly more powerful by implementing the most common and essential spreadsheet operations that are currently missing.
 
-* **[ ] High-Priority Transformations:**
-    * **`GROUP_BY` & `AGGREGATE`**: This is the most critical feature for this phase. Implement grouping and aggregation functions like `SUM`, `COUNT`, `AVG`, `MIN`, and `MAX`.
+* **[X] High-Priority Transformations:**
+    * **`GROUP_BY` & `AGGREGATE`**: Implement grouping and aggregation functions like `SUM`, `COUNT`, `AVG`, `MIN`, and `MAX`.
     * **`SORT`**: Implement data sorting based on one or more columns.
     * **`DROP`**: Implement the `DROP_COLUMNS` command.
     * **`RENAME`**: Implement the `RENAME_COLUMN` command.

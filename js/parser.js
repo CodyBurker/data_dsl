@@ -213,6 +213,8 @@ export class Parser {
             case 'RENAME_COLUMN': return { ...this.parseRenameColumn(), line: startLine };
             case 'SORT_BY': return { ...this.parseSortBy(), line: startLine };
             case 'JOIN': return { ...this.parseJoin(), line: startLine };
+            case 'GROUP_BY': return { ...this.parseGroupBy(), line: startLine };
+            case 'AGGREGATE': return { ...this.parseAggregate(), line: startLine };
             // case 'STORE_AS': return this.parseStoreAs();
             case 'EXPORT_CSV': return { ...this.parseExportCsv(), line: startLine };
             case 'EXPORT_EXCEL': return { ...this.parseExportExcel(), line: startLine };
@@ -345,6 +347,35 @@ export class Parser {
             t = tt;
         }
         return { command: 'JOIN', args: { variable: v, leftKey: left, rightKey: right, type: t } };
+    }
+    parseGroupBy() {
+        this.consume(TokenType.KEYWORD, 'GROUP_BY');
+        const cols = this.parseColumnList();
+        return { command: 'GROUP_BY', args: { columns: cols } };
+    }
+    parseAggregate() {
+        this.consume(TokenType.KEYWORD, 'AGGREGATE');
+        const aggs = [];
+        do {
+            const funcTok = this.consume(TokenType.KEYWORD);
+            const func = funcTok.value.toUpperCase();
+            let col = null;
+            if (this.peek().type === TokenType.OPERATOR && this.peek().value === '*') {
+                col = '*';
+                this.advance();
+            } else if (this.peek().type === TokenType.IDENTIFIER) {
+                col = this.consume(TokenType.IDENTIFIER).value;
+            } else if (this.peek().type === TokenType.STRING_LITERAL) {
+                col = this.consume(TokenType.STRING_LITERAL).value;
+            }
+            let as = null;
+            if (this.match(TokenType.KEYWORD, 'AS')) {
+                if (this.peek().type === TokenType.STRING_LITERAL) as = this.consume(TokenType.STRING_LITERAL).value;
+                else as = this.consume(TokenType.IDENTIFIER).value;
+            }
+            aggs.push({ func, column: col === '*' ? null : col, as });
+        } while (this.match(TokenType.PUNCTUATION, ','));
+        return { command: 'AGGREGATE', args: { aggregates: aggs } };
     }
     // parseStoreAs() { this.consume(TokenType.KEYWORD, 'STORE_AS'); const v = this.consume(TokenType.IDENTIFIER).value; return { command: 'STORE_AS', args: { variableName: v } }; }
     parseExportCsv() { this.consume(TokenType.KEYWORD, 'EXPORT_CSV'); this.consume(TokenType.KEYWORD, 'TO'); const f = this.consume(TokenType.STRING_LITERAL).value; return { command: 'EXPORT_CSV', args: { file: f } }; }
