@@ -51,7 +51,7 @@ THEN WITH COLUMN greeting = UPPER(clean_name) + " from " + city_of
 THEN SELECT person_id, greeting, age
 
 VAR "sales"
-THEN LOAD_CSV FILE "exampleSales.csv"
+THEN LOAD_JSON FILE "exampleSales.json"
 THEN WITH COLUMN revenue = quantity * unit_price
 THEN GROUP_BY person_id
 THEN AGGREGATE SUM revenue AS total_revenue, COUNT AS order_count

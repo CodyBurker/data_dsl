@@ -4,6 +4,7 @@ import { Interpreter } from '../js/interpreter.js';
 import { tokenizeForParser } from '../js/tokenizer.js';
 import { Parser } from '../js/parser.js';
 import * as csv from '../js/csv.js';
+import * as json from '../js/json.js';
 import { keepColumns, dropColumns, renameColumns, joinDatasets, filterRows, withColumn, groupBy, aggregate, sortDataset } from '../js/datasetOps.js';
 import { from } from 'arquero';
 
@@ -132,6 +133,17 @@ test('loadCsv uses example files when present', async () => {
   const data = await csv.loadCsv(interp, { file: 'example.csv' });
   assert.deepEqual(data.objects(), [{A:1,B:2},{A:3,B:4}]);
   assert.strictEqual(prompted, false);
+  global.fetch = originalFetch;
+});
+
+test('loadJson parses array of objects', async () => {
+  const interp = new Interpreter({ csvFileInputEl: {} });
+  interp.activeVariableName = 'js';
+  const originalFetch = global.fetch;
+  global.fetch = async () => ({ ok: false });
+  interp.requestJsonFile = async () => ({ name: 'd.json', text: async () => '[{"a":1},{"a":2}]' });
+  const table = await json.loadJson(interp, { file: 'd.json' });
+  assert.deepEqual(table.objects(), [{a:1},{a:2}]);
   global.fetch = originalFetch;
 });
 
@@ -339,8 +351,8 @@ test('default script file runs without error', async () => {
     if (url.endsWith('examplePeople.csv')) {
       return { ok: true, text: async () => fs.readFileSync(path.join('examples', 'examplePeople.csv'), 'utf8') };
     }
-    if (url.endsWith('exampleSales.csv')) {
-      return { ok: true, text: async () => fs.readFileSync(path.join('examples', 'exampleSales.csv'), 'utf8') };
+    if (url.endsWith('exampleSales.json')) {
+      return { ok: true, json: async () => JSON.parse(fs.readFileSync(path.join('examples', 'exampleSales.json'), 'utf8')) };
     }
     return { ok: false };
   };

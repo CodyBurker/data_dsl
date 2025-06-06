@@ -203,6 +203,7 @@ export class Parser {
         }
         switch (t.value) {
             case 'LOAD_CSV': return { ...this.parseLoadCsv(), line: startLine };
+            case 'LOAD_JSON': return { ...this.parseLoadJson(), line: startLine };
             case 'LOAD_EXCEL': return { ...this.parseLoadExcel(), line: startLine };
             case 'KEEP_COLUMNS': return { ...this.parseKeepColumns(), line: startLine };
             case 'SELECT': return { ...this.parseSelect(), line: startLine };
@@ -228,6 +229,7 @@ export class Parser {
         }
     }
     parseLoadCsv() { this.consume(TokenType.KEYWORD, 'LOAD_CSV'); this.consume(TokenType.KEYWORD, 'FILE'); const f = this.consume(TokenType.STRING_LITERAL).value; return { command: 'LOAD_CSV', args: { file: f } }; }
+    parseLoadJson() { this.consume(TokenType.KEYWORD, 'LOAD_JSON'); this.consume(TokenType.KEYWORD, 'FILE'); const f = this.consume(TokenType.STRING_LITERAL).value; let r = null; if (this.match(TokenType.KEYWORD, 'ROOT')) r = this.consume(TokenType.STRING_LITERAL).value; return { command: 'LOAD_JSON', args: { file: f, root: r } }; }
     parseLoadExcel() { this.consume(TokenType.KEYWORD, 'LOAD_EXCEL'); this.consume(TokenType.KEYWORD, 'FILE'); const f = this.consume(TokenType.STRING_LITERAL).value; let s = null; if (this.match(TokenType.KEYWORD, 'SHEET')) s = this.consume(TokenType.STRING_LITERAL).value; return { command: 'LOAD_EXCEL', args: { file: f, sheet: s } }; }
     parseColumnList() { const c = []; do { if (this.peek().type === TokenType.STRING_LITERAL) c.push(this.consume(TokenType.STRING_LITERAL).value); else if (this.peek().type === TokenType.IDENTIFIER) c.push(this.consume(TokenType.IDENTIFIER).value); else this.error("Expected column name (identifier or string literal)."); } while (this.match(TokenType.PUNCTUATION, ',')); return c; }
     parseKeepColumns() { this.consume(TokenType.KEYWORD, 'KEEP_COLUMNS'); const c = this.parseColumnList(); return { command: 'KEEP_COLUMNS', args: { columns: c } }; }

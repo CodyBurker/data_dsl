@@ -21,8 +21,8 @@ export default function App() {
           </p>
         </header>
         <div className="file-input-container hidden" id="fileInputContainer">
-          <label htmlFor="csvFileInput" className="block text-sm font-medium text-gray-700 mb-2">A `LOAD_CSV` command requires you to select a file:</label>
-          <input type="file" id="csvFileInput" accept=".csv,.txt" className="block w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 cursor-pointer focus:outline-none p-2" />
+          <label htmlFor="csvFileInput" className="block text-sm font-medium text-gray-700 mb-2">A `LOAD_CSV` or `LOAD_JSON` command requires you to select a file:</label>
+          <input type="file" id="csvFileInput" accept=".csv,.txt,.json" className="block w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 cursor-pointer focus:outline-none p-2" />
           <p id="filePromptMessage" className="text-xs text-gray-500 mt-1"></p>
         </div>
         <div className="mb-6">
@@ -41,7 +41,7 @@ export default function App() {
               spellCheck="false"
               autoComplete="off"
               autoCapitalize="off"
-              placeholder={'# Example: VAR "myVar" THEN LOAD_CSV FILE "your_file.csv"...'}
+              placeholder={'# Example: VAR "myVar" THEN LOAD_CSV FILE "your_file.csv" OR LOAD_JSON FILE "data.json"...'}
             ></textarea>
             <pre id="highlightingOverlay" aria-hidden="true"></pre>
           </div>
@@ -78,7 +78,7 @@ export default function App() {
           <h3 className="text-lg font-semibold text-gray-700 mb-2">Syntax Guide:</h3>
           <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
             <li>Start pipelines with `VAR \"variableName\"`.</li>
-            <li>Supported: `LOAD_CSV FILE \"name\"`, `KEEP_COLUMNS cols` or `SELECT cols`, `JOIN var ON left = right TYPE \"LEFT\"`, `EXPORT_CSV TO \"name\"`.</li>
+            <li>Supported: `LOAD_CSV FILE \"name\"`, `LOAD_JSON FILE \"name\"`, `KEEP_COLUMNS cols` or `SELECT cols`, `JOIN var ON left = right TYPE \"LEFT\"`, `EXPORT_CSV TO \"name\"`.</li>
             <li>Other commands are parsed but not yet interpreted for all operations.</li>
             <li>Piping: Use `THEN`. Comments: Start with `#`.</li>
             <li>CSV Loading uses a basic native parser.</li>

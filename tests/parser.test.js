@@ -16,6 +16,14 @@ VAR "v2" THEN LOAD_EXCEL FILE "book.xlsx" SHEET "Sheet1"`;
   assert.strictEqual(ast[1].pipeline[0].command, 'LOAD_EXCEL');
 });
 
+test('Parser parses LOAD_JSON command', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN LOAD_JSON FILE "data.json"');
+  const ast = new Parser(tokens).parse();
+  const cmd = ast[0].pipeline[0];
+  assert.strictEqual(cmd.command, 'LOAD_JSON');
+  assert.deepEqual(cmd.args, { file: 'data.json', root: null });
+});
+
 test('Parser throws on missing THEN', () => {
   const tokens = tokenizeForParser('VAR "x" SELECT A');
   const parser = new Parser(tokens);
