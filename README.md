@@ -2,7 +2,7 @@
 
 PipeData is a domain-specific language (DSL) designed for simple, scriptable data pipeline operations on CSV files directly in the browser. It allows users to load, transform, and preview tabular data using a readable, step-by-step syntax.
 
-Mission: To provide a simple and intuitive way to manipulate tabular data in the browser, making data processing accessible to everyone.
+**Mission:** To provide a simple and intuitive way to manipulate tabular data in the browser, making data processing accessible to everyone.
 
 ---
 
@@ -55,7 +55,7 @@ fingerprints ignore line numbers, reformatting a script will not affect future
 caching logic and changes to upstream steps automatically update downstream
 fingerprints.
 The interpreter stores a cache of datasets keyed by these fingerprints. When you
-re-run a script without changing a step or its dependencies, the cached result is
+re-run a script withoutchanging a step or its dependencies, the cached result is
 reused so the pipeline executes faster. PEEK results and step outputs come from
 the cache when a step is skipped, so the UI stays in sync. This cache persists
 across runs until you clear it using the **Clear Outputs** button (or calling
@@ -70,7 +70,7 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
 
 # PipeData Development Roadmap
 
-## Guiding Principles for Development (Especially for a Solo ADHD Developer)
+## Guiding Principles for Development
 
 * **Short Iterations & Visible Progress:** Each phase aims to deliver tangible results quickly.
 * **Focus on Core Value:** Prioritize features that directly address the goal of replacing spreadsheet vlookups and similar tasks.
@@ -80,149 +80,67 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
 
 ---
 
-## 🎯 Phase 1: The "It Works!" Core
+## ✅ Phase 1: The "It Works!" Core (Complete)
 
-**Goal:** Get basic vlookup-like functionality working ASAP. A user can load two CSVs, join them, select columns, and see the result.
+**Goal:** Get basic vlookup-like functionality working ASAP.
 
-**ADHD Strategy:** Lean into hyperfocus on getting the first end-to-end flow working. Keep it simple.
-
-1.  **Data Engine (Foundation First):**
-    * [X] **Use Native Arrays:** Move away from external DataFrame libraries for a simpler core.
-2.  **I/O (Getting Data In & Out):**
-    * [X] **LOAD_CSV (Better):** Implement `LOAD_CSV` using PapaParse.
-    * [X] **Save to CSV:** Implement basic functionality to download the transformed data as a CSV.
-3.  **Transformations (The "VLOOKUP" Core):**
-    * [X] **SELECT:** Implement function to select specific columns.
-    * [X] **JOIN (Inner/Left):** Implement function to join two datasets on matching or distinct keys with inner or left semantics.
-4.  **UI Features (Minimal Viable Preview):**
-    * [X] **Basic Script Input Area:** Simple textarea for script input.
-    * [X]  **"Run" Button:** Manual trigger for script execution.
-    * [X] **Simple Tabular Preview:** Display the *final* output in a basic HTML table.
+* **[X] Data Engine:** Use native JavaScript arrays and objects as the foundation, avoiding complex external DataFrame libraries.
+* **[X] I/O:** Implement `LOAD_CSV` (with PapaParse) and the ability to save the final output to a new CSV file.
+* **[X] Core Transformations:** Implement `SELECT` and `JOIN` (inner/left) to cover the basic "vlookup" use case.
+* **[X] UI:** Create a minimal viable product with a script input area, a "Run" button, and a basic HTML table to preview the final result.
 
 ---
 
-## 🚀 Phase 2: Enhancing the Experience & Core Operations
+## ✅ Phase 2: Enhancing the Experience & Core Operations (Complete)
 
 **Goal:** Make the tool more usable, add more common spreadsheet operations, and improve responsiveness.
 
-**ADHD Strategy:** Mix UI tasks with backend tasks. Allow for task switching if needed.
-
-1.  **Data Engine (Smarter Execution):**
-    * [X] **Cache Inputs:** Allow re-running scripts without re-uploading files (e.g., session-based cache or allow local file paths if feasible securely).
-2.  **I/O (More Formats & Script Management):**
-    * [ ] **LOAD\_JSON:** Implement loading data from JSON files.
-    * [X] **Save/Load Scripts:** Allow users to save and load their PipeData scripts (e.g., using file download/upload).
-3.  **Transformations (Expanding the Toolkit):**
-    * **FILTER:**
-        * [X] Basic equals filtering on strings and numbers.
-        * [X] Support additional comparisons like `!=`, `>`, `<`, `>=`, `<=`, `IS`, and string operations.
-        * [X] Allow grouped conditions with `AND`/`OR` using parentheses,
-          e.g., `(col=1 OR col=2) AND (otherCol != 3)`.
-        * [X] Extensive unit and integration tests with syntax-highlighted docs.
-    * [ ] **DROP:** Implement function to drop specified columns.
-    * [X] **WITH COLUMN (Basic):**
-        * [X] Implement arithmetic operations (e.g., `new_col = col1 + col2`).
-        * [X] Implement basic string operations:
-             * [X] Concat by adding: `cola + colb` or `col1 + "!"`
-             * [X] CASE: `LOWER(a)`, `UPPER(b)`
-             * [X] TRIM: `TRIM(a)`
-4.  **UI Features (Better Feedback):**
-    * [ ] **Clearer Error Messages:** Improve feedback for script errors.
-    * [X] **Data Preview Enhancement:** Consider options for previewing data after each step (if performance allows without caching) or ensure final preview is robust.
+* **[X] Data Engine:** Cache loaded CSV files so that scripts can be re-run without needing to re-upload files.
+* **[X] I/O:** Allow users to save and load their PipeData scripts.
+* **[X] Transformations:**
+    * Implement a comprehensive `FILTER` command with support for various operators (`=`, `!=`, `>`, `<`, etc.), string matching, and grouped conditions with `AND`/`OR`.
+    * Implement a basic `WITH COLUMN` command for arithmetic and simple string operations (`LOWER`, `UPPER`, `TRIM`, concatenation).
+* **[X] UI Features:** Improve the data preview to be more robust and provide better feedback on the state of the pipeline.
 
 ---
 
-## ✨ Phase 3: Power & Polish
+## ✨ Phase 3: Achieving Spreadsheet Parity (Current Focus)
 
-**Goal:** Make the tool significantly more powerful with advanced transformations, a more dynamic UI, and performance optimizations.
+**Goal:** Make the tool significantly more powerful by implementing the most common and essential spreadsheet operations that are currently missing.
 
-**ADHD Strategy:** Focus on intellectually stimulating features (like DAGs) or visually rewarding UI enhancements.
-
-1.  **Data Engine (Performance & Insight):**
-    * [X] **Build DAG of Operations:** Internally represent the script as a Directed Acyclic Graph.
-    * [X] **Cache Intermediate Results:** Use the DAG to cache results of intermediate steps for faster re-runs and dynamic updates.
-    * [X] **Dynamically Run Script:** Explore running the script automatically (e.g., on pause after typing, or when script is valid) leveraging the cached results.
-2.  **I/O (Wider Compatibility):**
-    * [ ] **LOAD\_EXCEL:** Implement loading data from Excel files (e.g., using SheetJS for .xlsx).
-    * [ ] **Save to Excel:** Implement saving data to Excel format.
-3.  **Transformations (More Analytic Power):**
-    * [ ] **GROUP\_BY:** Implement grouping functionality.
-    * [ ] **AGGREGATE:** Implement core aggregation functions (`SUM`, `AVG`, `COUNT`, `MIN`, `MAX`) for grouped data.
-    * [ ] **SORT:** Implement data sorting based on column values.
-    * [ ] **WITH COLUMN (Enhanced):**
-        * [ ] Date operations (e.g., basic formatting).
-        * [ ] Conditional operations (e.g., simple if/else).
-        * [ ] Data type conversions.
-4.  **UI Features (Richer Interaction):**
-    * [ ] **Visualize Pipeline (DAG):** Display the DAG to the user.
-    * [ ] **Manage Multiple Inputs:** Create a UI to list and manage loaded files/datasets.
-    * [X] **Preview Data After Each Step:** With caching, implement a reliable preview of the data after each transformation step.
+* **[ ] High-Priority Transformations:**
+    * **`GROUP_BY` & `AGGREGATE`**: This is the most critical feature for this phase. Implement grouping and aggregation functions like `SUM`, `COUNT`, `AVG`, `MIN`, and `MAX`.
+    * **`SORT`**: Implement data sorting based on one or more columns.
+    * **`DROP`**: Implement the `DROP_COLUMNS` command.
+    * **`RENAME`**: Implement the `RENAME_COLUMN` command.
+* **[ ] I/O (Wider Compatibility):**
+    * **`LOAD_JSON`**: Implement loading data from JSON files.
+    * **`LOAD_EXCEL`**: Implement loading data from Excel files (e.g., using SheetJS for .xlsx).
+    * **`SAVE_EXCEL`**: Implement saving data to Excel format.
+* **[ ] UI & UX Enhancements:**
+    * **Manage Multiple Inputs:** Create a UI to list and manage loaded files/datasets.
+    * **Clearer Error Messages:** Improve feedback for script errors, providing more context and suggestions.
+    * **Add Variable-based Tabs:** Add persistent tabs for each `VAR` block's final output, in addition to the line-by-line step outputs.
 
 ---
 
-## 🌟 Phase 4: Advanced Features & Broader Appeal
+## 🌟 Phase 4: Advanced Features & Polish (Future Vision)
 
 **Goal:** Add sophisticated data operations and user-friendly features for complex scenarios, making PipeData a comprehensive tool.
 
-**ADHD Strategy:** Tackle larger features one at a time. Switch tasks if motivation wanes, but ensure completion.
-
-1.  **Transformations (Sophisticated Manipulations):**
-    * [ ] **RENAME:** Implement column renaming.
-    * [ ] **DISTINCT:** Implement removal of duplicate rows.
-    * [ ] **FILL:** Implement functions to fill missing values.
-    * [ ] **More Aggregation Functions:** Add `COUNT_DISTINCT`, `MEDIAN`, `MODE`, `STDDEV`, `VARIANCE`, `FIRST`, `LAST`, `CONCAT` (group concat).
-    * [ ] **PIVOT:** Implement data pivoting.
-    * [ ] **UNPIVOT:** Implement data unpivoting.
-2.  **I/O (Professional Grade):**
-    * [ ] **Support for Parquet/Avro:** Add support for these formats (lower priority unless specific demand).
-3.  **UI Features (Data Exploration & Presentation):**
-    * [ ] **Data Visualization:** Integrate a simple charting library (e.g., Chart.js) to create basic charts/graphs from data at any pipeline stage.
-    * [ ] **Realtime Updates (Full):** Refine dynamic script execution for seamless, real-time updates to the data preview as the script is written (with debouncing).
-
----
-
-## General ADHD Developer Survival Tips for This Project:
-
-* **Break It Down Religiously:** Further break down each roadmap item into the smallest actionable tasks.
-* **Timeboxing/Pomodoro:** Work in focused bursts with short breaks.
-* **"Done" List:** Keep a visible list of accomplishments for motivation.
-* **Embrace Novelty (Strategically):** Switch tasks if bored, but ensure critical path items are completed.
-* **Externalize Motivation:** Share progress with others.
-* **Visual Reminders:** Keep the roadmap and current goals visible.
-* **Reduce Friction:** Make the first step of any task incredibly easy.
-* **Automate Repetitive Tasks:** Script build/test processes if possible.
-* **Be Kind to Yourself:** Forgive "off" days.
-* **Prioritize Well-being:** Sleep, exercise, and breaks are crucial.
-* **Celebrate Milestones:** Acknowledge and reward progress.
-
-This roadmap will evolve. The key is consistent, focused effort on manageable chunks. Good luck!
-
-Random ideas:
-* Realtime updates
-~~* Run script jumps the cursor around - make it stay.~~
-~~* After editing a line, the output of that is dirty and needs to be marked as such.~~
-~~* Refactor into smaller files (maybe add doco about what is where too)~~  
-* Add tabs for variables in output in addition to selected line.
-* Some commands have underscores and some don't - lose all of them?
-* Tab key doesn't work. Ctrl + S doesn't work.
-~~* Realtime editing errors are hard to find. Also seems like they should be isolated to the line they are on (before next THEN?)~~
-* Dark mode?
-* Variable blocks formatted to identify what is and isn't in a variable?
-* Autofill column names, commands, etc.
-
-Recommended Refactorings (completed)
-
-The UI logic now lives in dedicated modules under `js/ui/`:
-
-- `elements.js` – caches DOM elements via `queryElements` and exports the `elements` object.
-- `highlight.js` – syntax highlighting helpers.
-- `peek.js` – renders PEEK output and handles export.
-- `fileOps.js` – script file loading/saving utilities.
-- `index.js` – orchestrates initialization and event binding.
-
-Interpreter operations have also been split out:
-
-- `csv.js` – `loadCsv`, `parseCsvInput`, and `exportCsv`.
-- `datasetOps.js` – `keepColumns`, `joinDatasets`, `filterRows`, and `withColumn`.
-
-Tests remain in `tests/` and may be subdivided in the future if they grow too large.
+* **[ ] Advanced Transformations:**
+    * **`DISTINCT`**: Implement removal of duplicate rows.
+    * **`FILL`**: Implement functions to fill missing values (e.g., with a specific value, mean, or median).
+    * **`PIVOT` / `UNPIVOT`**: Implement data pivoting and unpivoting.
+    * **More Aggregation Functions:** Add `COUNT_DISTINCT`, `MEDIAN`, `STDDEV`, `VARIANCE`, etc.
+    * **`WITH COLUMN` (Enhanced):** Add date operations and conditional logic.
+* **[ ] Professional-Grade I/O:**
+    * Add support for `Parquet` or `Avro` formats based on user demand.
+* **[ ] UI & Language Polish:**
+    * **Data Visualization:** Integrate a simple charting library (e.g., Chart.js) to create basic charts from data at any pipeline stage.
+    * **Dark Mode:** Implement a dark theme for the UI.
+    * **Editor Enhancements:**
+        * Add autocomplete for commands and column names.
+        * Implement proper Tab key support for indentation.
+        * Add keyboard shortcuts (e.g., Ctrl+S to save).
+    * **Language Consistency:** Standardize command names to be consistent (e.g., remove all underscores).
