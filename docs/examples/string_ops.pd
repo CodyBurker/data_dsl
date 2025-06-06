@@ -1,5 +1,0 @@
-VAR "people"
-THEN LOAD_EXCEL FILE "examplePeople.xlsx"
-THEN WITH COLUMN clean = TRIM(name)
-THEN WITH COLUMN shout = UPPER(clean) + "!"
-THEN SELECT person_id, shout

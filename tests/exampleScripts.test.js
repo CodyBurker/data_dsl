@@ -50,10 +50,10 @@ function stubPapaParse() {
   return () => { global.Papa = originalPapa; };
 }
 
-const scriptFiles = fs.readdirSync('examples').filter(f => f.endsWith('.pd'));
+const scriptFiles = fs.readdirSync('test_scripts').filter(f => f.endsWith('.pd'));
 for (const file of scriptFiles) {
   test(`example script ${file} runs without error`, async () => {
-    const script = fs.readFileSync(path.join('examples', file), 'utf8');
+    const script = fs.readFileSync(path.join('test_scripts', file), 'utf8');
     const tokens = tokenizeForParser(script);
     const ast = new Parser(tokens).parse();
     const interp = new Interpreter({ csvFileInputEl: {} });
