@@ -124,7 +124,7 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
       ```
     * **`SAVE_EXCEL`**: Implement saving data to Excel format.
 - [ ] **UI & UX Enhancements:**
-    * **Re-arrange UI elements:** Move existing elements around to make better use of the screen space.
+    * [X] **Re-arrange UI elements:** Move existing elements around to make better use of the screen space.
     * **Manage Multiple Inputs:** Create a UI to list and manage loaded files/datasets.
     * **Clearer Error Messages:** Improve feedback for script errors, providing more context and suggestions.
     * **Add Variable-based Tabs:** Add persistent tabs for each `VAR` block's final output, in addition to the line-by-line step outputs.
@@ -155,3 +155,6 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
 
 ## Phase 5: Spreadsheet UI
 **Goal** Add spreadsheet UI, with GUI for data manipulation that builds AST, and the option to switch back and forth between GUI and text editor.
+
+## Refactor
+Make it an electron app to make file management easier?
