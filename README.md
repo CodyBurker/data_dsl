@@ -122,7 +122,7 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
       VAR "data"
       THEN LOAD_EXCEL FILE "book.xlsx" SHEET "Sheet1" RANGE "A1:C10"
       ```
-    * **`SAVE_EXCEL`**: Implement saving data to Excel format.
+    * [ ] **`SAVE_EXCEL`**: Implement saving data to Excel format.
 - [ ] **UI & UX Enhancements:**
     * [X] **Re-arrange UI elements:** Move existing elements around to make better use of the screen space.
     * **Manage Multiple Inputs:** Create a UI to list and manage loaded files/datasets.
