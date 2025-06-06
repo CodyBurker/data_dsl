@@ -8,7 +8,7 @@ function generatePeekHtmlForDisplay(datasetToPeek, varName, line) {
     if (datasetToPeek && typeof datasetToPeek.objects === 'function') {
         datasetToPeek = datasetToPeek.objects();
     }
-    let outputHTML = `<h3 class="text-md font-semibold mb-2 text-gray-100">Data for: VAR "${varName || 'Current Context'}" (PEEK at Line ${line})</h3>`;
+    let outputHTML = `<h3 class="text-md font-semibold mb-2 text-gray-100">Data for: ${varName || 'Current Context'} (Line ${line})</h3>`;
 
     if (!datasetToPeek) {
         outputHTML += '<p class="text-gray-400">No dataset loaded to PEEK.</p>';
