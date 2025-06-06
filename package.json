@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "DSL for manipulating CSV data in the browser",
   "type": "module",
+  "main": "electron/main.js",
+  "author": "PipeData",
   "scripts": {
     "test": "node --test",
     "dev": "vite",
