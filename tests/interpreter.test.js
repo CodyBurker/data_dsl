@@ -5,6 +5,8 @@ import { tokenizeForParser } from '../js/tokenizer.js';
 import { Parser } from '../js/parser.js';
 import * as csv from '../js/csv.js';
 import * as json from '../js/json.js';
+import * as excel from '../js/excel.js';
+import * as XLSX from 'xlsx';
 import { keepColumns, dropColumns, renameColumns, joinDatasets, filterRows, withColumn, groupBy, aggregate, sortDataset } from '../js/datasetOps.js';
 import { from } from 'arquero';
 
@@ -144,6 +146,26 @@ test('loadJson parses array of objects', async () => {
   interp.requestJsonFile = async () => ({ name: 'd.json', text: async () => '[{"a":1},{"a":2}]' });
   const table = await json.loadJson(interp, { file: 'd.json' });
   assert.deepEqual(table.objects(), [{a:1},{a:2}]);
+  global.fetch = originalFetch;
+});
+
+test('loadExcel loads sheet by name with range', async () => {
+  const interp = new Interpreter({ csvFileInputEl: {} });
+  interp.activeVariableName = 'ex';
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['A','B'],
+    [1,2],
+    [3,4],
+    [5,6]
+  ]);
+  XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+  const buffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+  const originalFetch = global.fetch;
+  global.fetch = async () => ({ ok: false });
+  interp.requestExcelFile = async () => ({ arrayBuffer: async () => buffer });
+  const table = await excel.loadExcel(interp, { file: 'x.xlsx', sheet: 'Sheet1', range: 'A1:B3' });
+  assert.deepEqual(table.objects(), [{A:1,B:2},{A:3,B:4}]);
   global.fetch = originalFetch;
 });
 

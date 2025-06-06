@@ -2,6 +2,7 @@
 import { cities as sampleCities, people as samplePeople } from './samples.js';
 import { loadCsv, exportCsv } from './csv.js';
 import { loadJson } from './json.js';
+import { loadExcel } from './excel.js';
 import { keepColumns, dropColumns, renameColumns, withColumn, filterRows, joinDatasets, groupBy, aggregate, sortDataset } from './datasetOps.js';
 import { buildDag } from './dag.js';
 import { from } from 'arquero';
@@ -67,6 +68,22 @@ export class Interpreter {
     async requestJsonFile(fileNameHint, forVariable) {
         this.uiElements.fileInputContainerEl.classList.remove('hidden');
         this.uiElements.filePromptMessageEl.textContent = `Pipeline for VAR "${forVariable}": Select JSON for ${fileNameHint}.`;
+        this.uiElements.csvFileInputEl.value = '';
+        return new Promise((resolve, reject) => {
+            this.fileResolve = (file) => {
+                if (file) {
+                    resolve(file);
+                } else {
+                    this.log(`File selection cancelled for VAR "${forVariable}".`);
+                    reject(new Error('File selection cancelled or no file provided.'));
+                }
+            };
+        });
+    }
+
+    async requestExcelFile(fileNameHint, forVariable) {
+        this.uiElements.fileInputContainerEl.classList.remove('hidden');
+        this.uiElements.filePromptMessageEl.textContent = `Pipeline for VAR "${forVariable}": Select Excel for ${fileNameHint}.`;
         this.uiElements.csvFileInputEl.value = '';
         return new Promise((resolve, reject) => {
             this.fileResolve = (file) => {
@@ -175,6 +192,9 @@ export class Interpreter {
                 break;
             case 'LOAD_JSON':
                 this.variables[this.activeVariableName] = await loadJson(this, args);
+                break;
+            case 'LOAD_EXCEL':
+                this.variables[this.activeVariableName] = await loadExcel(this, args);
                 break;
             case 'KEEP_COLUMNS':
             case 'SELECT':

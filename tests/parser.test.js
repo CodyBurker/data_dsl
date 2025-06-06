@@ -16,6 +16,14 @@ VAR "v2" THEN LOAD_EXCEL FILE "book.xlsx" SHEET "Sheet1"`;
   assert.strictEqual(ast[1].pipeline[0].command, 'LOAD_EXCEL');
 });
 
+test('Parser parses LOAD_EXCEL with sheet index and range', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN LOAD_EXCEL FILE "book.xlsx" SHEET 2 RANGE "A1:C5"');
+  const ast = new Parser(tokens).parse();
+  const cmd = ast[0].pipeline[0];
+  assert.strictEqual(cmd.command, 'LOAD_EXCEL');
+  assert.deepEqual(cmd.args, { file: 'book.xlsx', sheet: 2, range: 'A1:C5' });
+});
+
 test('Parser parses LOAD_JSON command', () => {
   const tokens = tokenizeForParser('VAR "d" THEN LOAD_JSON FILE "data.json"');
   const ast = new Parser(tokens).parse();

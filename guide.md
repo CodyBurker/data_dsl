@@ -157,9 +157,21 @@ column with `-` to sort ascending.
 SORT total_revenue, -greeting
 ```
 
+### LOAD_EXCEL
+Load data from an Excel workbook using [SheetJS](https://www.npmjs.com/package/xlsx).
+Specify a sheet by name or index and optionally a cell range.
+
+```
+VAR "data"
+THEN LOAD_EXCEL FILE "book.xlsx" SHEET "Sheet1" RANGE "A1:C10"
+```
+
+The `SHEET` argument defaults to the first sheet when omitted. The `RANGE`
+argument allows trimming the loaded rows and columns.
+
 ### Parsed but Not Yet Executed
-The tokenizer and parser also recognize `LOAD_EXCEL` and `NEW_COLUMN`. These
-commands are parsed but currently have no effect in the interpreter.
+The tokenizer and parser also recognize `NEW_COLUMN`. This command is parsed but
+currently has no effect in the interpreter.
 
 ## Tips
 
