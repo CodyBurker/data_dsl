@@ -109,6 +109,37 @@ function renderPeekOutputsUI(interpreter, { currentLineRef, updateVarBlockIndica
     activeContent.innerHTML = '<div class="output-box-placeholder">Select a line to see output.</div>';
     elements.peekOutputsDisplayAreaEl.appendChild(activeContent);
 
+    // When the Active tab is clicked, refresh its preview using the last
+    // highlighted line or the current cursor position without moving the cursor.
+    activeTab.addEventListener('click', () => {
+        const inputEl = elements.inputArea;
+        let lineNum = currentLineRef.currentLine;
+        if (lineNum == null && inputEl) {
+            const val = inputEl.value.slice(0, inputEl.selectionStart);
+            lineNum = val.split(/\r?\n/).length;
+        }
+        if (lineNum == null) return;
+
+        let dataset = null;
+        let varName = null;
+        const stepOutputsArr = interpreter.stepOutputs || [];
+        for (let i = stepOutputsArr.length - 1; i >= 0; i--) {
+            const s = stepOutputsArr[i];
+            if (s.line === lineNum) { dataset = s.dataset; varName = s.varName; break; }
+        }
+        if (!dataset) {
+            const peekOutputsArr = interpreter.peekOutputs || [];
+            for (let i = peekOutputsArr.length - 1; i >= 0; i--) {
+                const p = peekOutputsArr[i];
+                if (p.line === lineNum) { dataset = p.dataset; varName = p.varName; break; }
+            }
+        }
+
+        if (dataset) {
+            updateActiveTab(dataset, varName, lineNum, true);
+        }
+    });
+
     const finalOutputs = [];
     const seen = new Set();
     stepOutputs.forEach((s) => {
@@ -139,11 +170,6 @@ function renderPeekOutputsUI(interpreter, { currentLineRef, updateVarBlockIndica
             elements.peekOutputsDisplayAreaEl.querySelectorAll('.peek-content').forEach(c => c.classList.remove('active-peek-content'));
             tabButton.classList.add('active-peek-tab');
             contentDiv.classList.add('active-peek-content');
-            if (elements.inputArea && elements.highlightingOverlay) {
-                elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(elements.inputArea.value, finalData.line);
-                currentLineRef.currentLine = finalData.line;
-                updateVarBlockIndicator(finalData.line);
-            }
             updateActiveTab(finalData.dataset, finalData.varName, finalData.line, false);
         });
     });
@@ -171,23 +197,6 @@ function renderPeekOutputsUI(interpreter, { currentLineRef, updateVarBlockIndica
             tabButton.classList.add('active-peek-tab');
             contentDiv.classList.add('active-peek-content');
 
-            if (elements.inputArea && elements.highlightingOverlay) {
-                elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(elements.inputArea.value, peekData.line);
-                currentLineRef.currentLine = peekData.line;
-
-                const highlightedSpan = elements.highlightingOverlay.querySelector('#active-editor-peek-highlight');
-                if (highlightedSpan) {
-                    const scrollTargetOffset = highlightedSpan.offsetTop;
-                    const inputAreaVisibleHeight = elements.inputArea.clientHeight;
-                    const desiredScrollTop = scrollTargetOffset - (inputAreaVisibleHeight / 3);
-
-                    if (!suppressTabScrollRef.suppressTabScroll) {
-                        elements.inputArea.scrollTop = Math.max(0, desiredScrollTop);
-                        elements.highlightingOverlay.scrollTop = elements.inputArea.scrollTop;
-                    }
-                }
-                updateVarBlockIndicator(peekData.line);
-            }
             updateActiveTab(peekData.dataset, peekData.varName, peekData.line, false);
         });
 
