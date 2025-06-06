@@ -25,10 +25,6 @@ export default function App() {
           <input type="file" id="csvFileInput" accept=".csv,.txt,.json" className="block w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 cursor-pointer focus:outline-none p-2" />
           <p id="filePromptMessage" className="text-xs text-gray-500 mt-1"></p>
         </div>
-        <div className="mb-6">
-          <label className="block text-lg font-medium text-gray-700 mb-1">Datapipe View:</label>
-          <div id="dagContainer" className="border border-gray-300 rounded-lg"></div>
-        </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-1/2 w-full">
             <label htmlFor="pipeDataInput" className="block text-lg font-medium text-gray-700 mb-1">Editor:</label>
@@ -63,6 +59,10 @@ export default function App() {
               <div className="output-box-placeholder">Peek results will appear here when a script is run.</div>
             </div>
           </div>
+        </div>
+        <div className="mb-6">
+          <label className="block text-lg font-medium text-gray-700 mb-1">Datapipe View:</label>
+          <div id="dagContainer" className="border border-gray-300 rounded-lg"></div>
         </div>
         <div className="mb-6">
           <details className="output-collapsible rounded-lg border border-gray-300">
