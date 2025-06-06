@@ -1,7 +1,7 @@
 VAR "cities"
 THEN LOAD_CSV FILE "exampleCities.csv"
 THEN WITH COLUMN city_of = "City of " + name
-THEN SELECT id, city_of
+THEN DROP_COLUMNS city, name
 
 VAR "people"
 THEN LOAD_CSV FILE "examplePeople.csv"
