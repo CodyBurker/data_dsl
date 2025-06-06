@@ -8,7 +8,8 @@ import {
     generatePeekHtmlForDisplay,
     renderPeekOutputsUI as renderPeekOutputsUIHelper,
     clearEditorPeekHighlight as clearEditorPeekHighlightHelper,
-    handleExportPeek as handleExportPeekHelper
+    handleExportPeek as handleExportPeekHelper,
+    updateActiveTab
 } from './peek.js';
 import { buildDag } from '../dag.js';
 import { renderDag, highlightDagNodeForLine } from './dagView.js';
@@ -200,20 +201,43 @@ function scheduleRealtimeRun() {
 }
 
 function showOutputForLine(lineNumber) {
-    if (!elements.peekTabsContainerEl) return false;
-    const tabSelectors = [
-        `.peek-tab[data-peek-index][data-line='${lineNumber}']`,
-        `.peek-tab[data-step-index][data-line='${lineNumber}']`
-    ];
-    for (const sel of tabSelectors) {
-        const tab = elements.peekTabsContainerEl.querySelector(sel);
-        if (tab) {
-            scrollState.suppressTabScroll = true;
-            tab.click();
-            scrollState.suppressTabScroll = false;
-            return true;
+    if (!elements.peekTabsContainerEl || !uiInterpreterInstance) return false;
+
+    let dataset = null;
+    let varName = null;
+
+    const stepOutputs = uiInterpreterInstance.stepOutputs || [];
+    for (let i = stepOutputs.length - 1; i >= 0; i--) {
+        const s = stepOutputs[i];
+        if (s.line === lineNumber) {
+            dataset = s.dataset;
+            varName = s.varName;
+            break;
         }
     }
+
+    if (!dataset) {
+        const peekOutputs = uiInterpreterInstance.peekOutputs || [];
+        for (let i = peekOutputs.length - 1; i >= 0; i--) {
+            const p = peekOutputs[i];
+            if (p.line === lineNumber) {
+                dataset = p.dataset;
+                varName = p.varName;
+                break;
+            }
+        }
+    }
+
+    if (dataset) {
+        if (elements.inputArea && elements.highlightingOverlay) {
+            elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(elements.inputArea.value, lineNumber);
+            highlightState.currentLine = lineNumber;
+        }
+        updateActiveTab(dataset, varName, lineNumber, true);
+        updateVarBlockIndicator(lineNumber);
+        return true;
+    }
+
     return false;
 }
 
