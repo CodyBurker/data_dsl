@@ -1,0 +1,44 @@
+[
+    {
+      "sale_id": 1,
+      "person_id": 1,
+      "product": "Phone",
+      "quantity": 1,
+      "unit_price": 699
+    },
+    {
+      "sale_id": 2,
+      "person_id": 2,
+      "product": "Tablet",
+      "quantity": 2,
+      "unit_price": 250
+    },
+    {
+      "sale_id": 3,
+      "person_id": 1,
+      "product": "Case",
+      "quantity": 3,
+      "unit_price": 20
+    },
+    {
+      "sale_id": 4,
+      "person_id": 3,
+      "product": "Laptop",
+      "quantity": 1,
+      "unit_price": 1200
+    },
+    {
+      "sale_id": 5,
+      "person_id": 4,
+      "product": "Headphones",
+      "quantity": 2,
+      "unit_price": 80
+    },
+    {
+      "sale_id": 6,
+      "person_id": 1,
+      "product": "Charger",
+      "quantity": 2,
+      "unit_price": 15
+    }
+  ]
