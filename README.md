@@ -160,3 +160,7 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
 Integrate AG Grid
 Export to Excel
 Make panels resizable (or even movable?)
+Workspace management (e.g. open folder)
+
+## Bugs
+Since moving to electron all IO is broken
