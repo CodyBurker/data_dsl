@@ -8,6 +8,7 @@ import { buildDag } from '../js/dag.js';
 
 import { TokenType, tokenizeForParser, tokenizeForHighlighting } from "../js/tokenizer.js";
 import { Parser } from "../js/parser.js";
+import { from } from 'arquero';
 function setupDom() {
   const dom = new JSDOM(`<!DOCTYPE html><body>
     <textarea id="pipeDataInput"></textarea>
@@ -70,8 +71,8 @@ test('renderPeekOutputsUI creates a tab for each PEEK output', async () => {
   const interp = new Interpreter({});
   await initUI(interp, { autoRun: false });
   interp.peekOutputs = [
-    { id: 'p1', varName: 'x', line: 1, dataset: [{A:1}] },
-    { id: 'p2', varName: 'x', line: 2, dataset: [{A:2}] }
+    { id: 'p1', varName: 'x', line: 1, dataset: from([{A:1}]) },
+    { id: 'p2', varName: 'x', line: 2, dataset: from([{A:2}]) }
   ];
   renderPeekOutputsUI();
   const tabs = document.querySelectorAll('.peek-tab');
@@ -85,8 +86,8 @@ test('moving cursor selects matching peek tab', async () => {
   const interp = new Interpreter({});
   await initUI(interp, { autoRun: false });
   interp.peekOutputs = [
-    { id: 'p1', varName: 'x', line: 1, dataset: [{A:1}] },
-    { id: 'p2', varName: 'x', line: 2, dataset: [{A:2}] }
+    { id: 'p1', varName: 'x', line: 1, dataset: from([{A:1}]) },
+    { id: 'p2', varName: 'x', line: 2, dataset: from([{A:2}]) }
   ];
   renderPeekOutputsUI();
 

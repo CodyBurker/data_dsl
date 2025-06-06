@@ -84,7 +84,7 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
 
 **Goal:** Get basic vlookup-like functionality working ASAP.
 
-* **[X] Data Engine:** Use native JavaScript arrays and objects as the foundation, avoiding complex external DataFrame libraries.
+* **[X] Data Engine:** Use [Arquero](https://github.com/uwdata/arquero) tables for data manipulation.
 * **[X] I/O:** Implement `LOAD_CSV` (with PapaParse) and the ability to save the final output to a new CSV file.
 * **[X] Core Transformations:** Implement `SELECT` and `JOIN` (inner/left) to cover the basic "vlookup" use case.
 * **[X] UI:** Create a minimal viable product with a script input area, a "Run" button, and a basic HTML table to preview the final result.

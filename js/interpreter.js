@@ -3,6 +3,7 @@ import { cities as sampleCities, people as samplePeople } from './samples.js';
 import { loadCsv, exportCsv } from './csv.js';
 import { keepColumns, withColumn, filterRows, joinDatasets } from './datasetOps.js';
 import { buildDag } from './dag.js';
+import { from } from 'arquero';
 
 export class Interpreter {
     constructor(uiElements) {
@@ -31,8 +32,8 @@ export class Interpreter {
 
     clearInternalState(resetCache = false) {
         this.variables = {
-            cities: sampleCities.map(r => ({ ...r })),
-            people: samplePeople.map(r => ({ ...r }))
+            cities: from(sampleCities.map(r => ({ ...r }))),
+            people: from(samplePeople.map(r => ({ ...r })))
         };
         this.activeVariableName = null;
         this.peekOutputs = [];
@@ -157,25 +158,25 @@ export class Interpreter {
                 break;
             case 'KEEP_COLUMNS':
             case 'SELECT':
-                if (!Array.isArray(currentDataset)) {
+                if (!currentDataset || typeof currentDataset.select !== 'function') {
                     throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply ${command}.`);
                 }
                 this.variables[this.activeVariableName] = keepColumns(this, args, currentDataset);
                 break;
             case 'JOIN':
-                if (!Array.isArray(currentDataset)) {
+                if (!currentDataset || typeof currentDataset.join !== 'function') {
                     throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply JOIN.`);
                 }
                 this.variables[this.activeVariableName] = joinDatasets(this, args, currentDataset);
                 break;
             case 'FILTER':
-                if (!Array.isArray(currentDataset)) {
+                if (!currentDataset || typeof currentDataset.filter !== 'function') {
                     throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply FILTER.`);
                 }
                 this.variables[this.activeVariableName] = filterRows(this, args, currentDataset);
                 break;
             case 'WITH_COLUMN':
-                if (!Array.isArray(currentDataset)) {
+                if (!currentDataset || typeof currentDataset.derive !== 'function') {
                     throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply WITH_COLUMN.`);
                 }
                 this.variables[this.activeVariableName] = withColumn(this, args, currentDataset);

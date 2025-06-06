@@ -3,27 +3,22 @@
 // Helper functions for dataset transformations. Like csv.js, each
 // function expects the interpreter instance as the first argument so
 // logging remains centralized.
+import { op, from } from 'arquero';
 
 export function keepColumns(interp, args, currentDataset) {
     const { columns } = args;
     if (!Array.isArray(columns)) {
         throw new Error(`Invalid columns argument for KEEP_COLUMNS in VAR "${interp.activeVariableName}".`);
     }
-    if (!Array.isArray(currentDataset) || currentDataset.length === 0) {
-        return [];
+    if (!currentDataset || typeof currentDataset.select !== 'function') {
+        return currentDataset;
     }
-    const allCols = Object.keys(currentDataset[0]);
+    const allCols = currentDataset.columnNames();
     const columnsToKeep = columns.map(c => allCols.find(ac => ac.toLowerCase() === c.toLowerCase())).filter(Boolean);
-
     if (columnsToKeep.length === 0) {
         throw new Error(`None of the specified columns for KEEP_COLUMNS were found in VAR "${interp.activeVariableName}".`);
     }
-
-    const newDataset = currentDataset.map(row => {
-        const obj = {};
-        columnsToKeep.forEach(col => { obj[col] = row[col]; });
-        return obj;
-    });
+    const newDataset = currentDataset.select(...columnsToKeep);
     interp.log(`Kept columns: ${columnsToKeep.join(', ')} for VAR "${interp.activeVariableName}".`);
     return newDataset;
 }
@@ -85,7 +80,9 @@ export function withColumn(interp, args, currentDataset) {
         }
     };
 
-    const result = currentDataset.map(row => ({ ...row, [columnName]: evalExpr(row) }));
+    const rows = currentDataset.objects();
+    const newRows = rows.map(row => ({ ...row, [columnName]: evalExpr(row) }));
+    const result = from(newRows);
     interp.log(`WITH_COLUMN '${columnName}' computed for VAR "${interp.activeVariableName}".`);
     return result;
 }
@@ -135,43 +132,34 @@ export function filterRows(interp, condition, currentDataset) {
         }
     };
 
-    const filtered = currentDataset.filter(row => evalCondition(condition, row));
-    interp.log(`FILTER kept ${filtered.length} of ${currentDataset.length} rows for VAR "${interp.activeVariableName}".`);
+    const filteredRows = currentDataset.objects().filter(r => evalCondition(condition, r));
+    const filtered = from(filteredRows);
+    interp.log(`FILTER kept ${filtered.numRows()} of ${currentDataset.numRows()} rows for VAR "${interp.activeVariableName}".`);
     return filtered;
 }
 
 export function joinDatasets(interp, args, currentDataset) {
     const { variable, leftKey, rightKey, type = 'INNER' } = args;
     const other = interp.variables[variable];
-    if (!Array.isArray(other)) {
-        throw new Error(`JOIN target VAR "${variable}" is not loaded or not an array.`);
+    if (!other || typeof other.join !== 'function') {
+        throw new Error(`JOIN target VAR "${variable}" is not loaded or not a table.`);
     }
-    if (!Array.isArray(currentDataset)) {
-        throw new Error(`Current dataset for VAR "${interp.activeVariableName}" is not an array.`);
-    }
-
-    const map = new Map();
-    for (const row of other) {
-        if (row.hasOwnProperty(rightKey)) {
-            const key = row[rightKey];
-            if (!map.has(key)) map.set(key, []);
-            map.get(key).push(row);
-        }
+    if (!currentDataset || typeof currentDataset.join !== 'function') {
+        throw new Error(`Current dataset for VAR "${interp.activeVariableName}" is not a table.`);
     }
 
-    const joined = [];
-    for (const lRow of currentDataset) {
-        const key = lRow[leftKey];
-        const matches = map.get(key);
-        if (matches) {
-            for (const rRow of matches) {
-                joined.push({ ...lRow, ...rRow });
-            }
-        } else if (type === 'LEFT') {
-            joined.push({ ...lRow });
-        }
+    let joined;
+    if (type === 'LEFT') {
+        joined = currentDataset.join_left(other, [leftKey, rightKey]);
+    } else {
+        joined = currentDataset.join(other, [leftKey, rightKey]);
     }
-    interp.log(`JOIN ${type} completed using '${leftKey}' = '${rightKey}' with VAR "${variable}". Rows: ${joined.length}`);
-    return joined;
+    const cleaned = joined.objects().map(r => {
+        const obj = {};
+        for (const [k,v] of Object.entries(r)) if (v !== undefined) obj[k] = v;
+        return obj;
+    });
+    const table = from(cleaned);
+    interp.log(`JOIN ${type} completed using '${leftKey}' = '${rightKey}' with VAR "${variable}". Rows: ${table.numRows()}`);
+    return table;
 }
-
