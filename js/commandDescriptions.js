@@ -34,6 +34,12 @@ export function describeCommand(cmd) {
                 return `Drop columns: ${args.columns.join(', ')}`;
             }
             break;
+        case 'RENAME_COLUMNS':
+            if (args && Array.isArray(args.mappings)) {
+                const parts = args.mappings.map(m => `${m.from} AS ${m.to}`);
+                return `Rename columns: ${parts.join(', ')}`;
+            }
+            break;
         case 'WITH_COLUMN':
             if (args && args.columnName) {
                 const expr = Array.isArray(args.expression)

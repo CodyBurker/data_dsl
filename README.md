@@ -112,7 +112,7 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
     * [X] **`GROUP_BY` & `AGGREGATE`**: Implement grouping and aggregation functions like `SUM`, `COUNT`, `AVG`, `MIN`, and `MAX`.
     * [X] **`SORT`**: Implement data sorting based on one or more columns.
     * [X] **`DROP`**: Implement the `DROP_COLUMNS` command.
-    * [ ] **`RENAME`**: Implement the `RENAME_COLUMN` command.
+    * [X] **`RENAME`**: Implement the `RENAME_COLUMN` command.
     * [ ] **Unit tests**: Add more example data, and full example scripts that are run in tests for more langauge coverage.
 * **[ ] I/O (Wider Compatibility):**
     * **`LOAD_JSON`**: Implement loading data from JSON files.

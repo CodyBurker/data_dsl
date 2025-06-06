@@ -212,7 +212,9 @@ export class Parser {
             case 'FILTER': return { ...this.parseFilter(), line: startLine };
             case 'WITH': return { ...this.parseWithColumn(), line: startLine };
             case 'NEW_COLUMN': return { ...this.parseNewColumn(), line: startLine };
-            case 'RENAME_COLUMN': return { ...this.parseRenameColumn(), line: startLine };
+            case 'RENAME_COLUMN':
+            case 'RENAME_COLUMNS':
+                return { ...this.parseRenameColumns(), line: startLine };
             case 'SORT': return { ...this.parseSort(), line: startLine };
             case 'JOIN': return { ...this.parseJoin(), line: startLine };
             case 'GROUP_BY': return { ...this.parseGroupBy(), line: startLine };
@@ -339,7 +341,25 @@ export class Parser {
         return cond;
     }
     parseNewColumn() { this.consume(TokenType.KEYWORD, 'NEW_COLUMN'); let n; if (this.peek().type === TokenType.STRING_LITERAL) n = this.consume(TokenType.STRING_LITERAL).value; else n = this.consume(TokenType.IDENTIFIER).value; this.consume(TokenType.KEYWORD, 'AS'); const e = this.parseExpression(); return { command: 'NEW_COLUMN', args: { newColumnName: n, expression: e } }; }
-    parseRenameColumn() { this.consume(TokenType.KEYWORD, 'RENAME_COLUMN'); let o; if(this.peek().type === TokenType.STRING_LITERAL) o = this.consume(TokenType.STRING_LITERAL).value; else o = this.consume(TokenType.IDENTIFIER).value; this.consume(TokenType.KEYWORD, 'TO'); let n; if(this.peek().type === TokenType.STRING_LITERAL) n = this.consume(TokenType.STRING_LITERAL).value; else n = this.consume(TokenType.IDENTIFIER).value; return { command: 'RENAME_COLUMN', args: { oldName: o, newName: n } }; }
+    parseRenameColumns() {
+        if (this.match(TokenType.KEYWORD, 'RENAME_COLUMN') || this.match(TokenType.KEYWORD, 'RENAME_COLUMNS')) {
+            // keyword already consumed by match
+        } else {
+            this.consume(TokenType.KEYWORD, 'RENAME_COLUMN');
+        }
+        const mappings = [];
+        do {
+            let oldName;
+            if (this.peek().type === TokenType.STRING_LITERAL) oldName = this.consume(TokenType.STRING_LITERAL).value;
+            else oldName = this.consume(TokenType.IDENTIFIER).value;
+            this.consume(TokenType.KEYWORD, 'AS');
+            let newName;
+            if (this.peek().type === TokenType.STRING_LITERAL) newName = this.consume(TokenType.STRING_LITERAL).value;
+            else newName = this.consume(TokenType.IDENTIFIER).value;
+            mappings.push({ from: oldName, to: newName });
+        } while (this.match(TokenType.PUNCTUATION, ','));
+        return { command: 'RENAME_COLUMNS', args: { mappings } };
+    }
     parseSort() {
         this.consume(TokenType.KEYWORD, 'SORT');
         const specs = [];

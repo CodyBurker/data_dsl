@@ -97,3 +97,9 @@ test('tokenizeForParser recognizes DROP keyword', () => {
   const drop = tokens.find(t => t.value === 'DROP');
   assert.ok(drop && drop.type === TokenType.KEYWORD);
 });
+
+test('tokenizeForParser recognizes RENAME_COLUMNS keyword', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN RENAME_COLUMNS a AS b');
+  const ren = tokens.find(t => t.value === 'RENAME_COLUMNS');
+  assert.ok(ren && ren.type === TokenType.KEYWORD);
+});
