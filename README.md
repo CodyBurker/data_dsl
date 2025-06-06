@@ -46,6 +46,8 @@ on first launch. The new script demonstrates joining three datasets and using
 `GROUP_BY` and `AGGREGATE` to summarize sales by customer.
 
 Use the File menu in the desktop app to **Open** or **Save** `.pd` script files.
+All disk access is performed in the Electron main process and exposed via a
+minimal preload API so the renderer remains sandboxed.
 
 ### DAG Representation
 
