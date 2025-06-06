@@ -373,6 +373,9 @@ test('default script file runs without error', async () => {
     if (url.endsWith('examplePeople.csv')) {
       return { ok: true, text: async () => fs.readFileSync(path.join('examples', 'examplePeople.csv'), 'utf8') };
     }
+    if (url.endsWith('examplePeople.xlsx')) {
+      return { ok: true, arrayBuffer: async () => fs.readFileSync(path.join('examples', 'examplePeople.xlsx')) };
+    }
     if (url.endsWith('exampleSales.json')) {
       return { ok: true, json: async () => JSON.parse(fs.readFileSync(path.join('examples', 'exampleSales.json'), 'utf8')) };
     }
