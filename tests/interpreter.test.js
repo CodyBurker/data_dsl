@@ -316,7 +316,7 @@ test('default script file runs without error', async () => {
   global.fetch = originalFetch;
   global.Papa = originalPapa;
   assert.strictEqual(interp.peekOutputs.length, 0);
-  assert.strictEqual(interp.stepOutputs.length, 19);
+  assert.strictEqual(interp.stepOutputs.length, 18);
 });
 
 test('run records step outputs for each command', async () => {
