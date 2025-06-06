@@ -4,7 +4,7 @@ import { Interpreter } from '../js/interpreter.js';
 import { tokenizeForParser } from '../js/tokenizer.js';
 import { Parser } from '../js/parser.js';
 import * as csv from '../js/csv.js';
-import { keepColumns, joinDatasets, filterRows, withColumn } from '../js/datasetOps.js';
+import { keepColumns, joinDatasets, filterRows, withColumn, groupBy, aggregate } from '../js/datasetOps.js';
 import { from } from 'arquero';
 
 // Minimal stubs for browser APIs used in exports
@@ -307,13 +307,16 @@ test('default script file runs without error', async () => {
     if (url.endsWith('examplePeople.csv')) {
       return { ok: true, text: async () => fs.readFileSync(path.join('examples', 'examplePeople.csv'), 'utf8') };
     }
+    if (url.endsWith('exampleSales.csv')) {
+      return { ok: true, text: async () => fs.readFileSync(path.join('examples', 'exampleSales.csv'), 'utf8') };
+    }
     return { ok: false };
   };
   await interp.run(ast);
   global.fetch = originalFetch;
   global.Papa = originalPapa;
   assert.strictEqual(interp.peekOutputs.length, 0);
-  assert.strictEqual(interp.stepOutputs.length, 10);
+  assert.strictEqual(interp.stepOutputs.length, 18);
 });
 
 test('run records step outputs for each command', async () => {
@@ -425,4 +428,21 @@ test('cache entries track unusedCount across runs', async () => {
   assert.strictEqual(interp.cache['d-0'].unusedCount, 0);
 
   interp.executeCommand = orig;
+});
+
+test('groupBy and aggregate summarize data', () => {
+  const interp = new Interpreter({});
+  interp.activeVariableName = 'd';
+  const data = from([
+    {cat:'A', val:1},
+    {cat:'A', val:2},
+    {cat:'B', val:3}
+  ]);
+  const g = groupBy(interp, { columns:['cat'] }, data);
+  const result = aggregate(interp, { aggregates:[{func:'SUM', column:'val', as:'total'}, {func:'COUNT'}] }, g);
+  const objs = result.objects();
+  assert.deepEqual(objs, [
+    {cat:'A', total:3, count:2},
+    {cat:'B', total:3, count:1}
+  ]);
 });

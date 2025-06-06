@@ -1,7 +1,7 @@
 // interpreter.js
 import { cities as sampleCities, people as samplePeople } from './samples.js';
 import { loadCsv, exportCsv } from './csv.js';
-import { keepColumns, withColumn, filterRows, joinDatasets } from './datasetOps.js';
+import { keepColumns, withColumn, filterRows, joinDatasets, groupBy, aggregate } from './datasetOps.js';
 import { buildDag } from './dag.js';
 import { from } from 'arquero';
 
@@ -180,6 +180,18 @@ export class Interpreter {
                     throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply WITH_COLUMN.`);
                 }
                 this.variables[this.activeVariableName] = withColumn(this, args, currentDataset);
+                break;
+            case 'GROUP_BY':
+                if (!currentDataset || typeof currentDataset.groupby !== 'function') {
+                    throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply GROUP_BY.`);
+                }
+                this.variables[this.activeVariableName] = groupBy(this, args, currentDataset);
+                break;
+            case 'AGGREGATE':
+                if (!currentDataset || typeof currentDataset.rollup !== 'function') {
+                    throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply AGGREGATE.`);
+                }
+                this.variables[this.activeVariableName] = aggregate(this, args, currentDataset);
                 break;
             case 'EXPORT_CSV':
                 if (!currentDataset) {

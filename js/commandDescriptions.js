@@ -53,6 +53,17 @@ export function describeCommand(cmd) {
                 return desc;
             }
             break;
+        case 'GROUP_BY':
+            if (args && Array.isArray(args.columns)) {
+                return `Group by ${args.columns.join(', ')}`;
+            }
+            break;
+        case 'AGGREGATE':
+            if (args && Array.isArray(args.aggregates)) {
+                const parts = args.aggregates.map(a => `${a.func}${a.column ? `(${a.column})` : ''}${a.as ? ` AS ${a.as}` : ''}`);
+                return `Aggregate ${parts.join(', ')}`;
+            }
+            break;
         case 'EXPORT_CSV':
             return args && args.file ? `Export CSV to \"${args.file}\"` : 'Export CSV';
         case 'EXPORT_EXCEL':

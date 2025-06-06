@@ -14,6 +14,8 @@ export const KEYWORDS = [
     'EXPORT_CSV', 'EXPORT_EXCEL', 'SHEET', 'FILE', 'AND', 'OR',
     'WITH', 'COLUMN',
     'JOIN', 'ON', 'TYPE',
+    'GROUP_BY', 'AGGREGATE',
+    'SUM', 'COUNT', 'AVG', 'MIN', 'MAX',
     'IS', 'CONTAINS', 'STARTSWITH', 'ENDSWITH'
 ];
 

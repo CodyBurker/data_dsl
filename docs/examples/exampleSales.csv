@@ -1,0 +1,7 @@
+sale_id,person_id,product,quantity,unit_price
+1,1,Phone,1,699
+2,2,Tablet,2,250
+3,1,Case,3,20
+4,3,Laptop,1,1200
+5,4,Headphones,2,80
+6,1,Charger,2,15

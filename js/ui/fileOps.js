@@ -40,13 +40,25 @@ async function loadScriptFromFile(interpreter, updateLineNumbers, highlightRef) 
 
 const fallbackScript = `VAR "cities"
 THEN LOAD_CSV FILE "exampleCities.csv"
-THEN SELECT population, id
-THEN WITH COLUMN population_millions = population / 1000000
+THEN WITH COLUMN city_of = "City of " + name
+THEN SELECT id, city_of
+
 VAR "people"
 THEN LOAD_CSV FILE "examplePeople.csv"
 THEN JOIN cities ON city_id=id TYPE "LEFT"
-THEN SELECT name, age, population, population_millions
-THEN FILTER name STARTSWITH "A"`;
+THEN WITH COLUMN clean_name = TRIM(name)
+THEN WITH COLUMN greeting = UPPER(clean_name) + " from " + city_of
+THEN SELECT person_id, greeting, age
+
+VAR "sales"
+THEN LOAD_CSV FILE "exampleSales.csv"
+THEN WITH COLUMN revenue = quantity * unit_price
+THEN GROUP_BY person_id
+THEN AGGREGATE SUM revenue AS total_revenue, COUNT AS order_count
+THEN JOIN people ON person_id=person_id TYPE "LEFT"
+THEN FILTER total_revenue > 100
+THEN SELECT greeting, total_revenue, order_count
+THEN EXPORT_CSV TO "top_customers.csv"`;
 
 async function loadDefaultScript() {
     try {
