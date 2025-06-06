@@ -23,6 +23,25 @@ export function keepColumns(interp, args, currentDataset) {
     return newDataset;
 }
 
+export function dropColumns(interp, args, currentDataset) {
+    const { columns } = args;
+    if (!Array.isArray(columns)) {
+        throw new Error(`Invalid columns argument for DROP_COLUMNS in VAR "${interp.activeVariableName}".`);
+    }
+    if (!currentDataset || typeof currentDataset.select !== 'function') {
+        return currentDataset;
+    }
+    const allCols = currentDataset.columnNames();
+    const colsToDrop = columns.map(c => allCols.find(ac => ac.toLowerCase() === c.toLowerCase())).filter(Boolean);
+    if (colsToDrop.length === 0) {
+        throw new Error(`None of the specified columns for DROP_COLUMNS were found in VAR "${interp.activeVariableName}".`);
+    }
+    const colsToKeep = allCols.filter(c => !colsToDrop.includes(c));
+    const result = currentDataset.select(...colsToKeep);
+    interp.log(`Dropped columns: ${colsToDrop.join(', ')} for VAR "${interp.activeVariableName}".`);
+    return result;
+}
+
 export function withColumn(interp, args, currentDataset) {
     const { columnName, expression } = args;
     if (!Array.isArray(expression) || expression.length === 0) {

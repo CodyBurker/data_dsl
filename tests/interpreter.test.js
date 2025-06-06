@@ -4,7 +4,7 @@ import { Interpreter } from '../js/interpreter.js';
 import { tokenizeForParser } from '../js/tokenizer.js';
 import { Parser } from '../js/parser.js';
 import * as csv from '../js/csv.js';
-import { keepColumns, joinDatasets, filterRows, withColumn, groupBy, aggregate, sortDataset } from '../js/datasetOps.js';
+import { keepColumns, dropColumns, joinDatasets, filterRows, withColumn, groupBy, aggregate, sortDataset } from '../js/datasetOps.js';
 import { from } from 'arquero';
 
 // Minimal stubs for browser APIs used in exports
@@ -24,6 +24,14 @@ test('keepColumns selects columns case-insensitively', () => {
   const data = from([{A:1,B:2,C:3},{A:4,B:5,C:6}]);
   const result = keepColumns(interp, { columns: ['a','C'] }, data);
   assert.deepEqual(result.objects(), [{A:1,C:3},{A:4,C:6}]);
+});
+
+test('dropColumns removes columns case-insensitively', () => {
+  const interp = new Interpreter({});
+  interp.activeVariableName = 'd';
+  const data = from([{A:1,B:2,C:3},{A:4,B:5,C:6}]);
+  const result = dropColumns(interp, { columns: ['b'] }, data);
+  assert.deepEqual(result.columnNames(), ['A','C']);
 });
 
 
@@ -50,6 +58,14 @@ test('executeCommand SELECT uses keepColumns', async () => {
   interp.variables.sel = from([{A:1,B:2,C:3}]);
   await interp.executeCommand({ command: 'SELECT', args: { columns: ['B'] } });
   assert.deepEqual(interp.variables.sel.objects(), [{B:2}]);
+});
+
+test('executeCommand DROP_COLUMNS uses dropColumns', async () => {
+  const interp = new Interpreter({});
+  interp.activeVariableName = 'd';
+  interp.variables.d = from([{A:1,B:2,C:3}]);
+  await interp.executeCommand({ command: 'DROP_COLUMNS', args: { columns: ['B'] } });
+  assert.deepEqual(interp.variables.d.columnNames(), ['A','C']);
 });
 
 test('joinDatasets performs default inner join', () => {

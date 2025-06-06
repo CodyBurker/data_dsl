@@ -50,6 +50,16 @@ SELECT col1, col2
 KEEP_COLUMNS col1, col2
 ```
 
+### DROP COLUMN / DROP COLUMNS
+Remove one or more columns from the current dataset. Both `DROP COLUMN` and
+`DROP COLUMNS` are accepted.
+
+```
+DROP COLUMN col1
+# or
+DROP COLUMNS col1, col2
+```
+
 ### JOIN
 Merge the current dataset with another variable. Specify the column from the current dataset and optionally a different column from the other variable. Use `TYPE "LEFT"` to keep unmatched rows.
 
@@ -131,9 +141,9 @@ SORT total_revenue, -greeting
 ```
 
 ### Parsed but Not Yet Executed
-The tokenizer and parser recognize additional commands such as `LOAD_EXCEL`,
-`DROP_COLUMNS`, `NEW_COLUMN`, and `RENAME_COLUMN`. These commands are
-parsed but currently have no effect in the interpreter.
+The tokenizer and parser also recognize `LOAD_EXCEL`, `NEW_COLUMN`, and
+`RENAME_COLUMN`. These commands are parsed but currently have no effect in
+the interpreter.
 
 ## Tips
 
