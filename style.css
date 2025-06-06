@@ -289,7 +289,7 @@ body {
 
 .editor-prominent #pipeDataInput,
 .editor-prominent #highlightingOverlay {
-    min-height: 350px;
+    min-height: 700px;
 }
 
 /* Container for the tabbed PEEK outputs, not an output-box itself */
