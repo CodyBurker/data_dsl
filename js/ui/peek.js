@@ -195,6 +195,22 @@ function renderPeekOutputsUI(interpreter, { currentLineRef, updateVarBlockIndica
             tabButton.click();
         }
     });
+
+    let lastData = null;
+    if (stepOutputs.length > 0) {
+        lastData = stepOutputs[stepOutputs.length - 1];
+    } else if (peekOutputs.length > 0) {
+        lastData = peekOutputs[peekOutputs.length - 1];
+    }
+
+    if (lastData) {
+        updateActiveTab(lastData.dataset, lastData.varName, lastData.line, true);
+        if (elements.inputArea && elements.highlightingOverlay) {
+            elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(elements.inputArea.value, lastData.line);
+            currentLineRef.currentLine = lastData.line;
+            updateVarBlockIndicator(lastData.line);
+        }
+    }
 }
 
 // Clear any highlight that was added by renderPeekOutputsUI.
