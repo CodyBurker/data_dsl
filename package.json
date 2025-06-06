@@ -4,9 +4,18 @@
   "description": "DSL for manipulating CSV data in the browser",
   "type": "module",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "dev": "vite",
+    "build": "vite build && npm run copy-examples",
+    "copy-examples": "mkdir -p docs/examples && cp examples/* docs/examples/"
   },
   "dependencies": {
-    "jsdom": "^26.1.0"
+    "jsdom": "^26.1.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.5.1",
+    "vite": "^6.3.5"
   }
 }
