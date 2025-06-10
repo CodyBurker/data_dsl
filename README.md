@@ -107,7 +107,7 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
 
 ---
 
-## ✨ Phase 3: Achieving Spreadsheet Parity (Current Focus)
+## ✅ Phase 3: Achieving Spreadsheet Parity (Current Focus)
 
 **Goal:** Make the tool significantly more powerful by implementing the most common and essential spreadsheet operations that are currently missing.
 
@@ -128,10 +128,10 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
       ```
       THEN EXPORT_EXCEL TO "results.xlsx" SHEET "Sheet1"
       ```
-- [ ] **UI & UX Enhancements:**
+- [X] **UI & UX Enhancements:**
     * [X] **Re-arrange UI elements:** Move existing elements around to make better use of the screen space.
-    * **Manage Multiple Inputs:** Create a UI to list and manage loaded files/datasets. Allow users to open a folder and then load files from there. (e.g. open 'reports' folder then load `report1.csv`, `report2.csv`, etc.)
-    * **Clearer Error Messages:** Improve feedback for script errors, providing more context and suggestions.
+    * (Will not do yet) **Manage Multiple Inputs:** Create a UI to list and manage loaded files/datasets. Allow users to open a folder and then load files from there. (e.g. open 'reports' folder then load `report1.csv`, `report2.csv`, etc.)
+    * (Will not do yet) **Clearer Error Messages:** Improve feedback for script errors, providing more context and suggestions.
     [X] * **Add Variable-based Tabs:** Add persistent tabs for each `VAR` block's final output, in addition to the line-by-line step outputs.
 
 ---
