@@ -171,3 +171,4 @@ Workspace management (e.g. open folder)
 ~~Since moving to electron all IO is broken~~
 Language guide is not working.
 Open/Save script not working (menu bar not working)
+Hover over DAG nodes doesn't work when scrolling right.
