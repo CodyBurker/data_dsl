@@ -1,6 +1,6 @@
 # PipeData Language Guide
 
-PipeData is a small domain-specific language for manipulating CSV data directly in the browser.
+PipeData is a small domain-specific language for manipulating CSV data in a desktop environment powered by Electron.
 This guide covers the core syntax and currently supported commands.
 
 ## Basics
@@ -35,10 +35,19 @@ VAR "myVar"
 ```
 
 ### LOAD_CSV
-Load data from a CSV file chosen in the browser.
+Load data from a CSV file on your computer.
 
 ```
 LOAD_CSV FILE "file.csv"
+```
+
+### LOAD_JSON
+Load data from a JSON file on your computer. The file must contain an array of objects at the top level or under the optional `ROOT` key.
+
+```
+LOAD_JSON FILE "file.json"
+# or with a root key
+LOAD_JSON FILE "data.json" ROOT "items"
 ```
 
 ### KEEP_COLUMNS / SELECT
@@ -48,6 +57,24 @@ Keep only the specified columns. `SELECT` is an alias for `KEEP_COLUMNS`.
 SELECT col1, col2
 # or
 KEEP_COLUMNS col1, col2
+```
+
+### DROP COLUMN / DROP COLUMNS
+Remove one or more columns from the current dataset. Both `DROP COLUMN` and
+`DROP COLUMNS` are accepted.
+
+```
+DROP COLUMN col1
+# or
+DROP COLUMNS col1, col2
+```
+
+### RENAME COLUMN / RENAME COLUMNS
+Change one or more column names. Use `AS` to specify the new name for each column. Both `RENAME COLUMN` and `RENAME COLUMNS` accept multiple mappings.
+
+```
+RENAME COLUMNS weight AS weight_kg, height AS height_in
+RENAME COLUMN "old name" AS "New Name"
 ```
 
 ### JOIN
@@ -107,20 +134,54 @@ WITH COLUMN name_lower = LOWER(name)
 WITH COLUMN greeting = name + "!"
 ```
 
+### GROUP_BY
+Group rows by one or more columns.
+
+```
+GROUP_BY category
+```
+
+### AGGREGATE
+Summarize rows using functions like `SUM`, `COUNT`, `AVG`, `MIN`, and `MAX`.
+
+```
+GROUP_BY category
+THEN AGGREGATE SUM amount AS total, COUNT AS count
+```
+
+### SORT
+Order rows by one or more columns. Columns sort descending by default. Prefix a
+column with `-` to sort ascending.
+
+```
+SORT total_revenue, -greeting
+```
+
+### LOAD_EXCEL
+Load data from an Excel workbook using [SheetJS](https://www.npmjs.com/package/xlsx).
+Specify a sheet by name or index and optionally a cell range.
+
+```
+VAR "data"
+THEN LOAD_EXCEL FILE "book.xlsx" SHEET "Sheet1" RANGE "A1:C10"
+```
+
+The `SHEET` argument defaults to the first sheet when omitted. The `RANGE`
+argument allows trimming the loaded rows and columns.
+
 ### Parsed but Not Yet Executed
-The tokenizer and parser recognize additional commands such as `LOAD_EXCEL`,
-`DROP_COLUMNS`, `NEW_COLUMN`, `RENAME_COLUMN`, and `SORT_BY`. These commands are
-parsed but currently have no effect in the interpreter.
+The tokenizer and parser also recognize `NEW_COLUMN`. This command is parsed but
+currently has no effect in the interpreter.
 
 ## Tips
 
 - Chain multiple commands with `THEN` to build a pipeline.
 - Comments can appear on their own line or after a command.
 - When loading a file, the UI will prompt you to select it.
-- With a supported browser you can **Open File** or **Save File** to work
-  with `.pd` files.
+- Use the desktop app's File menu to **Open** or **Save** `.pd` files.
 - The editor loads `examples/default.pd` automatically and runs it once on first
-  launch so you can see a working script right away.
+  launch so you can see a working script right away. The bundled example joins
+  city, people, and sales data and aggregates total revenue per customer.
   - Internally the parser output can be converted to a directed acyclic graph.
     Each command node has a fingerprint that ignores line numbers and includes
     the fingerprints of its dependencies, so formatting changes do not disrupt

@@ -23,6 +23,8 @@ export function describeCommand(cmd) {
     switch (command) {
         case 'LOAD_CSV':
             return args && args.file ? `Load CSV \"${args.file}\"` : 'Load CSV';
+        case 'LOAD_JSON':
+            return args && args.file ? `Load JSON \"${args.file}\"` : 'Load JSON';
         case 'SELECT':
         case 'KEEP_COLUMNS':
             if (args && Array.isArray(args.columns)) {
@@ -32,6 +34,12 @@ export function describeCommand(cmd) {
         case 'DROP_COLUMNS':
             if (args && Array.isArray(args.columns)) {
                 return `Drop columns: ${args.columns.join(', ')}`;
+            }
+            break;
+        case 'RENAME_COLUMNS':
+            if (args && Array.isArray(args.mappings)) {
+                const parts = args.mappings.map(m => `${m.from} AS ${m.to}`);
+                return `Rename columns: ${parts.join(', ')}`;
             }
             break;
         case 'WITH_COLUMN':
@@ -51,6 +59,23 @@ export function describeCommand(cmd) {
                 if (rightKey && rightKey !== leftKey) desc += ` = ${rightKey}`;
                 if (type) desc += ` (${type})`;
                 return desc;
+            }
+            break;
+        case 'GROUP_BY':
+            if (args && Array.isArray(args.columns)) {
+                return `Group by ${args.columns.join(', ')}`;
+            }
+            break;
+        case 'AGGREGATE':
+            if (args && Array.isArray(args.aggregates)) {
+                const parts = args.aggregates.map(a => `${a.func}${a.column ? `(${a.column})` : ''}${a.as ? ` AS ${a.as}` : ''}`);
+                return `Aggregate ${parts.join(', ')}`;
+            }
+            break;
+        case 'SORT':
+            if (args && Array.isArray(args.columns)) {
+                const parts = args.columns.map(c => (c.order === 'ASC' ? '-' : '') + c.column);
+                return `Sort by ${parts.join(', ')}`;
             }
             break;
         case 'EXPORT_CSV':

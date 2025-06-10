@@ -3,6 +3,7 @@
 // CSV-related helper functions used by the Interpreter. All functions expect
 // the interpreter instance as the first argument so logging and UI updates
 // remain consistent.
+import { from } from 'arquero';
 
 export async function loadCsv(interp, args) {
     const fileName = args.file;
@@ -42,8 +43,9 @@ export function parseCsvInput(interp, input, name) {
                 interp.log(`Loaded ${results.data.length} rows for VAR "${interp.activeVariableName}" from ${name}. Headers: ${results.meta.fields ? results.meta.fields.join(', ') : 'N/A'}`);
                 if (interp.uiElements.fileInputContainerEl) interp.uiElements.fileInputContainerEl.classList.add('hidden');
                 const rows = results.data;
-                interp.log(`Parsed CSV for VAR "${interp.activeVariableName}". Rows: ${rows.length}`);
-                resolve(rows);
+                const table = from(rows);
+                interp.log(`Parsed CSV for VAR "${interp.activeVariableName}". Rows: ${table.numRows()}`);
+                resolve(table);
             },
             error: (err) => {
                 interp.log(`PapaParse error for VAR "${interp.activeVariableName}": ${err.message}`);
@@ -57,8 +59,15 @@ export function parseCsvInput(interp, input, name) {
 export async function exportCsv(interp, args, dataset) {
     const fileName = args.file || 'export.csv';
 
-    if (Array.isArray(dataset) && dataset.length > 0 && typeof dataset[0] === 'object') {
-        const csvString = Papa.unparse(dataset);
+    let rows = null;
+    if (dataset && typeof dataset.objects === 'function') {
+        rows = dataset.objects();
+    } else if (Array.isArray(dataset)) {
+        rows = dataset;
+    }
+
+    if (Array.isArray(rows) && rows.length > 0 && typeof rows[0] === 'object') {
+        const csvString = Papa.unparse(rows);
         const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);

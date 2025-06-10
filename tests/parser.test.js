@@ -16,6 +16,22 @@ VAR "v2" THEN LOAD_EXCEL FILE "book.xlsx" SHEET "Sheet1"`;
   assert.strictEqual(ast[1].pipeline[0].command, 'LOAD_EXCEL');
 });
 
+test('Parser parses LOAD_EXCEL with sheet index and range', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN LOAD_EXCEL FILE "book.xlsx" SHEET 2 RANGE "A1:C5"');
+  const ast = new Parser(tokens).parse();
+  const cmd = ast[0].pipeline[0];
+  assert.strictEqual(cmd.command, 'LOAD_EXCEL');
+  assert.deepEqual(cmd.args, { file: 'book.xlsx', sheet: 2, range: 'A1:C5' });
+});
+
+test('Parser parses LOAD_JSON command', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN LOAD_JSON FILE "data.json"');
+  const ast = new Parser(tokens).parse();
+  const cmd = ast[0].pipeline[0];
+  assert.strictEqual(cmd.command, 'LOAD_JSON');
+  assert.deepEqual(cmd.args, { file: 'data.json', root: null });
+});
+
 test('Parser throws on missing THEN', () => {
   const tokens = tokenizeForParser('VAR "x" SELECT A');
   const parser = new Parser(tokens);
@@ -27,6 +43,25 @@ test('Parser parses SELECT command', () => {
   const ast = new Parser(tokens).parse();
   assert.strictEqual(ast[0].pipeline[1].command, 'SELECT');
   assert.deepEqual(ast[0].pipeline[1].args.columns, ['A']);
+});
+
+test('Parser parses DROP COLUMN command', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN DROP COLUMN a, b');
+  const ast = new Parser(tokens).parse();
+  const cmd = ast[0].pipeline[0];
+  assert.strictEqual(cmd.command, 'DROP_COLUMNS');
+  assert.deepEqual(cmd.args.columns, ['a','b']);
+});
+
+test('Parser parses RENAME_COLUMNS command', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN RENAME_COLUMNS a AS b, c AS d');
+  const ast = new Parser(tokens).parse();
+  const cmd = ast[0].pipeline[0];
+  assert.strictEqual(cmd.command, 'RENAME_COLUMNS');
+  assert.deepEqual(cmd.args.mappings, [
+    { from: 'a', to: 'b' },
+    { from: 'c', to: 'd' }
+  ]);
 });
 
 test('Parser parses JOIN command', () => {
@@ -135,6 +170,17 @@ test('Parser parses WITH COLUMN command', () => {
   assert.strictEqual(cmd.command, 'WITH_COLUMN');
   assert.strictEqual(cmd.args.columnName, 'total');
   assert.ok(Array.isArray(cmd.args.expression));
+});
+
+test('Parser parses SORT command with multiple columns', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN SORT colA, -colB');
+  const ast = new Parser(tokens).parse();
+  const cmd = ast[0].pipeline[0];
+  assert.strictEqual(cmd.command, 'SORT');
+  assert.deepEqual(cmd.args.columns, [
+    { column: 'colA', order: 'DESC' },
+    { column: 'colB', order: 'ASC' }
+  ]);
 });
 
 test('parseAll collects multiple errors', () => {

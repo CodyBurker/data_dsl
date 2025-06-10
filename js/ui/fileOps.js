@@ -4,7 +4,19 @@ import { elements } from './elements.js';
 import { applySyntaxHighlighting } from './highlight.js';
 
 async function saveScriptToFile(interpreter) {
-    if (!elements.inputArea || typeof window.showSaveFilePicker !== 'function') return;
+    if (!elements.inputArea) return;
+
+    if (window.electronAPI && window.electronAPI.saveFile) {
+        try {
+            await window.electronAPI.saveFile(elements.inputArea.value);
+            if (interpreter) interpreter.log('Script saved to file.');
+        } catch (e) {
+            // ignore
+        }
+        return;
+    }
+
+    if (typeof window.showSaveFilePicker !== 'function') return;
     try {
         const handle = await window.showSaveFilePicker({
             types: [{ description: 'PipeData Script', accept: { 'text/plain': ['.pd'] } }]
@@ -19,7 +31,27 @@ async function saveScriptToFile(interpreter) {
 }
 
 async function loadScriptFromFile(interpreter, updateLineNumbers, highlightRef) {
-    if (!elements.inputArea || typeof window.showOpenFilePicker !== 'function') return;
+    if (!elements.inputArea) return;
+
+    if (window.electronAPI && window.electronAPI.openFile) {
+        try {
+            const text = await window.electronAPI.openFile();
+            if (text != null) {
+                elements.inputArea.value = text;
+                updateLineNumbers();
+                if (elements.highlightingOverlay) {
+                    elements.highlightingOverlay.innerHTML = applySyntaxHighlighting(text, null);
+                    highlightRef.currentLine = null;
+                }
+                if (interpreter) interpreter.log('Loaded script from file.');
+            }
+        } catch (e) {
+            // ignore
+        }
+        return;
+    }
+
+    if (typeof window.showOpenFilePicker !== 'function') return;
     try {
         const [handle] = await window.showOpenFilePicker({
             types: [{ description: 'PipeData Script', accept: { 'text/plain': ['.pd', '.txt'] } }]
@@ -40,13 +72,26 @@ async function loadScriptFromFile(interpreter, updateLineNumbers, highlightRef) 
 
 const fallbackScript = `VAR "cities"
 THEN LOAD_CSV FILE "exampleCities.csv"
-THEN SELECT population, id
-THEN WITH COLUMN population_millions = population / 1000000
+THEN WITH COLUMN city_of = "City of " + name
+THEN SELECT id, city_of
+
 VAR "people"
 THEN LOAD_CSV FILE "examplePeople.csv"
 THEN JOIN cities ON city_id=id TYPE "LEFT"
-THEN SELECT name, age, population, population_millions
-THEN FILTER name STARTSWITH "A"`;
+THEN WITH COLUMN clean_name = TRIM(name)
+THEN WITH COLUMN greeting = UPPER(clean_name) + " from " + city_of
+THEN SELECT person_id, greeting, age
+
+VAR "sales"
+THEN LOAD_JSON FILE "exampleSales.json"
+THEN WITH COLUMN revenue = quantity * unit_price
+THEN GROUP_BY person_id
+THEN AGGREGATE SUM revenue AS total_revenue, COUNT AS order_count
+THEN JOIN people ON person_id=person_id TYPE "LEFT"
+THEN FILTER total_revenue > 100
+THEN SELECT greeting, total_revenue, order_count
+THEN SORT total_revenue, -greeting
+THEN EXPORT_CSV TO "top_customers.csv"`;
 
 async function loadDefaultScript() {
     try {

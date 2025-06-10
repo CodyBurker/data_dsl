@@ -8,6 +8,7 @@ import { buildDag } from '../js/dag.js';
 
 import { TokenType, tokenizeForParser, tokenizeForHighlighting } from "../js/tokenizer.js";
 import { Parser } from "../js/parser.js";
+import { from } from 'arquero';
 function setupDom() {
   const dom = new JSDOM(`<!DOCTYPE html><body>
     <textarea id="pipeDataInput"></textarea>
@@ -49,6 +50,15 @@ test('dag container is present after initUI', async () => {
   assert.ok(document.getElementById('dagContainer'));
 });
 
+test('interpreter.log appends messages to log output element', async () => {
+  setupDom();
+  const uiEls = { logOutputEl: document.getElementById('logOutput') };
+  const interp = new Interpreter(uiEls);
+  await initUI(interp, { autoRun: false });
+  interp.log('hello world');
+  assert.ok(document.getElementById('logOutput').innerHTML.includes('hello world'));
+});
+
 test('renderDag creates node elements with descriptions', async () => {
   setupDom();
   const interp = new Interpreter({});
@@ -70,13 +80,13 @@ test('renderPeekOutputsUI creates a tab for each PEEK output', async () => {
   const interp = new Interpreter({});
   await initUI(interp, { autoRun: false });
   interp.peekOutputs = [
-    { id: 'p1', varName: 'x', line: 1, dataset: [{A:1}] },
-    { id: 'p2', varName: 'x', line: 2, dataset: [{A:2}] }
+    { id: 'p1', varName: 'x', line: 1, dataset: from([{A:1}]) },
+    { id: 'p2', varName: 'x', line: 2, dataset: from([{A:2}]) }
   ];
   renderPeekOutputsUI();
   const tabs = document.querySelectorAll('.peek-tab');
-  assert.strictEqual(tabs.length, 2);
-  assert.strictEqual(tabs[1].dataset.line, '2');
+  assert.strictEqual(tabs.length, 3); // Active tab plus two peek tabs
+  assert.strictEqual(tabs[2].dataset.line, '2');
 });
 
 test('moving cursor selects matching peek tab', async () => {
@@ -85,8 +95,8 @@ test('moving cursor selects matching peek tab', async () => {
   const interp = new Interpreter({});
   await initUI(interp, { autoRun: false });
   interp.peekOutputs = [
-    { id: 'p1', varName: 'x', line: 1, dataset: [{A:1}] },
-    { id: 'p2', varName: 'x', line: 2, dataset: [{A:2}] }
+    { id: 'p1', varName: 'x', line: 1, dataset: from([{A:1}]) },
+    { id: 'p2', varName: 'x', line: 2, dataset: from([{A:2}]) }
   ];
   renderPeekOutputsUI();
 
@@ -97,6 +107,7 @@ test('moving cursor selects matching peek tab', async () => {
 
   const active = document.querySelector('.peek-tab.active-peek-tab');
   assert.ok(active);
+  assert.strictEqual(active.textContent, 'Active');
   assert.strictEqual(active.dataset.line, '2');
 });
 
@@ -137,9 +148,10 @@ THEN SELECT A`;
   assert.strictEqual(interp.stepOutputs.length, 3);
 
   const tabs = document.querySelectorAll('.peek-tab');
-  assert.strictEqual(tabs.length, interp.peekOutputs.length + interp.stepOutputs.length);
+  // active tab + one final output
+  assert.strictEqual(tabs.length, 2);
   const contents = document.querySelectorAll('.peek-content');
-  assert.strictEqual(contents.length, interp.peekOutputs.length + interp.stepOutputs.length);
+  assert.strictEqual(contents.length, 2);
   assert.ok(document.getElementById('astOutput').textContent.includes('LOAD_CSV'));
 });
 
@@ -186,7 +198,8 @@ THEN LOAD_CSV FILE "fake.csv"`;
   assert.strictEqual(interp.stepOutputs.length, 5);
 
   const tabs = document.querySelectorAll('.peek-tab');
-  assert.strictEqual(tabs.length, interp.stepOutputs.length);
+  // active tab plus two final outputs
+  assert.strictEqual(tabs.length, 3);
   assert.ok(document.getElementById('highlightingOverlay').innerHTML.length > 0);
 });
 

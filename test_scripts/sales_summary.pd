@@ -1,0 +1,11 @@
+VAR "people"
+THEN LOAD_EXCEL FILE "examplePeople.xlsx"
+
+VAR "sales"
+THEN LOAD_JSON FILE "exampleSales.json"
+THEN WITH COLUMN revenue = quantity * unit_price
+THEN GROUP_BY person_id
+THEN AGGREGATE SUM revenue AS total_revenue, COUNT AS orders
+THEN JOIN people ON person_id=person_id TYPE "LEFT"
+THEN SELECT name, total_revenue, orders
+THEN SORT -total_revenue

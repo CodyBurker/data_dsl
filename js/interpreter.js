@@ -1,8 +1,11 @@
 // interpreter.js
 import { cities as sampleCities, people as samplePeople } from './samples.js';
 import { loadCsv, exportCsv } from './csv.js';
-import { keepColumns, withColumn, filterRows, joinDatasets } from './datasetOps.js';
+import { loadJson } from './json.js';
+import { loadExcel } from './excel.js';
+import { keepColumns, dropColumns, renameColumns, withColumn, filterRows, joinDatasets, groupBy, aggregate, sortDataset } from './datasetOps.js';
 import { buildDag } from './dag.js';
+import { from } from 'arquero';
 
 export class Interpreter {
     constructor(uiElements) {
@@ -31,8 +34,8 @@ export class Interpreter {
 
     clearInternalState(resetCache = false) {
         this.variables = {
-            cities: sampleCities.map(r => ({ ...r })),
-            people: samplePeople.map(r => ({ ...r }))
+            cities: from(sampleCities.map(r => ({ ...r }))),
+            people: from(samplePeople.map(r => ({ ...r })))
         };
         this.activeVariableName = null;
         this.peekOutputs = [];
@@ -49,6 +52,9 @@ export class Interpreter {
         this.uiElements.fileInputContainerEl.classList.remove('hidden');
         this.uiElements.filePromptMessageEl.textContent = `Pipeline for VAR "${forVariable}": Select CSV for ${fileNameHint}.`;
         this.uiElements.csvFileInputEl.value = ''; // Clear previous selection
+        this.uiElements.csvFileInputEl.accept = '.csv,.txt';
+        // Automatically trigger the file picker so the user doesn't need to click
+        this.uiElements.csvFileInputEl.click();
         return new Promise((resolve, reject) => {
             this.fileResolve = (file) => {
                 if (file) {
@@ -59,6 +65,42 @@ export class Interpreter {
                 }
             };
             // The actual event listener is in ui.js, it will call this.fileResolve
+        });
+    }
+
+    async requestJsonFile(fileNameHint, forVariable) {
+        this.uiElements.fileInputContainerEl.classList.remove('hidden');
+        this.uiElements.filePromptMessageEl.textContent = `Pipeline for VAR "${forVariable}": Select JSON for ${fileNameHint}.`;
+        this.uiElements.csvFileInputEl.value = '';
+        this.uiElements.csvFileInputEl.accept = '.json';
+        this.uiElements.csvFileInputEl.click();
+        return new Promise((resolve, reject) => {
+            this.fileResolve = (file) => {
+                if (file) {
+                    resolve(file);
+                } else {
+                    this.log(`File selection cancelled for VAR "${forVariable}".`);
+                    reject(new Error('File selection cancelled or no file provided.'));
+                }
+            };
+        });
+    }
+
+    async requestExcelFile(fileNameHint, forVariable) {
+        this.uiElements.fileInputContainerEl.classList.remove('hidden');
+        this.uiElements.filePromptMessageEl.textContent = `Pipeline for VAR "${forVariable}": Select Excel for ${fileNameHint}.`;
+        this.uiElements.csvFileInputEl.value = '';
+        this.uiElements.csvFileInputEl.accept = '.xlsx,.xls';
+        this.uiElements.csvFileInputEl.click();
+        return new Promise((resolve, reject) => {
+            this.fileResolve = (file) => {
+                if (file) {
+                    resolve(file);
+                } else {
+                    this.log(`File selection cancelled for VAR "${forVariable}".`);
+                    reject(new Error('File selection cancelled or no file provided.'));
+                }
+            };
         });
     }
 
@@ -155,30 +197,66 @@ export class Interpreter {
             case 'LOAD_CSV':
                 this.variables[this.activeVariableName] = await loadCsv(this, args);
                 break;
+            case 'LOAD_JSON':
+                this.variables[this.activeVariableName] = await loadJson(this, args);
+                break;
+            case 'LOAD_EXCEL':
+                this.variables[this.activeVariableName] = await loadExcel(this, args);
+                break;
             case 'KEEP_COLUMNS':
             case 'SELECT':
-                if (!Array.isArray(currentDataset)) {
+                if (!currentDataset || typeof currentDataset.select !== 'function') {
                     throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply ${command}.`);
                 }
                 this.variables[this.activeVariableName] = keepColumns(this, args, currentDataset);
                 break;
+            case 'DROP_COLUMNS':
+                if (!currentDataset || typeof currentDataset.select !== 'function') {
+                    throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply DROP_COLUMNS.`);
+                }
+                this.variables[this.activeVariableName] = dropColumns(this, args, currentDataset);
+                break;
+            case 'RENAME_COLUMNS':
+                if (!currentDataset || typeof currentDataset.rename !== 'function') {
+                    throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply RENAME_COLUMNS.`);
+                }
+                this.variables[this.activeVariableName] = renameColumns(this, args, currentDataset);
+                break;
             case 'JOIN':
-                if (!Array.isArray(currentDataset)) {
+                if (!currentDataset || typeof currentDataset.join !== 'function') {
                     throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply JOIN.`);
                 }
                 this.variables[this.activeVariableName] = joinDatasets(this, args, currentDataset);
                 break;
             case 'FILTER':
-                if (!Array.isArray(currentDataset)) {
+                if (!currentDataset || typeof currentDataset.filter !== 'function') {
                     throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply FILTER.`);
                 }
                 this.variables[this.activeVariableName] = filterRows(this, args, currentDataset);
                 break;
             case 'WITH_COLUMN':
-                if (!Array.isArray(currentDataset)) {
+                if (!currentDataset || typeof currentDataset.derive !== 'function') {
                     throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply WITH_COLUMN.`);
                 }
                 this.variables[this.activeVariableName] = withColumn(this, args, currentDataset);
+                break;
+            case 'GROUP_BY':
+                if (!currentDataset || typeof currentDataset.groupby !== 'function') {
+                    throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply GROUP_BY.`);
+                }
+                this.variables[this.activeVariableName] = groupBy(this, args, currentDataset);
+                break;
+            case 'AGGREGATE':
+                if (!currentDataset || typeof currentDataset.rollup !== 'function') {
+                    throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply AGGREGATE.`);
+                }
+                this.variables[this.activeVariableName] = aggregate(this, args, currentDataset);
+                break;
+            case 'SORT':
+                if (!currentDataset || typeof currentDataset.orderby !== 'function') {
+                    throw new Error(`No dataset loaded for VAR "${this.activeVariableName}" to apply SORT.`);
+                }
+                this.variables[this.activeVariableName] = sortDataset(this, args, currentDataset);
                 break;
             case 'EXPORT_CSV':
                 if (!currentDataset) {

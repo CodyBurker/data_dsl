@@ -85,3 +85,21 @@ test('tokenizeForParser recognizes WITH and COLUMN keywords', () => {
   assert.ok(withKw && withKw.type === TokenType.KEYWORD);
   assert.ok(columnKw && columnKw.type === TokenType.KEYWORD);
 });
+
+test('tokenizeForParser recognizes SORT keyword', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN SORT a, -b');
+  const sortKw = tokens.find(t => t.value === 'SORT');
+  assert.ok(sortKw && sortKw.type === TokenType.KEYWORD);
+});
+
+test('tokenizeForParser recognizes DROP keyword', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN DROP COLUMN a');
+  const drop = tokens.find(t => t.value === 'DROP');
+  assert.ok(drop && drop.type === TokenType.KEYWORD);
+});
+
+test('tokenizeForParser recognizes RENAME_COLUMNS keyword', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN RENAME_COLUMNS a AS b');
+  const ren = tokens.find(t => t.value === 'RENAME_COLUMNS');
+  assert.ok(ren && ren.type === TokenType.KEYWORD);
+});
