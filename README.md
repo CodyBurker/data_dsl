@@ -172,3 +172,4 @@ Workspace management (e.g. open folder)
 Language guide is not working.
 Open/Save script not working (menu bar not working)
 Hover over DAG nodes doesn't work when scrolling right.
+Windows builds are not working (commands are nix based, failing on Windows)
