@@ -2,7 +2,7 @@
 import { cities as sampleCities, people as samplePeople } from './samples.js';
 import { loadCsv, exportCsv } from './csv.js';
 import { loadJson } from './json.js';
-import { loadExcel } from './excel.js';
+import { loadExcel, exportExcel } from './excel.js';
 import { keepColumns, dropColumns, renameColumns, withColumn, filterRows, joinDatasets, groupBy, aggregate, sortDataset } from './datasetOps.js';
 import { buildDag } from './dag.js';
 import { from } from 'arquero';
@@ -263,6 +263,12 @@ export class Interpreter {
                     throw new Error(`No dataset available in VAR "${this.activeVariableName}" to export.`);
                 }
                 await exportCsv(this, args, currentDataset);
+                break;
+            case 'EXPORT_EXCEL':
+                if (!currentDataset) {
+                    throw new Error(`No dataset available in VAR "${this.activeVariableName}" to export.`);
+                }
+                await exportExcel(this, args, currentDataset);
                 break;
             default: this.log(`Command ${command} for VAR "${this.activeVariableName}" is parsed but not yet fully implemented.`);
         }

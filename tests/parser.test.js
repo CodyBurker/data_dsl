@@ -24,6 +24,14 @@ test('Parser parses LOAD_EXCEL with sheet index and range', () => {
   assert.deepEqual(cmd.args, { file: 'book.xlsx', sheet: 2, range: 'A1:C5' });
 });
 
+test('Parser parses EXPORT_EXCEL command', () => {
+  const tokens = tokenizeForParser('VAR "d" THEN EXPORT_EXCEL TO "out.xlsx" SHEET "Data"');
+  const ast = new Parser(tokens).parse();
+  const cmd = ast[0].pipeline[0];
+  assert.strictEqual(cmd.command, 'EXPORT_EXCEL');
+  assert.deepEqual(cmd.args, { file: 'out.xlsx', sheet: 'Data' });
+});
+
 test('Parser parses LOAD_JSON command', () => {
   const tokens = tokenizeForParser('VAR "d" THEN LOAD_JSON FILE "data.json"');
   const ast = new Parser(tokens).parse();

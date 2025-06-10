@@ -107,6 +107,13 @@ Download the current dataset as a CSV file.
 EXPORT_CSV TO "output.csv"
 ```
 
+### EXPORT_EXCEL
+Download the current dataset as an Excel workbook.
+
+```
+EXPORT_EXCEL TO "output.xlsx" SHEET "Sheet1"
+```
+
 ### FILTER
 Filter rows using comparisons against values or other columns. Supported operators
 include `=`, `!=`, `>`, `<`, `>=`, `<=`, `IS`, `IS NOT`, `CONTAINS`, `STARTSWITH`,
