@@ -291,7 +291,11 @@ function handleExportPeek(interpreter) {
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            link.setAttribute('download', `peek_export_${datasetEntry.varName}_L${datasetEntry.line}.csv`);
+            let fileName = `export_${datasetEntry.varName}_L${datasetEntry.line}.csv`;
+            if (datasetEntry.id && datasetEntry.id.endsWith('-final')) {
+                fileName = `${datasetEntry.varName}.csv`;
+            }
+            link.setAttribute('download', fileName);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
@@ -368,7 +372,11 @@ function handleExportPeekExcel(interpreter) {
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            link.setAttribute('download', `peek_export_${datasetEntry.varName}_L${datasetEntry.line}.xlsx`);
+            let fileName = `export_${datasetEntry.varName}_L${datasetEntry.line}.xlsx`;
+            if (datasetEntry.id && datasetEntry.id.endsWith('-final')) {
+                fileName = `${datasetEntry.varName}.xlsx`;
+            }
+            link.setAttribute('download', fileName);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
