@@ -165,4 +165,5 @@ Make panels resizable (or even movable?)
 Workspace management (e.g. open folder)
 
 ## Bugs
-Since moving to electron all IO is broken
+~~Since moving to electron all IO is broken~~
+Language guide is not working.
