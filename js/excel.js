@@ -46,3 +46,32 @@ export async function loadExcel(interp, args) {
     interp.log(`Loaded ${json.length} rows from ${file} sheet ${sheetName}${range ? ` range ${range}` : ''}.`);
     return from(json);
 }
+
+export async function exportExcel(interp, args, dataset) {
+    const fileName = args.file || 'export.xlsx';
+    const sheetName = args.sheet || 'Sheet1';
+
+    let rows = null;
+    if (dataset && typeof dataset.objects === 'function') {
+        rows = dataset.objects();
+    } else if (Array.isArray(dataset)) {
+        rows = dataset;
+    }
+
+    if (Array.isArray(rows) && rows.length > 0 && typeof rows[0] === 'object') {
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(rows);
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        const buffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        interp.log(`Exported data from VAR "${interp.activeVariableName}" to ${fileName} sheet ${sheetName}.`);
+    } else {
+        throw new Error(`EXPORT_EXCEL does not support dataset type: ${typeof dataset}`);
+    }
+}

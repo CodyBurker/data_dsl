@@ -2,6 +2,7 @@
 
 import { elements } from './elements.js';
 import { applySyntaxHighlighting, escapeHtml } from './highlight.js';
+import * as XLSX from 'xlsx';
 
 // Build HTML to display a peeked dataset.
 function generatePeekHtmlForDisplay(datasetToPeek, varName, line) {
@@ -90,11 +91,13 @@ function renderPeekOutputsUI(interpreter, { currentLineRef, updateVarBlockIndica
     if (peekOutputs.length === 0 && stepOutputs.length === 0) {
         elements.peekOutputsDisplayAreaEl.innerHTML = '<div class="output-box-placeholder">No PEEK outputs to display.</div>';
         if (elements.exportPeekButton) elements.exportPeekButton.classList.add('hidden');
+        if (elements.exportExcelButton) elements.exportExcelButton.classList.add('hidden');
         clearEditorPeekHighlight({ currentLineRef });
         return;
     }
 
     if (elements.exportPeekButton) elements.exportPeekButton.classList.remove('hidden');
+    if (elements.exportExcelButton) elements.exportExcelButton.classList.remove('hidden');
 
     const activeTab = document.createElement('button');
     activeTab.classList.add('peek-tab', 'active-peek-tab');
@@ -288,7 +291,11 @@ function handleExportPeek(interpreter) {
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            link.setAttribute('download', `peek_export_${datasetEntry.varName}_L${datasetEntry.line}.csv`);
+            let fileName = `export_${datasetEntry.varName}_L${datasetEntry.line}.csv`;
+            if (datasetEntry.id && datasetEntry.id.endsWith('-final')) {
+                fileName = `${datasetEntry.varName}.csv`;
+            }
+            link.setAttribute('download', fileName);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
@@ -305,10 +312,92 @@ function handleExportPeek(interpreter) {
     }
 }
 
+function handleExportPeekExcel(interpreter) {
+    if (!interpreter || !elements.peekTabsContainerEl) return;
+
+    const activeTab = elements.peekTabsContainerEl.querySelector('.peek-tab.active-peek-tab');
+    if (!activeTab) {
+        alert('No active PEEK tab found to export.');
+        return;
+    }
+
+    let datasetEntry = null;
+
+    if (activeTab.dataset.peekIndex) {
+        const idx = parseInt(activeTab.dataset.peekIndex, 10);
+        if (!Number.isNaN(idx)) datasetEntry = interpreter.peekOutputs[idx];
+    } else if (activeTab.dataset.finalVar) {
+        const stepOutputs = interpreter.stepOutputs || [];
+        for (const s of stepOutputs) {
+            if (s.id && s.id.endsWith('-final') && s.varName === activeTab.dataset.finalVar) {
+                datasetEntry = s;
+                break;
+            }
+        }
+    } else if (activeTab.dataset.special === 'active') {
+        const line = parseInt(activeTab.dataset.line, 10);
+        if (!Number.isNaN(line)) {
+            const stepOutputs = interpreter.stepOutputs || [];
+            for (let i = stepOutputs.length - 1; i >= 0; i--) {
+                const s = stepOutputs[i];
+                if (s.line === line) { datasetEntry = s; break; }
+            }
+            if (!datasetEntry) {
+                const peekOutputs = interpreter.peekOutputs || [];
+                for (let i = peekOutputs.length - 1; i >= 0; i--) {
+                    const p = peekOutputs[i];
+                    if (p.line === line) { datasetEntry = p; break; }
+                }
+            }
+        }
+    }
+
+    if (!datasetEntry || !datasetEntry.dataset) {
+        alert('Could not find data for the active PEEK tab.');
+        return;
+    }
+
+    let dataset = datasetEntry.dataset;
+    if (dataset && typeof dataset.objects === 'function') {
+        dataset = dataset.objects();
+    }
+
+    if (Array.isArray(dataset) && dataset.length > 0 && typeof dataset[0] === 'object') {
+        try {
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(dataset);
+            XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+            const buffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            let fileName = `export_${datasetEntry.varName}_L${datasetEntry.line}.xlsx`;
+            if (datasetEntry.id && datasetEntry.id.endsWith('-final')) {
+                fileName = `${datasetEntry.varName}.xlsx`;
+            }
+            link.setAttribute('download', fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            interpreter.log(`Exported PEEK data (array of objects) for VAR "${datasetEntry.varName}" (Line ${datasetEntry.line}) to Excel.`);
+        } catch (error) {
+            console.error('Error exporting array of objects to Excel:', error);
+            alert('Failed to export data to Excel. See console for details.');
+            interpreter.log(`Error exporting PEEK (array of objects) for VAR "${datasetEntry.varName}" to Excel: ${error.message}`);
+        }
+    } else {
+        alert('The active PEEK tab data is not in a format that can be exported to Excel.');
+        interpreter.log(`PEEK data for VAR "${datasetEntry.varName}" (Line ${datasetEntry.line}) is not exportable to Excel (type: ${typeof dataset})`);
+    }
+}
+
 export {
     generatePeekHtmlForDisplay,
     renderPeekOutputsUI,
     updateActiveTab,
     clearEditorPeekHighlight,
-    handleExportPeek
+    handleExportPeek,
+    handleExportPeekExcel
 };

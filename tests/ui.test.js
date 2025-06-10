@@ -30,6 +30,7 @@ function setupDom() {
     <div id="fileInputContainer"></div>
     <span id="filePromptMessage"></span>
     <button id="exportPeekButton"></button>
+    <button id="exportExcelButton"></button>
   </body>`, { url: 'https://example.com' });
   global.document = dom.window.document;
   global.window = dom.window;
