@@ -127,9 +127,9 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
     * [ ] **`SAVE_EXCEL`**: Implement saving data to Excel format.
 - [ ] **UI & UX Enhancements:**
     * [X] **Re-arrange UI elements:** Move existing elements around to make better use of the screen space.
-    * **Manage Multiple Inputs:** Create a UI to list and manage loaded files/datasets.
+    * **Manage Multiple Inputs:** Create a UI to list and manage loaded files/datasets. Allow users to open a folder and then load files from there. (e.g. open 'reports' folder then load `report1.csv`, `report2.csv`, etc.)
     * **Clearer Error Messages:** Improve feedback for script errors, providing more context and suggestions.
-    * **Add Variable-based Tabs:** Add persistent tabs for each `VAR` block's final output, in addition to the line-by-line step outputs.
+    [X] * **Add Variable-based Tabs:** Add persistent tabs for each `VAR` block's final output, in addition to the line-by-line step outputs.
 
 ---
 
@@ -167,3 +167,4 @@ Workspace management (e.g. open folder)
 ## Bugs
 ~~Since moving to electron all IO is broken~~
 Language guide is not working.
+Open/Save script not working (menu bar not working)
