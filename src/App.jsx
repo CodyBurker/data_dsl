@@ -1,9 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Interpreter } from '../js/interpreter.js';
 import { initUI } from '../js/ui/index.js';
 import '../style.css';
+import SpreadsheetUI from './SpreadsheetUI.jsx';
 
 export default function App() {
+  const [mode, setMode] = useState('code');
   useEffect(() => {
     const uiElementsForInterpreter = {
       logOutputEl: document.getElementById('logOutput'),
@@ -27,7 +29,12 @@ export default function App() {
             <a href="https://github.com/CodyBurker/data_dsl" target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium underline">View on GitHub</a>
             <a href="guide.html" className="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium underline ml-4">Language Guide</a>
           </p>
+          <div className="mt-4 flex justify-center space-x-4">
+            <button onClick={() => setMode('code')} className={mode === 'code' ? 'font-semibold underline' : 'text-indigo-600 underline'}>Code Editor</button>
+            <button onClick={() => setMode('sheet')} className={mode === 'sheet' ? 'font-semibold underline' : 'text-indigo-600 underline'}>Spreadsheet</button>
+          </div>
         </header>
+        <div className={mode === 'code' ? '' : 'hidden'}>
         <div className="file-input-container hidden" id="fileInputContainer">
           <label htmlFor="csvFileInput" className="block text-sm font-medium text-gray-700 mb-2">A `LOAD_CSV` or `LOAD_JSON` command requires you to select a file:</label>
           <input type="file" id="csvFileInput" accept=".csv,.txt,.json" className="block w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 cursor-pointer focus:outline-none p-2" />
@@ -99,6 +106,10 @@ export default function App() {
           </ul>
         </div>
       </div>
+      <div className={mode === "sheet" ? "" : "hidden"}>
+        <SpreadsheetUI />
+      </div>
+    </div>
     </div>
   );
 }
