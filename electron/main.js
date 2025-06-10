@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs/promises';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -9,7 +10,9 @@ function createWindow() {
     width: 1000,
     height: 800,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false
     }
   });
   win.loadFile(path.join(__dirname, '..', 'docs', 'index.html'));
@@ -35,8 +38,11 @@ ipcMain.handle('openFile', async () => {
     filters: [{ name: 'PipeData Script', extensions: ['pd', 'txt'] }]
   });
   if (canceled || filePaths.length === 0) return null;
-  const fs = await import('fs/promises');
-  return fs.readFile(filePaths[0], 'utf8');
+  try {
+    return await fs.readFile(filePaths[0], 'utf8');
+  } catch {
+    return null;
+  }
 });
 
 ipcMain.handle('saveFile', async (event, content) => {
@@ -44,9 +50,12 @@ ipcMain.handle('saveFile', async (event, content) => {
     filters: [{ name: 'PipeData Script', extensions: ['pd'] }]
   });
   if (canceled || !filePath) return null;
-  const fs = await import('fs/promises');
-  await fs.writeFile(filePath, content, 'utf8');
-  return true;
+  try {
+    await fs.writeFile(filePath, content, 'utf8');
+    return true;
+  } catch {
+    return null;
+  }
 });
 
 export { createWindow };

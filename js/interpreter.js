@@ -52,6 +52,9 @@ export class Interpreter {
         this.uiElements.fileInputContainerEl.classList.remove('hidden');
         this.uiElements.filePromptMessageEl.textContent = `Pipeline for VAR "${forVariable}": Select CSV for ${fileNameHint}.`;
         this.uiElements.csvFileInputEl.value = ''; // Clear previous selection
+        this.uiElements.csvFileInputEl.accept = '.csv,.txt';
+        // Automatically trigger the file picker so the user doesn't need to click
+        this.uiElements.csvFileInputEl.click();
         return new Promise((resolve, reject) => {
             this.fileResolve = (file) => {
                 if (file) {
@@ -69,6 +72,8 @@ export class Interpreter {
         this.uiElements.fileInputContainerEl.classList.remove('hidden');
         this.uiElements.filePromptMessageEl.textContent = `Pipeline for VAR "${forVariable}": Select JSON for ${fileNameHint}.`;
         this.uiElements.csvFileInputEl.value = '';
+        this.uiElements.csvFileInputEl.accept = '.json';
+        this.uiElements.csvFileInputEl.click();
         return new Promise((resolve, reject) => {
             this.fileResolve = (file) => {
                 if (file) {
@@ -85,6 +90,8 @@ export class Interpreter {
         this.uiElements.fileInputContainerEl.classList.remove('hidden');
         this.uiElements.filePromptMessageEl.textContent = `Pipeline for VAR "${forVariable}": Select Excel for ${fileNameHint}.`;
         this.uiElements.csvFileInputEl.value = '';
+        this.uiElements.csvFileInputEl.accept = '.xlsx,.xls';
+        this.uiElements.csvFileInputEl.click();
         return new Promise((resolve, reject) => {
             this.fileResolve = (file) => {
                 if (file) {
