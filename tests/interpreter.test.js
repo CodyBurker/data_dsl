@@ -57,6 +57,15 @@ test('exportCsv for array of objects uses Papa.unparse', async () => {
   global.__clicked = false;
 });
 
+test('exportExcel triggers download link', async () => {
+  const interp = new Interpreter({});
+  interp.activeVariableName = 'data';
+  const table = from([{A:1},{A:2}]);
+  await excel.exportExcel(interp, { file: 'out.xlsx', sheet: 'Data' }, table);
+  assert.ok(global.__clicked);
+  global.__clicked = false;
+});
+
 test('exportCsv throws on unsupported type', async () => {
   const interp = new Interpreter({});
   interp.activeVariableName = 'data';

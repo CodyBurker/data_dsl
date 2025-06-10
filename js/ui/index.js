@@ -9,6 +9,7 @@ import {
     renderPeekOutputsUI as renderPeekOutputsUIHelper,
     clearEditorPeekHighlight as clearEditorPeekHighlightHelper,
     handleExportPeek as handleExportPeekHelper,
+    handleExportPeekExcel as handleExportPeekExcelHelper,
     updateActiveTab
 } from './peek.js';
 import { buildDag } from '../dag.js';
@@ -145,6 +146,10 @@ function clearEditorPeekHighlight() {
 
 function handleExportPeek() {
     handleExportPeekHelper(uiInterpreterInstance);
+}
+
+function handleExportExcel() {
+    handleExportPeekExcelHelper(uiInterpreterInstance);
 }
 
 async function runRealtime() {
@@ -307,6 +312,7 @@ function clearOutputs() {
         elements.fileInputContainerEl.classList.add('hidden');
     }
     if (elements.exportPeekButton) elements.exportPeekButton.classList.add('hidden');
+    if (elements.exportExcelButton) elements.exportExcelButton.classList.add('hidden');
     clearEditorPeekHighlight();
     if (elements.varBlockIndicator) elements.varBlockIndicator.style.display = 'none';
     if (elements.dagContainer) elements.dagContainer.innerHTML = '';
@@ -390,6 +396,7 @@ export async function initUI(interpreter, options = {}) {
         if (elements.peekTabsContainerEl) elements.peekTabsContainerEl.innerHTML = '';
         if (elements.peekOutputsDisplayAreaEl) elements.peekOutputsDisplayAreaEl.innerHTML = '<div class="output-box-placeholder">Peek results will appear here when a script is run.</div>';
         if (elements.exportPeekButton) elements.exportPeekButton.classList.add('hidden');
+        if (elements.exportExcelButton) elements.exportExcelButton.classList.add('hidden');
         clearEditorPeekHighlight();
         uiInterpreterInstance.clearInternalState();
 
@@ -432,6 +439,7 @@ export async function initUI(interpreter, options = {}) {
     elements.saveFileButton?.addEventListener('click', () => saveScriptToFile(uiInterpreterInstance));
     elements.openFileButton?.addEventListener('click', () => loadScriptFromFile(uiInterpreterInstance, updateLineNumbers, highlightState));
     elements.exportPeekButton?.addEventListener('click', handleExportPeek);
+    elements.exportExcelButton?.addEventListener('click', handleExportExcel);
 
    elements.inputArea?.addEventListener('keyup', () => {
         const line = getCursorLineNumber();

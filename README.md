@@ -124,7 +124,10 @@ The UI visualizes this DAG below the editor. Nodes are arranged so that every de
       VAR "data"
       THEN LOAD_EXCEL FILE "book.xlsx" SHEET "Sheet1" RANGE "A1:C10"
       ```
-    * [ ] **`SAVE_EXCEL`**: Implement saving data to Excel format.
+    * [X] **`SAVE_EXCEL`**: Implement saving data to Excel format.
+      ```
+      THEN EXPORT_EXCEL TO "results.xlsx" SHEET "Sheet1"
+      ```
 - [ ] **UI & UX Enhancements:**
     * [X] **Re-arrange UI elements:** Move existing elements around to make better use of the screen space.
     * **Manage Multiple Inputs:** Create a UI to list and manage loaded files/datasets. Allow users to open a folder and then load files from there. (e.g. open 'reports' folder then load `report1.csv`, `report2.csv`, etc.)
@@ -168,3 +171,4 @@ Workspace management (e.g. open folder)
 ~~Since moving to electron all IO is broken~~
 Language guide is not working.
 Open/Save script not working (menu bar not working)
+Hover over DAG nodes doesn't work when scrolling right.
