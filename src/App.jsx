@@ -60,7 +60,7 @@ export default function App() {
           <div className="lg:w-1/2 w-full">
             <div className="flex justify-between items-center mb-0">
               <label className="block text-lg font-medium text-gray-700">Data:</label>
-              <button id="exportPeekButton" className="bg-green-500 hover:bg-green-600 text-white font-semibold py-1 px-3 rounded-lg shadow-md transition duration-150 ease-in-out transform hover:scale-105 text-xs hidden">Export Active PEEK (CSV)</button>
+              <button id="exportPeekButton" className="bg-green-500 hover:bg-green-600 text-white font-semibold py-1 px-3 rounded-lg shadow-md transition duration-150 ease-in-out transform hover:scale-105 text-xs hidden">Export CSV</button>
             </div>
             <div id="peekTabsContainer" className="flex flex-wrap border-b border-gray-300"></div>
             <div id="peekOutputsDisplayArea" className="peek-output-area-container">
