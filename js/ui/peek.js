@@ -240,15 +240,43 @@ function handleExportPeek(interpreter) {
         return;
     }
 
-    const peekIndex = parseInt(activeTab.dataset.peekIndex, 10);
-    const peekDataEntry = interpreter.peekOutputs[peekIndex];
+    let datasetEntry = null;
 
-    if (!peekDataEntry || !peekDataEntry.dataset) {
+    if (activeTab.dataset.peekIndex) {
+        const idx = parseInt(activeTab.dataset.peekIndex, 10);
+        if (!Number.isNaN(idx)) datasetEntry = interpreter.peekOutputs[idx];
+    } else if (activeTab.dataset.finalVar) {
+        const stepOutputs = interpreter.stepOutputs || [];
+        for (const s of stepOutputs) {
+            if (s.id && s.id.endsWith('-final') && s.varName === activeTab.dataset.finalVar) {
+                datasetEntry = s;
+                break;
+            }
+        }
+    } else if (activeTab.dataset.special === 'active') {
+        const line = parseInt(activeTab.dataset.line, 10);
+        if (!Number.isNaN(line)) {
+            const stepOutputs = interpreter.stepOutputs || [];
+            for (let i = stepOutputs.length - 1; i >= 0; i--) {
+                const s = stepOutputs[i];
+                if (s.line === line) { datasetEntry = s; break; }
+            }
+            if (!datasetEntry) {
+                const peekOutputs = interpreter.peekOutputs || [];
+                for (let i = peekOutputs.length - 1; i >= 0; i--) {
+                    const p = peekOutputs[i];
+                    if (p.line === line) { datasetEntry = p; break; }
+                }
+            }
+        }
+    }
+
+    if (!datasetEntry || !datasetEntry.dataset) {
         alert('Could not find data for the active PEEK tab.');
         return;
     }
 
-    let dataset = peekDataEntry.dataset;
+    let dataset = datasetEntry.dataset;
     if (dataset && typeof dataset.objects === 'function') {
         dataset = dataset.objects();
     }
@@ -260,20 +288,20 @@ function handleExportPeek(interpreter) {
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            link.setAttribute('download', `peek_export_${peekDataEntry.varName}_L${peekDataEntry.line}.csv`);
+            link.setAttribute('download', `peek_export_${datasetEntry.varName}_L${datasetEntry.line}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            interpreter.log(`Exported PEEK data (array of objects) for VAR "${peekDataEntry.varName}" (Line ${peekDataEntry.line}) to CSV.`);
+            interpreter.log(`Exported PEEK data (array of objects) for VAR "${datasetEntry.varName}" (Line ${datasetEntry.line}) to CSV.`);
         } catch (error) {
             console.error('Error exporting array of objects to CSV:', error);
             alert('Failed to export data to CSV. See console for details.');
-            interpreter.log(`Error exporting PEEK (array of objects) for VAR "${peekDataEntry.varName}" to CSV: ${error.message}`);
+            interpreter.log(`Error exporting PEEK (array of objects) for VAR "${datasetEntry.varName}" to CSV: ${error.message}`);
         }
     } else {
         alert('The active PEEK tab data is not in a format that can be exported to CSV.');
-        interpreter.log(`PEEK data for VAR "${peekDataEntry.varName}" (Line ${peekDataEntry.line}) is not exportable to CSV (type: ${typeof dataset})`);
+        interpreter.log(`PEEK data for VAR "${datasetEntry.varName}" (Line ${datasetEntry.line}) is not exportable to CSV (type: ${typeof dataset})`);
     }
 }
 
