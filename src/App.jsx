@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Interpreter } from '../js/interpreter.js';
-import { initUI } from '../js/ui/index.js';
+import { initUI, renderPeekOutputsUI } from '../js/ui/index.js';
 import { tokenizeForParser } from '../js/tokenizer.js';
 import { Parser } from '../js/parser.js';
 import { buildDag } from '../js/dag.js';
 import { dagToNodes } from '../js/ui/dagToNodes.js';
 import { nodesToDsl } from '../js/ui/nodesToDsl.js';
+import { renderDag } from '../js/ui/dagView.js';
 import '../style.css';
 import SpreadsheetUI from './SpreadsheetUI.jsx';
 
@@ -13,6 +14,22 @@ export default function App() {
   const [mode, setMode] = useState('code');
   const [interpreter, setInterpreter] = useState(null);
   const [sheetNodes, setSheetNodes] = useState([]);
+
+  // Keep interpreter, peek UI and DAG in sync when editing spreadsheet
+  useEffect(() => {
+    if (mode !== 'sheet' || !interpreter) return;
+    (async () => {
+      try {
+        const dsl = nodesToDsl({ main: sheetNodes });
+        const ast = new Parser(tokenizeForParser(dsl)).parse();
+        await interpreter.run(ast);
+        renderPeekOutputsUI();
+        renderDag(buildDag(ast));
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, [sheetNodes, interpreter, mode]);
 
   useEffect(() => {
     const uiElementsForInterpreter = {

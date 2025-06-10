@@ -28,3 +28,20 @@ test('dagToNodes and nodesToDsl round-trip', () => {
   const ast2 = new Parser(tokens2).parse();
   assert.deepStrictEqual(stripLines(ast2), stripLines(ast));
 });
+
+test('multiple translations preserve semantics', () => {
+  const tokens1 = tokenizeForParser(script);
+  const ast1 = new Parser(tokens1).parse();
+  let pipelines = dagToNodes(buildDag(ast1));
+
+  for (let i = 0; i < 3; i++) {
+    const dsl = nodesToDsl(pipelines);
+    const ast = new Parser(tokenizeForParser(dsl)).parse();
+    pipelines = dagToNodes(buildDag(ast));
+  }
+
+  const finalDsl = nodesToDsl(pipelines);
+  const astFinal = new Parser(tokenizeForParser(finalDsl)).parse();
+
+  assert.deepStrictEqual(stripLines(astFinal), stripLines(ast1));
+});
