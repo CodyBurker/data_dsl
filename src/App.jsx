@@ -1,11 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { Interpreter } from '../js/interpreter.js';
 import { initUI } from '../js/ui/index.js';
+import { tokenizeForParser } from '../js/tokenizer.js';
+import { Parser } from '../js/parser.js';
+import { buildDag } from '../js/dag.js';
+import { dagToNodes } from '../js/ui/dagToNodes.js';
+import { nodesToDsl } from '../js/ui/nodesToDsl.js';
 import '../style.css';
 import SpreadsheetUI from './SpreadsheetUI.jsx';
 
 export default function App() {
   const [mode, setMode] = useState('code');
+  const [interpreter, setInterpreter] = useState(null);
+  const [sheetNodes, setSheetNodes] = useState([]);
+
   useEffect(() => {
     const uiElementsForInterpreter = {
       logOutputEl: document.getElementById('logOutput'),
@@ -15,9 +23,44 @@ export default function App() {
       fileInputContainerEl: document.getElementById('fileInputContainer'),
       filePromptMessageEl: document.getElementById('filePromptMessage')
     };
-    const interpreter = new Interpreter(uiElementsForInterpreter);
-    initUI(interpreter);
+    const i = new Interpreter(uiElementsForInterpreter);
+    initUI(i);
+    setInterpreter(i);
   }, []);
+
+  const switchToSheet = async () => {
+    if (!interpreter) return;
+    const textarea = document.getElementById('pipeDataInput');
+    if (!textarea) return;
+    const script = textarea.value;
+    try {
+      const tokens = tokenizeForParser(script);
+      const ast = new Parser(tokens).parse();
+      await interpreter.run(ast);
+      const dag = buildDag(ast);
+      const pipelines = dagToNodes(dag);
+      const firstVar = Object.keys(pipelines)[0];
+      setSheetNodes(pipelines[firstVar] || []);
+    } catch (e) {
+      console.error(e);
+    }
+    setMode('sheet');
+  };
+
+  const switchToCode = async () => {
+    const textarea = document.getElementById('pipeDataInput');
+    if (!textarea) return;
+    const pipelines = { main: sheetNodes };
+    const newScript = nodesToDsl(pipelines);
+    textarea.value = newScript;
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    if (interpreter) {
+      const tokens = tokenizeForParser(newScript);
+      const ast = new Parser(tokens).parse();
+      await interpreter.run(ast);
+    }
+    setMode('code');
+  };
 
   return (
     <div className="bg-gray-100 min-h-screen flex flex-col p-4">
@@ -30,8 +73,8 @@ export default function App() {
             <a href="guide.html" className="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium underline ml-4">Language Guide</a>
           </p>
           <div className="mt-4 flex justify-center space-x-4">
-            <button onClick={() => setMode('code')} className={mode === 'code' ? 'font-semibold underline' : 'text-indigo-600 underline'}>Code Editor</button>
-            <button onClick={() => setMode('sheet')} className={mode === 'sheet' ? 'font-semibold underline' : 'text-indigo-600 underline'}>Spreadsheet</button>
+            <button onClick={switchToCode} className={mode === 'code' ? 'font-semibold underline' : 'text-indigo-600 underline'}>Code Editor</button>
+            <button onClick={switchToSheet} className={mode === 'sheet' ? 'font-semibold underline' : 'text-indigo-600 underline'}>Spreadsheet</button>
           </div>
         </header>
         <div className={mode === 'code' ? '' : 'hidden'}>
@@ -107,7 +150,7 @@ export default function App() {
         </div>
       </div>
       <div className={mode === "sheet" ? "" : "hidden"}>
-        <SpreadsheetUI />
+        <SpreadsheetUI nodes={sheetNodes} onNodesChange={setSheetNodes} />
       </div>
     </div>
     </div>

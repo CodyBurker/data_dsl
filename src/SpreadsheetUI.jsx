@@ -48,15 +48,21 @@ function SpreadsheetTable({ data, headers }) {
   );
 }
 
-export default function SpreadsheetUI() {
+export default function SpreadsheetUI({ nodes = null, onNodesChange = () => {} }) {
   const [originalData, setOriginalData] = useState([]);
   const [originalHeaders, setOriginalHeaders] = useState([]);
-  const [pipelineNodes, setPipelineNodes] = useState([]); // {id,type,params,name}
+  const [pipelineNodes, setPipelineNodes] = useState(nodes || []); // {id,type,params,name}
   const [activeNodeId, setActiveNodeId] = useState(null);
   const [viewNodeId, setViewNodeId] = useState(null);
 
-  // Initialize with dummy dataset on mount
+  // Initialize with dummy dataset on mount if no nodes provided
   useEffect(() => {
+    if (nodes && nodes.length > 0) {
+      setPipelineNodes(nodes);
+      setActiveNodeId(nodes[0].id);
+      setViewNodeId(nodes[0].id);
+      return;
+    }
     setOriginalData(dummyDataSource.data);
     setOriginalHeaders(dummyDataSource.headers);
     const uploadNode = {
@@ -68,7 +74,11 @@ export default function SpreadsheetUI() {
     setPipelineNodes([uploadNode]);
     setActiveNodeId(uploadNode.id);
     setViewNodeId(uploadNode.id);
-  }, []);
+  }, [nodes]);
+
+  useEffect(() => {
+    onNodesChange(pipelineNodes);
+  }, [pipelineNodes, onNodesChange]);
 
   // Compute processed data for each node
   const processedDataHistory = useMemo(() => {
