@@ -24,6 +24,7 @@ function queryElements() {
     elements.fileInputContainerEl = document.getElementById('fileInputContainer');
     elements.filePromptMessageEl = document.getElementById('filePromptMessage');
     elements.exportPeekButton = document.getElementById('exportPeekButton');
+    elements.exportExcelButton = document.getElementById('exportExcelButton');
 }
 
 export { elements, queryElements };
