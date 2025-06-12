@@ -27,8 +27,10 @@ function serializeNode(node) {
       }
       return `${cmd}`;
     }
-    case 'FILTER':
-      return `FILTER ${node.params.column} ${node.params.operator} ${quote(node.params.value)}`;
+    case 'FILTER': {
+      const op = node.params.operator === '==' ? '=' : node.params.operator;
+      return `FILTER ${node.params.column} ${op} ${quote(node.params.value)}`;
+    }
     case 'SELECT_COLUMNS':
       return `SELECT ${node.params.selectedColumns.join(', ')}`;
     case 'RENAME_COLUMN': {

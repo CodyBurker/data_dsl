@@ -103,7 +103,7 @@ export default function SpreadsheetUI({ nodes = null, onNodesChange = () => {} }
             const v = row[node.params.column];
             const c = node.params.value;
             switch (node.params.operator) {
-              case '==': return v == c;
+              case '=': return v == c;
               case '!=': return v != c;
               case '>': return parseFloat(v) > parseFloat(c);
               case '<': return parseFloat(v) < parseFloat(c);
@@ -153,7 +153,7 @@ export default function SpreadsheetUI({ nodes = null, onNodesChange = () => {} }
     let name = '';
     switch (type) {
       case NODE_TYPES.FILTER:
-        params = { column: lastHeaders[0] || '', operator: '==', value: '' };
+        params = { column: lastHeaders[0] || '', operator: '=', value: '' };
         name = 'New Filter';
         break;
       case NODE_TYPES.RENAME_COLUMN:
@@ -241,7 +241,7 @@ export default function SpreadsheetUI({ nodes = null, onNodesChange = () => {} }
               onChange={e => handleParamChange('operator', e.target.value)}
               className="w-full p-2 mb-2 rounded bg-gray-700 text-gray-100"
             >
-              {['==','!=','>','<','>=','<=','contains'].map(op => (<option key={op} value={op}>{op}</option>))}
+              {['=','!=','>','<','>=','<=','contains'].map(op => (<option key={op} value={op}>{op}</option>))}
             </select>
             <label className="block text-sm text-gray-300 mb-1">Value</label>
             <input
