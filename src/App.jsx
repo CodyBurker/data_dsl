@@ -1,9 +1,36 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Interpreter } from '../js/interpreter.js';
-import { initUI } from '../js/ui/index.js';
+import { initUI, renderPeekOutputsUI } from '../js/ui/index.js';
+import { tokenizeForParser } from '../js/tokenizer.js';
+import { Parser } from '../js/parser.js';
+import { buildDag } from '../js/dag.js';
+import { dagToNodes } from '../js/ui/dagToNodes.js';
+import { nodesToDsl } from '../js/ui/nodesToDsl.js';
+import { renderDag } from '../js/ui/dagView.js';
 import '../style.css';
+import SpreadsheetUI from './SpreadsheetUI.jsx';
 
 export default function App() {
+  const [mode, setMode] = useState('code');
+  const [interpreter, setInterpreter] = useState(null);
+  const [sheetNodes, setSheetNodes] = useState([]);
+
+  // Keep interpreter, peek UI and DAG in sync when editing spreadsheet
+  useEffect(() => {
+    if (mode !== 'sheet' || !interpreter) return;
+    (async () => {
+      try {
+        const dsl = nodesToDsl({ main: sheetNodes });
+        const ast = new Parser(tokenizeForParser(dsl)).parse();
+        await interpreter.run(ast);
+        renderPeekOutputsUI();
+        renderDag(buildDag(ast));
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, [sheetNodes, interpreter, mode]);
+
   useEffect(() => {
     const uiElementsForInterpreter = {
       logOutputEl: document.getElementById('logOutput'),
@@ -13,9 +40,44 @@ export default function App() {
       fileInputContainerEl: document.getElementById('fileInputContainer'),
       filePromptMessageEl: document.getElementById('filePromptMessage')
     };
-    const interpreter = new Interpreter(uiElementsForInterpreter);
-    initUI(interpreter);
+    const i = new Interpreter(uiElementsForInterpreter);
+    initUI(i);
+    setInterpreter(i);
   }, []);
+
+  const switchToSheet = async () => {
+    if (!interpreter) return;
+    const textarea = document.getElementById('pipeDataInput');
+    if (!textarea) return;
+    const script = textarea.value;
+    try {
+      const tokens = tokenizeForParser(script);
+      const ast = new Parser(tokens).parse();
+      await interpreter.run(ast);
+      const dag = buildDag(ast);
+      const pipelines = dagToNodes(dag);
+      const firstVar = Object.keys(pipelines)[0];
+      setSheetNodes(pipelines[firstVar] || []);
+    } catch (e) {
+      console.error(e);
+    }
+    setMode('sheet');
+  };
+
+  const switchToCode = async () => {
+    const textarea = document.getElementById('pipeDataInput');
+    if (!textarea) return;
+    const pipelines = { main: sheetNodes };
+    const newScript = nodesToDsl(pipelines);
+    textarea.value = newScript;
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    if (interpreter) {
+      const tokens = tokenizeForParser(newScript);
+      const ast = new Parser(tokens).parse();
+      await interpreter.run(ast);
+    }
+    setMode('code');
+  };
 
   return (
     <div className="bg-gray-100 min-h-screen flex flex-col p-4">
@@ -27,7 +89,12 @@ export default function App() {
             <a href="https://github.com/CodyBurker/data_dsl" target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium underline">View on GitHub</a>
             <a href="guide.html" className="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium underline ml-4">Language Guide</a>
           </p>
+          <div className="mt-4 flex justify-center space-x-4">
+            <button onClick={switchToCode} className={mode === 'code' ? 'font-semibold underline' : 'text-indigo-600 underline'}>Code Editor</button>
+            <button onClick={switchToSheet} className={mode === 'sheet' ? 'font-semibold underline' : 'text-indigo-600 underline'}>Spreadsheet</button>
+          </div>
         </header>
+        <div className={mode === 'code' ? '' : 'hidden'}>
         <div className="file-input-container hidden" id="fileInputContainer">
           <label htmlFor="csvFileInput" className="block text-sm font-medium text-gray-700 mb-2">A `LOAD_CSV` or `LOAD_JSON` command requires you to select a file:</label>
           <input type="file" id="csvFileInput" accept=".csv,.txt,.json" className="block w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 cursor-pointer focus:outline-none p-2" />
@@ -99,6 +166,10 @@ export default function App() {
           </ul>
         </div>
       </div>
+      <div className={mode === "sheet" ? "" : "hidden"}>
+        <SpreadsheetUI nodes={sheetNodes} onNodesChange={setSheetNodes} />
+      </div>
+    </div>
     </div>
   );
 }
